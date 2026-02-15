@@ -2,22 +2,44 @@ import SwiftUI
 import CoreSpotlight
 
 class AppDelegate: NSObject, NSApplicationDelegate {
+    /// Stores a pending navigation from Spotlight or URL scheme that arrived before the UI was ready.
+    static var pendingNavigation: (book: String, chapter: Int, verse: Int?)?
+
+    private func navigate(book: String, chapter: Int, verse: Int?) {
+        let userInfo: [String: Any] = [
+            "book": book,
+            "chapter": chapter,
+            "verse": verse as Any
+        ]
+        // Post now and also store as pending in case the view isn't listening yet.
+        Self.pendingNavigation = (book, chapter, verse)
+        NotificationCenter.default.post(
+            name: .navigateToReference,
+            object: nil,
+            userInfo: userInfo
+        )
+    }
+
     func application(_ application: NSApplication, continue userActivity: NSUserActivity, restorationHandler: @escaping ([any NSUserActivityRestoring]) -> Void) -> Bool {
         guard userActivity.activityType == CSSearchableItemActionType,
               let identifier = userActivity.userInfo?[CSSearchableItemActivityIdentifier] as? String,
               let parsed = SpotlightIndexer.parseIdentifier(identifier) else {
             return false
         }
-        NotificationCenter.default.post(
-            name: .navigateToReference,
-            object: nil,
-            userInfo: [
-                "book": parsed.book,
-                "chapter": parsed.chapter,
-                "verse": parsed.verse as Any
-            ]
-        )
+        navigate(book: parsed.book, chapter: parsed.chapter, verse: parsed.verse)
         return true
+    }
+
+    func application(_ application: NSApplication, open urls: [URL]) {
+        guard let url = urls.first, url.scheme == "spark" else { return }
+        let components = [url.host].compactMap { $0 } + url.pathComponents.filter { $0 != "/" }
+        guard !components.isEmpty else { return }
+
+        let book = components[0]
+        let chapter = components.count > 1 ? Int(components[1]) ?? 1 : 1
+        let verse = components.count > 2 ? Int(components[2]) : nil
+
+        navigate(book: book, chapter: chapter, verse: verse)
     }
 }
 

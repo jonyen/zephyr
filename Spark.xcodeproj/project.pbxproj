@@ -92,6 +92,7 @@
 		AA00002C /* SearchService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00002D /* SearchService.swift */; };
 		AA00002E /* SearchServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00002F /* SearchServiceTests.swift */; };
 		AACC87212F409FA300E50F90 /* search_index.json in Resources */ = {isa = PBXBuildFile; fileRef = AACC87202F409F1F00E50F90 /* search_index.json */; };
+		AA000032 /* BibleScrubber.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000031 /* BibleScrubber.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -194,6 +195,7 @@
 		AA00002D /* SearchService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchService.swift; sourceTree = "<group>"; };
 		AA00002F /* SearchServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchServiceTests.swift; sourceTree = "<group>"; };
 		AACC87202F409F1F00E50F90 /* search_index.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = search_index.json; sourceTree = "<group>"; };
+		AA000031 /* BibleScrubber.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BibleScrubber.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -219,6 +221,7 @@
 				AA000027 /* Resources */,
 				AACC87102F40A09A00E50F90 /* ChapterPosition.swift */,
 				AA3A3F942F40A2C5004087F5 /* ReadingPaneView.swift */,
+				AA000031 /* BibleScrubber.swift */,
 				AA000029 /* Assets.xcassets */,
 			);
 			path = ESVBible;
@@ -506,6 +509,7 @@
 				AA00000D /* HistorySidebarView.swift in Sources */,
 				AA00002A /* SpotlightIndexer.swift in Sources */,
 				AA00002C /* SearchService.swift in Sources */,
+				AA000032 /* BibleScrubber.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -596,6 +600,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				EAGER_LINKING = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = ESVBible/Info.plist;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				INFOPLIST_KEY_NSMainStoryboardFile = "";
 				INFOPLIST_KEY_NSPrincipalClass = "";
@@ -623,6 +628,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				EAGER_LINKING = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = ESVBible/Info.plist;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				INFOPLIST_KEY_NSMainStoryboardFile = "";
 				INFOPLIST_KEY_NSPrincipalClass = "";

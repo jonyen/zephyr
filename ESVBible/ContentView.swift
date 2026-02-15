@@ -31,7 +31,10 @@ struct ContentView: View {
                         highlightVerseStart: highlightStart,
                         highlightVerseEnd: highlightEnd,
                         bibleStore: bibleStore,
-                        onPositionChanged: { visiblePosition = $0 }
+                        onPositionChanged: { visiblePosition = $0 },
+                        onNavigateRequested: { pos in
+                            navigateTo(book: pos.bookName, chapter: pos.chapterNumber, verseStart: nil, verseEnd: nil, addToHistory: false)
+                        }
                     )
                 } else {
                     ContentUnavailableView("Search for a passage",
@@ -194,7 +197,12 @@ struct ContentView: View {
         .frame(minWidth: 400, minHeight: 500)
         .toolbar(.hidden)
         .onAppear {
-            navigateTo(book: lastBook, chapter: lastChapter, verseStart: nil, verseEnd: nil, addToHistory: false)
+            if let pending = AppDelegate.pendingNavigation {
+                AppDelegate.pendingNavigation = nil
+                navigateTo(book: pending.book, chapter: pending.chapter, verseStart: pending.verse, verseEnd: pending.verse, addToHistory: true)
+            } else {
+                navigateTo(book: lastBook, chapter: lastChapter, verseStart: nil, verseEnd: nil, addToHistory: false)
+            }
         }
         .onReceive(NotificationCenter.default.publisher(for: .navigatePreviousChapter)) { _ in
             navigateChapter(delta: -1)
