@@ -1,2 +1,5 @@
 .DS_Store
+*.xcuserstate
 ESVBible/Resources/search_index.json
+build/
+dist/
