@@ -13,10 +13,13 @@ struct ReadingPaneView: View {
     let bibleStore: BibleStore
     /// Called whenever the topmost visible chapter changes.
     var onPositionChanged: ((ChapterPosition) -> Void)?
+    /// Called when the scrubber requests navigation to a chapter.
+    var onNavigateRequested: ((ChapterPosition) -> Void)?
 
     // The ordered list of chapters currently in the scroll view.
     @State private var loadedChapters: [ChapterPosition] = []
     @State private var scrolledID: ChapterID?
+    @State private var visiblePosition: ChapterPosition?
 
     var body: some View {
         ScrollView {
@@ -44,7 +47,16 @@ struct ReadingPaneView: View {
             }
             .scrollTargetLayout()
         }
+        .scrollIndicators(.hidden)
         .scrollPosition(id: $scrolledID, anchor: .top)
+        .overlay(alignment: .trailing) {
+            BibleScrubber(
+                currentPosition: visiblePosition ?? initialPosition,
+                onNavigate: { position in
+                    onNavigateRequested?(position)
+                }
+            )
+        }
         .onAppear {
             loadedChapters = [initialPosition]
             scrolledID = ChapterID(bookName: initialPosition.bookName, chapterNumber: initialPosition.chapterNumber)
@@ -57,6 +69,7 @@ struct ReadingPaneView: View {
         .onChange(of: scrolledID) { _, newID in
             guard let newID else { return }
             let position = ChapterPosition(bookName: newID.bookName, chapterNumber: newID.chapterNumber)
+            visiblePosition = position
             onPositionChanged?(position)
         }
     }
