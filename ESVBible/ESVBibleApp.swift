@@ -92,7 +92,34 @@ struct ESVBibleApp: App {
                 Button("Toggle Bookmark") {
                     NotificationCenter.default.post(name: .toggleBookmark, object: nil)
                 }
-                .keyboardShortcut("d", modifiers: .command)
+                .keyboardShortcut("b", modifiers: .command)
+
+                Button("Previous Bookmark") {
+                    NotificationCenter.default.post(name: .navigatePreviousBookmark, object: nil)
+                }
+                .keyboardShortcut(.leftArrow, modifiers: [.command, .shift])
+
+                Button("Next Bookmark") {
+                    NotificationCenter.default.post(name: .navigateNextBookmark, object: nil)
+                }
+                .keyboardShortcut(.rightArrow, modifiers: [.command, .shift])
+
+                Button("Previous Highlight") {
+                    NotificationCenter.default.post(name: .navigatePreviousHighlight, object: nil)
+                }
+                .keyboardShortcut("{", modifiers: .command)
+
+                Button("Next Highlight") {
+                    NotificationCenter.default.post(name: .navigateNextHighlight, object: nil)
+                }
+                .keyboardShortcut("}", modifiers: .command)
+
+                Divider()
+
+                Button("Keyboard Shortcuts") {
+                    NotificationCenter.default.post(name: .showKeyboardShortcuts, object: nil)
+                }
+                .keyboardShortcut("/", modifiers: .command)
             }
         }
     }
@@ -106,4 +133,9 @@ extension Notification.Name {
     static let navigateToReference = Notification.Name("navigateToReference")
     static let toggleHistory = Notification.Name("toggleHistory")
     static let toggleBookmark = Notification.Name("toggleBookmark")
+    static let navigatePreviousBookmark = Notification.Name("navigatePreviousBookmark")
+    static let navigateNextBookmark = Notification.Name("navigateNextBookmark")
+    static let navigatePreviousHighlight = Notification.Name("navigatePreviousHighlight")
+    static let navigateNextHighlight = Notification.Name("navigateNextHighlight")
+    static let showKeyboardShortcuts = Notification.Name("showKeyboardShortcuts")
 }

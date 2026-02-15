@@ -87,13 +87,13 @@ private struct LabelPanelContent: View {
                     .foregroundStyle(scale > 1.3 ? .primary : .secondary)
                     .lineLimit(1)
                     .fixedSize()
-                    .position(x: 90, y: y)
-                    .onHover { hovering in
-                        onHoverBook(hovering ? index : nil)
-                    }
-                    .onTapGesture {
-                        onTapBook(range.name)
-                    }
+                .position(x: 90, y: y)
+                .onHover { hovering in
+                    onHoverBook(hovering ? index : nil)
+                }
+                .onTapGesture {
+                    onTapBook(range.name)
+                }
             }
         }
     }
@@ -163,8 +163,8 @@ struct BibleScrubber: View {
                         let idx = CGFloat(BibleStore.globalChapterIndex(book: highlight.book, chapter: highlight.chapter))
                         let fraction = idx / totalChapters
                         let y = trackTop + fraction * trackHeight
-                        let tickRect = CGRect(x: trackX - 5, y: y - 1, width: 3, height: 2)
-                        context.fill(Path(roundedRect: tickRect, cornerRadius: 0.5), with: .color(highlight.color.swiftUIColor.opacity(1.0)))
+                        let tickRect = CGRect(x: trackX - 8, y: y - 1.5, width: 6, height: 3)
+                        context.fill(Path(roundedRect: tickRect, cornerRadius: 1), with: .color(highlight.color.scrubberColor))
                     }
 
                     // Bookmark markers (right of track) — diamond shape

@@ -17,10 +17,10 @@
 
     <!-- Middle wind line (largest/main) -->
     <path d="M 140 512 C 280 432, 440 432, 560 512 C 680 592, 780 540, 880 480"
-          stroke-width="56" opacity="1"/>
+          stroke-width="48" opacity="1"/>
 
     <!-- Bottom wind line -->
     <path d="M 240 684 C 360 624, 500 624, 600 684 C 700 744, 780 700, 840 660"
-          stroke-width="44" opacity="0.75"/>
+          stroke-width="48" opacity="0.75"/>
   </g>
 </svg>

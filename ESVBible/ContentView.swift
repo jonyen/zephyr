@@ -14,15 +14,43 @@ struct ContentView: View {
     @State private var errorMessage: String? = nil
     @State private var isTOCVisible = false
     @State private var hoveredBook: String? = nil
+    @State private var showKeyboardShortcuts = false
     @AppStorage("lastBook") private var lastBook: String = "Genesis"
     @AppStorage("lastChapter") private var lastChapter: Int = 1
     @FocusState private var isSearchFocused: Bool
+    @State private var keyMonitor: Any? = nil
     @State private var searchService = SearchService()
     @State private var searchResults: [SearchService.VerseResult] = []
     @State private var isKeywordSearch = false
     @State private var searchTask: Task<Void, Never>? = nil
 
     var body: some View {
+        mainContent
+        .onReceive(NotificationCenter.default.publisher(for: .navigatePreviousBookmark)) { _ in
+            navigateToBookmark(direction: -1)
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .navigateNextBookmark)) { _ in
+            navigateToBookmark(direction: 1)
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .navigatePreviousHighlight)) { _ in
+            navigateToHighlight(direction: -1)
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .navigateNextHighlight)) { _ in
+            navigateToHighlight(direction: 1)
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .showKeyboardShortcuts)) { _ in
+            showKeyboardShortcuts.toggle()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .navigateToReference)) { notification in
+            if let book = notification.userInfo?["book"] as? String,
+               let chapter = notification.userInfo?["chapter"] as? Int {
+                let verse = notification.userInfo?["verse"] as? Int
+                navigateTo(book: book, chapter: chapter, verseStart: verse, verseEnd: verse, addToHistory: true)
+            }
+        }
+    }
+
+    private var mainContent: some View {
         ZStack(alignment: .top) {
             // Reading pane
             Group {
@@ -182,6 +210,16 @@ struct ContentView: View {
                 tocOverlay
                     .transition(.opacity)
             }
+
+            // Keyboard shortcuts overlay
+            if showKeyboardShortcuts {
+                Color.black.opacity(0.3)
+                    .ignoresSafeArea()
+                    .onTapGesture { showKeyboardShortcuts = false }
+
+                keyboardShortcutsOverlay
+                    .transition(.opacity)
+            }
         }
         .inspector(isPresented: $showHistory) {
             HistorySidebarView(
@@ -199,6 +237,17 @@ struct ContentView: View {
         .frame(minWidth: 400, minHeight: 500)
         .toolbar(.hidden)
         .onAppear {
+            keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
+                if event.charactersIgnoringModifiers == "?" && !isSearchVisible {
+                    showKeyboardShortcuts.toggle()
+                    return nil
+                }
+                if event.keyCode == 53 /* Escape */ && showKeyboardShortcuts {
+                    showKeyboardShortcuts = false
+                    return nil
+                }
+                return event
+            }
             if let pending = AppDelegate.pendingNavigation {
                 AppDelegate.pendingNavigation = nil
                 navigateTo(book: pending.book, chapter: pending.chapter, verseStart: pending.verse, verseEnd: pending.verse, addToHistory: true)
@@ -223,6 +272,12 @@ struct ContentView: View {
             }
             return .ignored
         }
+        .onDisappear {
+            if let monitor = keyMonitor {
+                NSEvent.removeMonitor(monitor)
+                keyMonitor = nil
+            }
+        }
         .onReceive(NotificationCenter.default.publisher(for: .showSearch)) { _ in
             showSearch()
         }
@@ -236,13 +291,6 @@ struct ContentView: View {
             let position = visiblePosition ?? currentPosition
             guard let position else { return }
             highlightManager.toggleBookmark(book: position.bookName, chapter: position.chapterNumber)
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .navigateToReference)) { notification in
-            if let book = notification.userInfo?["book"] as? String,
-               let chapter = notification.userInfo?["chapter"] as? Int {
-                let verse = notification.userInfo?["verse"] as? Int
-                navigateTo(book: book, chapter: chapter, verseStart: verse, verseEnd: verse, addToHistory: true)
-            }
         }
     }
 
@@ -390,6 +438,65 @@ struct ContentView: View {
             }
     }
 
+    private var keyboardShortcutsOverlay: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            HStack {
+                Text("Keyboard Shortcuts")
+                    .font(.title2.bold())
+                Spacer()
+                Button {
+                    showKeyboardShortcuts = false
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundStyle(.secondary)
+                        .imageScale(.large)
+                }
+                .buttonStyle(.plain)
+            }
+
+            Divider()
+
+            VStack(spacing: 10) {
+                ForEach(shortcutItems, id: \.action) { item in
+                    HStack {
+                        Text(item.action)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                        Text(item.keys)
+                            .font(.system(.body, design: .rounded).bold())
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 2)
+                            .background(.quaternary, in: RoundedRectangle(cornerRadius: 5))
+                    }
+                }
+            }
+        }
+        .padding(24)
+        .frame(width: 360)
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
+        .overlay {
+            RoundedRectangle(cornerRadius: 12)
+                .strokeBorder(.separator, lineWidth: 0.5)
+        }
+        .shadow(color: .black.opacity(0.25), radius: 20, x: 0, y: 8)
+    }
+
+    private var shortcutItems: [(action: String, keys: String)] {
+        [
+            ("Search for Passage", "\u{2318}F"),
+            ("Table of Contents", "\u{2318}T"),
+            ("Toggle History", "\u{2318}Y"),
+            ("Previous Chapter", "\u{2318}["),
+            ("Next Chapter", "\u{2318}]"),
+            ("Toggle Bookmark", "\u{2318}B"),
+            ("Previous Bookmark", "\u{21E7}\u{2318}\u{2190}"),
+            ("Next Bookmark", "\u{21E7}\u{2318}\u{2192}"),
+            ("Previous Highlight", "\u{2318}{"),
+            ("Next Highlight", "\u{2318}}"),
+            ("Show Shortcuts", "?"),
+            ("Dismiss", "Esc"),
+        ]
+    }
+
     private func performSearch() {
         errorMessage = nil
 
@@ -443,6 +550,63 @@ struct ContentView: View {
     private func navigateToHistory(_ entry: HistoryEntry) {
         showHistory = false // Hide inspector on selection
         navigateTo(book: entry.bookName, chapter: entry.chapter, verseStart: entry.verseStart, verseEnd: entry.verseEnd, addToHistory: false)
+    }
+
+    private func navigateToBookmark(direction: Int) {
+        let position = visiblePosition ?? currentPosition
+        guard let position else { return }
+        let bookmarks = highlightManager.bookmarks
+        guard !bookmarks.isEmpty else { return }
+
+        let currentIndex = BibleStore.globalChapterIndex(book: position.bookName, chapter: position.chapterNumber)
+
+        // Sort bookmarks by their position in the Bible
+        let sorted = bookmarks
+            .map { (bookmark: $0, index: BibleStore.globalChapterIndex(book: $0.book, chapter: $0.chapter)) }
+            .sorted { $0.index < $1.index }
+
+        let target: (bookmark: Bookmark, index: Int)?
+        if direction > 0 {
+            // Next: first bookmark after current position, or wrap to first
+            target = sorted.first(where: { $0.index > currentIndex }) ?? sorted.first
+        } else {
+            // Previous: last bookmark before current position, or wrap to last
+            target = sorted.last(where: { $0.index < currentIndex }) ?? sorted.last
+        }
+
+        if let target {
+            navigateTo(book: target.bookmark.book, chapter: target.bookmark.chapter, verseStart: nil, verseEnd: nil, addToHistory: true)
+        }
+    }
+
+    private func navigateToHighlight(direction: Int) {
+        let position = visiblePosition ?? currentPosition
+        guard let position else { return }
+        let highlights = highlightManager.highlights
+        guard !highlights.isEmpty else { return }
+
+        let currentIndex = BibleStore.globalChapterIndex(book: position.bookName, chapter: position.chapterNumber)
+
+        // Deduplicate to unique chapters and sort by Bible position
+        var seen = Set<Int>()
+        let sorted = highlights
+            .compactMap { h -> (highlight: Highlight, index: Int)? in
+                let idx = BibleStore.globalChapterIndex(book: h.book, chapter: h.chapter)
+                guard seen.insert(idx).inserted else { return nil }
+                return (highlight: h, index: idx)
+            }
+            .sorted { $0.index < $1.index }
+
+        let target: (highlight: Highlight, index: Int)?
+        if direction > 0 {
+            target = sorted.first(where: { $0.index > currentIndex }) ?? sorted.first
+        } else {
+            target = sorted.last(where: { $0.index < currentIndex }) ?? sorted.last
+        }
+
+        if let target {
+            navigateTo(book: target.highlight.book, chapter: target.highlight.chapter, verseStart: nil, verseEnd: nil, addToHistory: true)
+        }
     }
 
     private func navigateChapter(delta: Int) {

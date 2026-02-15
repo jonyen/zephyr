@@ -71,6 +71,15 @@ enum HighlightColor: String, Codable, CaseIterable {
         case .pink: return Color.pink.opacity(0.3)
         }
     }
+
+    var scrubberColor: Color {
+        switch self {
+        case .yellow: return Color.yellow.opacity(0.85)
+        case .green: return Color.green.opacity(0.85)
+        case .blue: return Color.blue.opacity(0.8)
+        case .pink: return Color.pink.opacity(0.85)
+        }
+    }
 }
 
 struct Highlight: Codable, Identifiable {
