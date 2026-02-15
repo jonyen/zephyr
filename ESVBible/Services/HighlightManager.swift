@@ -13,7 +13,7 @@ class HighlightManager {
             dir = url
         } else {
             let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
-            dir = appSupport.appendingPathComponent("Spark", isDirectory: true)
+            dir = appSupport.appendingPathComponent("Zephyr", isDirectory: true)
             try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         }
         self.highlightsURL = dir.appendingPathComponent("highlights.json")

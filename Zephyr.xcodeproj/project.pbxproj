@@ -131,8 +131,8 @@
 		AA000038 /* HighlightManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HighlightManager.swift; sourceTree = "<group>"; };
 		AA00003A /* SelectableTextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectableTextView.swift; sourceTree = "<group>"; };
 		AA000036 /* red_letter_verses.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = red_letter_verses.json; sourceTree = "<group>"; };
-		AA000040 /* Spark.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Spark.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		AA000041 /* SparkTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SparkTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		AA000040 /* Zephyr.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Zephyr.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		AA000041 /* ZephyrTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ZephyrTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA3A3F942F40A2C5004087F5 /* ReadingPaneView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadingPaneView.swift; sourceTree = "<group>"; };
 		AA3A3F982F40AAB6004087F5 /* ESVBibleApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ESVBibleApp.swift; sourceTree = "<group>"; };
 		AA3A3F992F40AAB9004087F5 /* ESVBibleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ESVBibleTests.swift; sourceTree = "<group>"; };
@@ -357,8 +357,8 @@
 		AA000030 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				AA000040 /* Spark.app */,
-				AA000041 /* SparkTests.xctest */,
+				AA000040 /* Zephyr.app */,
+				AA000041 /* ZephyrTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -366,9 +366,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		AA000050 /* Spark */ = {
+		AA000050 /* Zephyr */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = AA000070 /* Build configuration list for PBXNativeTarget "Spark" */;
+			buildConfigurationList = AA000070 /* Build configuration list for PBXNativeTarget "Zephyr" */;
 			buildPhases = (
 				AA000060 /* Sources */,
 				AACC86CD2F409F9600E50F90 /* Resources */,
@@ -377,14 +377,14 @@
 			);
 			dependencies = (
 			);
-			name = Spark;
+			name = Zephyr;
 			productName = ESVBible;
-			productReference = AA000040 /* Spark.app */;
+			productReference = AA000040 /* Zephyr.app */;
 			productType = "com.apple.product-type.application";
 		};
-		AA000051 /* SparkTests */ = {
+		AA000051 /* ZephyrTests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = AA000071 /* Build configuration list for PBXNativeTarget "SparkTests" */;
+			buildConfigurationList = AA000071 /* Build configuration list for PBXNativeTarget "ZephyrTests" */;
 			buildPhases = (
 				AA000061 /* Sources */,
 			);
@@ -393,9 +393,9 @@
 			dependencies = (
 				AA000081 /* PBXTargetDependency */,
 			);
-			name = SparkTests;
+			name = ZephyrTests;
 			productName = ESVBibleTests;
-			productReference = AA000041 /* SparkTests.xctest */;
+			productReference = AA000041 /* ZephyrTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
 /* End PBXNativeTarget section */
@@ -408,7 +408,7 @@
 				LastSwiftUpdateCheck = 1500;
 				LastUpgradeCheck = 1500;
 			};
-			buildConfigurationList = AA000075 /* Build configuration list for PBXProject "Spark" */;
+			buildConfigurationList = AA000075 /* Build configuration list for PBXProject "Zephyr" */;
 			compatibilityVersion = "Xcode 14.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -421,8 +421,8 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				AA000050 /* Spark */,
-				AA000051 /* SparkTests */,
+				AA000050 /* Zephyr */,
+				AA000051 /* ZephyrTests */,
 			);
 		};
 /* End PBXProject section */
@@ -547,7 +547,7 @@
 /* Begin PBXTargetDependency section */
 		AA000081 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = AA000050 /* Spark */;
+			target = AA000050 /* Zephyr */;
 			targetProxy = AA000080 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -625,8 +625,8 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.esv.bible;
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.esv.bible.zephyr;
 				PRODUCT_MODULE_NAME = ESVBible;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -654,8 +654,8 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.esv.bible;
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.esv.bible.zephyr;
 				PRODUCT_MODULE_NAME = ESVBible;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -670,12 +670,12 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.esv.bible.tests;
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.esv.bible.zephyr.tests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Spark.app/Contents/MacOS/Spark";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Zephyr.app/Contents/MacOS/Zephyr";
 			};
 			name = Debug;
 		};
@@ -686,19 +686,19 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.esv.bible.tests;
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.esv.bible.zephyr.tests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Spark.app/Contents/MacOS/Spark";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Zephyr.app/Contents/MacOS/Zephyr";
 			};
 			name = Release;
 		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		AA000070 /* Build configuration list for PBXNativeTarget "Spark" */ = {
+		AA000070 /* Build configuration list for PBXNativeTarget "Zephyr" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				AA000110 /* Debug */,
@@ -707,7 +707,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		AA000071 /* Build configuration list for PBXNativeTarget "SparkTests" */ = {
+		AA000071 /* Build configuration list for PBXNativeTarget "ZephyrTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				AA000120 /* Debug */,
@@ -716,7 +716,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		AA000075 /* Build configuration list for PBXProject "Spark" */ = {
+		AA000075 /* Build configuration list for PBXProject "Zephyr" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				AA000100 /* Debug */,

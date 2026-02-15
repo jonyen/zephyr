@@ -31,7 +31,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func application(_ application: NSApplication, open urls: [URL]) {
-        guard let url = urls.first, url.scheme == "spark" else { return }
+        guard let url = urls.first, url.scheme == "zephyr" else { return }
         let components = [url.host].compactMap { $0 } + url.pathComponents.filter { $0 != "/" }
         guard !components.isEmpty else { return }
 
@@ -92,7 +92,7 @@ struct ESVBibleApp: App {
                 Button("Toggle Bookmark") {
                     NotificationCenter.default.post(name: .toggleBookmark, object: nil)
                 }
-                .keyboardShortcut("d", modifiers: .command)
+                .keyboardShortcut("b", modifiers: .command)
             }
         }
     }
