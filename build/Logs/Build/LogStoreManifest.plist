@@ -5,6 +5,49 @@
 	<key>logFormatVersion</key>
 	<integer>12</integer>
 	<key>logs</key>
-	<dict/>
+	<dict>
+		<key>6D7F3918-BF2D-4263-9DE3-464A65B0EBA1</key>
+		<dict>
+			<key>className</key>
+			<string>IDECommandLineBuildLog</string>
+			<key>documentTypeString</key>
+			<string>&lt;nil&gt;</string>
+			<key>domainType</key>
+			<string>Xcode.IDEActivityLogDomainType.BuildLog</string>
+			<key>fileName</key>
+			<string>6D7F3918-BF2D-4263-9DE3-464A65B0EBA1.xcactivitylog</string>
+			<key>hasPrimaryLog</key>
+			<true/>
+			<key>primaryObservable</key>
+			<dict>
+				<key>highLevelStatus</key>
+				<string>S</string>
+				<key>totalNumberOfAnalyzerIssues</key>
+				<integer>0</integer>
+				<key>totalNumberOfErrors</key>
+				<integer>0</integer>
+				<key>totalNumberOfTestFailures</key>
+				<integer>0</integer>
+				<key>totalNumberOfWarnings</key>
+				<integer>0</integer>
+			</dict>
+			<key>schemeIdentifier-containerName</key>
+			<string>Zephyr project</string>
+			<key>schemeIdentifier-schemeName</key>
+			<string>Zephyr</string>
+			<key>schemeIdentifier-sharedScheme</key>
+			<integer>1</integer>
+			<key>signature</key>
+			<string>Cleaning project Zephyr with scheme Zephyr and configuration Release</string>
+			<key>timeStartedRecording</key>
+			<real>792873617.36248302</real>
+			<key>timeStoppedRecording</key>
+			<real>792873617.57480299</real>
+			<key>title</key>
+			<string>Cleaning project Zephyr with scheme Zephyr and configuration Release</string>
+			<key>uniqueIdentifier</key>
+			<string>6D7F3918-BF2D-4263-9DE3-464A65B0EBA1</string>
+		</dict>
+	</dict>
 </dict>
 </plist>

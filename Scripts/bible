@@ -1,0 +1,30 @@
+#!/bin/zsh
+# Usage: bible <book> <chapter>[:<verse>]
+# Examples:
+#   bible john 3:16
+#   bible genesis 1
+#   bible "1 corinthians" 13
+
+if [ $# -lt 2 ]; then
+    echo "Usage: bible <book> <chapter>[:<verse>]"
+    echo "Examples: bible john 3:16 | bible genesis 1"
+    exit 1
+fi
+
+book="$1"
+ref="$2"
+
+# Split chapter:verse
+chapter="${ref%%:*}"
+verse=""
+if [[ "$ref" == *:* ]]; then
+    verse="${ref#*:}"
+fi
+
+# Build URL
+url="zephyr://${book}/${chapter}"
+if [ -n "$verse" ]; then
+    url="${url}/${verse}"
+fi
+
+open "$url"

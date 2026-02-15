@@ -1,2 +1,0 @@
-Target dependency graph (1 target)
-Target 'Spark' in project 'Spark' (no dependencies)
