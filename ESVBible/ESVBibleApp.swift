@@ -92,7 +92,7 @@ struct ESVBibleApp: App {
                 Button("Toggle Bookmark") {
                     NotificationCenter.default.post(name: .toggleBookmark, object: nil)
                 }
-                .keyboardShortcut("b", modifiers: .command)
+                .keyboardShortcut("d", modifiers: .command)
             }
         }
     }
