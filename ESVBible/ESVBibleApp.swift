@@ -86,6 +86,13 @@ struct ESVBibleApp: App {
                     NotificationCenter.default.post(name: .toggleHistory, object: nil)
                 }
                 .keyboardShortcut("y", modifiers: .command)
+
+                Divider()
+
+                Button("Toggle Bookmark") {
+                    NotificationCenter.default.post(name: .toggleBookmark, object: nil)
+                }
+                .keyboardShortcut("d", modifiers: .command)
             }
         }
     }
@@ -98,4 +105,5 @@ extension Notification.Name {
     static let showTableOfContents = Notification.Name("showTableOfContents")
     static let navigateToReference = Notification.Name("navigateToReference")
     static let toggleHistory = Notification.Name("toggleHistory")
+    static let toggleBookmark = Notification.Name("toggleBookmark")
 }

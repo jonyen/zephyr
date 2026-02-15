@@ -11,6 +11,7 @@ struct ReadingPaneView: View {
     let highlightVerseStart: Int?
     let highlightVerseEnd: Int?
     let bibleStore: BibleStore
+    let highlightManager: HighlightManager
     /// Called whenever the topmost visible chapter changes.
     var onPositionChanged: ((ChapterPosition) -> Void)?
     /// Called when the scrubber requests navigation to a chapter.
@@ -31,7 +32,8 @@ struct ReadingPaneView: View {
                             chapter: chapter,
                             bookName: book.name,
                             highlightVerseStart: position == initialPosition ? highlightVerseStart : nil,
-                            highlightVerseEnd: position == initialPosition ? highlightVerseEnd : nil
+                            highlightVerseEnd: position == initialPosition ? highlightVerseEnd : nil,
+                            highlightManager: highlightManager
                         )
                         .id(ChapterID(bookName: position.bookName, chapterNumber: position.chapterNumber))
                         .onAppear {
@@ -54,7 +56,8 @@ struct ReadingPaneView: View {
                 currentPosition: visiblePosition ?? initialPosition,
                 onNavigate: { position in
                     onNavigateRequested?(position)
-                }
+                },
+                highlightManager: highlightManager
             )
         }
         .onAppear {
@@ -128,18 +131,47 @@ private struct ChapterView: View {
     let bookName: String
     let highlightVerseStart: Int?
     let highlightVerseEnd: Int?
+    let highlightManager: HighlightManager
+
+    @State private var textHeight: CGFloat = 100
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text("\(bookName) \(chapter.number)")
-                .font(.title)
-                .fontWeight(.semibold)
-                .padding(.bottom, 16)
+            HStack {
+                Text("\(bookName) \(chapter.number)")
+                    .font(.title)
+                    .fontWeight(.semibold)
 
-            paragraphText
-                .font(.system(size: 16, design: .serif))
-                .lineSpacing(6)
-                .padding(.horizontal, 8)
+                if highlightManager.isBookmarked(book: bookName, chapter: chapter.number) {
+                    Image(systemName: "bookmark.fill")
+                        .foregroundStyle(Color.accentColor)
+                        .font(.title3)
+                }
+            }
+            .padding(.bottom, 16)
+
+            SelectableTextView(
+                chapter: chapter,
+                bookName: bookName,
+                highlights: highlightManager.highlights(forBook: bookName, chapter: chapter.number),
+                searchHighlightStart: highlightVerseStart,
+                searchHighlightEnd: highlightVerseEnd,
+                onHighlight: { verse, startChar, endChar, color in
+                    highlightManager.addHighlight(
+                        book: bookName, chapter: chapter.number,
+                        verse: verse, startChar: startChar, endChar: endChar, color: color
+                    )
+                },
+                onRemoveHighlights: { verse, startChar, endChar in
+                    highlightManager.removeHighlights(
+                        book: bookName, chapter: chapter.number,
+                        verse: verse, startChar: startChar, endChar: endChar
+                    )
+                },
+                contentHeight: $textHeight
+            )
+            .frame(height: textHeight)
+            .padding(.horizontal, 8)
 
             Divider()
                 .padding(.vertical, 24)
@@ -147,30 +179,5 @@ private struct ChapterView: View {
         .padding(.horizontal, 24)
         .padding(.top, 24)
         .frame(maxWidth: .infinity, alignment: .leading)
-    }
-
-    private var paragraphText: Text {
-        var result = Text("")
-        for verse in chapter.verses {
-            let verseNum = Text("\(verse.number) ")
-                .font(.caption2)
-                .foregroundStyle(.secondary)
-                .baselineOffset(6)
-            let verseText: Text
-            if isHighlighted(verse.number) {
-                verseText = Text(verse.text + " ")
-                    .foregroundStyle(Color.accentColor)
-            } else {
-                verseText = Text(verse.text + " ")
-            }
-            result = result + verseNum + verseText
-        }
-        return result
-    }
-
-    private func isHighlighted(_ verseNumber: Int) -> Bool {
-        guard let start = highlightVerseStart else { return false }
-        let end = highlightVerseEnd ?? start
-        return verseNumber >= start && verseNumber <= end
     }
 }
