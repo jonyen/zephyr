@@ -20,6 +20,14 @@
 		AA00000B /* HistoryManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00001B /* HistoryManagerTests.swift */; };
 		AA00000D /* HistorySidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00001D /* HistorySidebarView.swift */; };
 		AA000028 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AA000029 /* Assets.xcassets */; };
+		AA00002A /* SpotlightIndexer.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00002B /* SpotlightIndexer.swift */; };
+		AA00002C /* SearchService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00002D /* SearchService.swift */; };
+		AA00002E /* SearchServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00002F /* SearchServiceTests.swift */; };
+		AA000032 /* BibleScrubber.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000031 /* BibleScrubber.swift */; };
+		AA000033 /* RedLetterService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000034 /* RedLetterService.swift */; };
+		AA000037 /* HighlightManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000038 /* HighlightManager.swift */; };
+		AA000039 /* SelectableTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00003A /* SelectableTextView.swift */; };
+		AA000035 /* red_letter_verses.json in Resources */ = {isa = PBXBuildFile; fileRef = AA000036 /* red_letter_verses.json */; };
 		AA3A3F952F40A2C5004087F5 /* ReadingPaneView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA3A3F942F40A2C5004087F5 /* ReadingPaneView.swift */; };
 		AACC86CE2F409FA300E50F90 /* 1Chronicles.json in Resources */ = {isa = PBXBuildFile; fileRef = AACC868B2F409F1F00E50F90 /* 1Chronicles.json */; };
 		AACC86CF2F409FA300E50F90 /* 1Corinthians.json in Resources */ = {isa = PBXBuildFile; fileRef = AACC868C2F409F1F00E50F90 /* 1Corinthians.json */; };
@@ -88,11 +96,7 @@
 		AACC870E2F409FA300E50F90 /* Zechariah.json in Resources */ = {isa = PBXBuildFile; fileRef = AACC86CB2F409F1F00E50F90 /* Zechariah.json */; };
 		AACC870F2F409FA300E50F90 /* Zephaniah.json in Resources */ = {isa = PBXBuildFile; fileRef = AACC86CC2F409F1F00E50F90 /* Zephaniah.json */; };
 		AACC87112F40A09A00E50F90 /* ChapterPosition.swift in Sources */ = {isa = PBXBuildFile; fileRef = AACC87102F40A09A00E50F90 /* ChapterPosition.swift */; };
-		AA00002A /* SpotlightIndexer.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00002B /* SpotlightIndexer.swift */; };
-		AA00002C /* SearchService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00002D /* SearchService.swift */; };
-		AA00002E /* SearchServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00002F /* SearchServiceTests.swift */; };
 		AACC87212F409FA300E50F90 /* search_index.json in Resources */ = {isa = PBXBuildFile; fileRef = AACC87202F409F1F00E50F90 /* search_index.json */; };
-		AA000032 /* BibleScrubber.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000031 /* BibleScrubber.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -119,6 +123,14 @@
 		AA00001B /* HistoryManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryManagerTests.swift; sourceTree = "<group>"; };
 		AA00001D /* HistorySidebarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistorySidebarView.swift; sourceTree = "<group>"; };
 		AA000029 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		AA00002B /* SpotlightIndexer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpotlightIndexer.swift; sourceTree = "<group>"; };
+		AA00002D /* SearchService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchService.swift; sourceTree = "<group>"; };
+		AA00002F /* SearchServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchServiceTests.swift; sourceTree = "<group>"; };
+		AA000031 /* BibleScrubber.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BibleScrubber.swift; sourceTree = "<group>"; };
+		AA000034 /* RedLetterService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RedLetterService.swift; sourceTree = "<group>"; };
+		AA000038 /* HighlightManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HighlightManager.swift; sourceTree = "<group>"; };
+		AA00003A /* SelectableTextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectableTextView.swift; sourceTree = "<group>"; };
+		AA000036 /* red_letter_verses.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = red_letter_verses.json; sourceTree = "<group>"; };
 		AA000040 /* Spark.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Spark.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA000041 /* SparkTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SparkTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA3A3F942F40A2C5004087F5 /* ReadingPaneView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadingPaneView.swift; sourceTree = "<group>"; };
@@ -191,11 +203,7 @@
 		AACC86CB2F409F1F00E50F90 /* Zechariah.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = Zechariah.json; sourceTree = "<group>"; };
 		AACC86CC2F409F1F00E50F90 /* Zephaniah.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = Zephaniah.json; sourceTree = "<group>"; };
 		AACC87102F40A09A00E50F90 /* ChapterPosition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChapterPosition.swift; sourceTree = "<group>"; };
-		AA00002B /* SpotlightIndexer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpotlightIndexer.swift; sourceTree = "<group>"; };
-		AA00002D /* SearchService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchService.swift; sourceTree = "<group>"; };
-		AA00002F /* SearchServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchServiceTests.swift; sourceTree = "<group>"; };
 		AACC87202F409F1F00E50F90 /* search_index.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = search_index.json; sourceTree = "<group>"; };
-		AA000031 /* BibleScrubber.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BibleScrubber.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
@@ -252,6 +260,7 @@
 			isa = PBXGroup;
 			children = (
 				AA00001D /* HistorySidebarView.swift */,
+				AA00003A /* SelectableTextView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -264,6 +273,8 @@
 				AA00001A /* HistoryManager.swift */,
 				AA00002B /* SpotlightIndexer.swift */,
 				AA00002D /* SearchService.swift */,
+				AA000034 /* RedLetterService.swift */,
+				AA000038 /* HighlightManager.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -338,6 +349,7 @@
 				AACC86CB2F409F1F00E50F90 /* Zechariah.json */,
 				AACC86CC2F409F1F00E50F90 /* Zephaniah.json */,
 				AACC87202F409F1F00E50F90 /* search_index.json */,
+				AA000036 /* red_letter_verses.json */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -420,6 +432,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				AA000028 /* Assets.xcassets in Resources */,
 				AACC86CE2F409FA300E50F90 /* 1Chronicles.json in Resources */,
 				AACC86CF2F409FA300E50F90 /* 1Corinthians.json in Resources */,
 				AACC86D02F409FA300E50F90 /* 1John.json in Resources */,
@@ -486,8 +499,8 @@
 				AACC870D2F409FA300E50F90 /* Titus.json in Resources */,
 				AACC870E2F409FA300E50F90 /* Zechariah.json in Resources */,
 				AACC870F2F409FA300E50F90 /* Zephaniah.json in Resources */,
-				AA000028 /* Assets.xcassets in Resources */,
 				AACC87212F409FA300E50F90 /* search_index.json in Resources */,
+				AA000035 /* red_letter_verses.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -510,6 +523,9 @@
 				AA00002A /* SpotlightIndexer.swift in Sources */,
 				AA00002C /* SearchService.swift in Sources */,
 				AA000032 /* BibleScrubber.swift in Sources */,
+				AA000033 /* RedLetterService.swift in Sources */,
+				AA000037 /* HighlightManager.swift in Sources */,
+				AA000039 /* SelectableTextView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -593,6 +609,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_ENTITLEMENTS = "";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
@@ -621,6 +638,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CODE_SIGN_ENTITLEMENTS = "";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;

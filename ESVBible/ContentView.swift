@@ -3,6 +3,7 @@ import SwiftUI
 struct ContentView: View {
     @State private var bibleStore = BibleStore()
     @State private var historyManager = HistoryManager()
+    @State private var highlightManager = HighlightManager()
     @State private var searchText = ""
     @State private var isSearchVisible = false
     @State private var currentPosition: ChapterPosition? = nil
@@ -31,6 +32,7 @@ struct ContentView: View {
                         highlightVerseStart: highlightStart,
                         highlightVerseEnd: highlightEnd,
                         bibleStore: bibleStore,
+                        highlightManager: highlightManager,
                         onPositionChanged: { visiblePosition = $0 },
                         onNavigateRequested: { pos in
                             navigateTo(book: pos.bookName, chapter: pos.chapterNumber, verseStart: nil, verseEnd: nil, addToHistory: false)
@@ -229,6 +231,11 @@ struct ContentView: View {
         }
         .onReceive(NotificationCenter.default.publisher(for: .toggleHistory)) { _ in
             showHistory.toggle()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .toggleBookmark)) { _ in
+            let position = visiblePosition ?? currentPosition
+            guard let position else { return }
+            highlightManager.toggleBookmark(book: position.bookName, chapter: position.chapterNumber)
         }
         .onReceive(NotificationCenter.default.publisher(for: .navigateToReference)) { notification in
             if let book = notification.userInfo?["book"] as? String,
