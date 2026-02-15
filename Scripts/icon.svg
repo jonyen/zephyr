@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#4A9FE5"/>
+      <stop offset="100%" stop-color="#2563EB"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1024" height="1024" fill="url(#bg)"/>
+
+  <!-- Three flowing wind curves -->
+  <g fill="none" stroke="white" stroke-linecap="round">
+    <!-- Top wind line -->
+    <path d="M 200 340 C 320 280, 480 280, 560 340 C 640 400, 720 360, 800 320"
+          stroke-width="48" opacity="0.85"/>
+
+    <!-- Middle wind line (largest/main) -->
+    <path d="M 140 512 C 280 432, 440 432, 560 512 C 680 592, 780 540, 880 480"
+          stroke-width="56" opacity="1"/>
+
+    <!-- Bottom wind line -->
+    <path d="M 240 684 C 360 624, 500 624, 600 684 C 700 744, 780 700, 840 660"
+          stroke-width="44" opacity="0.75"/>
+  </g>
+</svg>
