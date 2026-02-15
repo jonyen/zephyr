@@ -15,9 +15,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "AA000050"
-               BuildableName = "Spark.app"
-               BlueprintName = "Spark"
-               ReferencedContainer = "container:Spark.xcodeproj">
+               BuildableName = "Zephyr.app"
+               BlueprintName = "Zephyr"
+               ReferencedContainer = "container:Zephyr.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -34,9 +34,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "AA000051"
-               BuildableName = "SparkTests.xctest"
-               BlueprintName = "SparkTests"
-               ReferencedContainer = "container:Spark.xcodeproj">
+               BuildableName = "ZephyrTests.xctest"
+               BlueprintName = "ZephyrTests"
+               ReferencedContainer = "container:Zephyr.xcodeproj">
             </BuildableReference>
          </TestableReference>
       </Testables>
@@ -56,9 +56,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "AA000050"
-            BuildableName = "Spark.app"
-            BlueprintName = "Spark"
-            ReferencedContainer = "container:Spark.xcodeproj">
+            BuildableName = "Zephyr.app"
+            BlueprintName = "Zephyr"
+            ReferencedContainer = "container:Zephyr.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </LaunchAction>
@@ -73,9 +73,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "AA000050"
-            BuildableName = "Spark.app"
-            BlueprintName = "Spark"
-            ReferencedContainer = "container:Spark.xcodeproj">
+            BuildableName = "Zephyr.app"
+            BlueprintName = "Zephyr"
+            ReferencedContainer = "container:Zephyr.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>

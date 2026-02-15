@@ -32,7 +32,7 @@ struct SpotlightIndexer {
             let abbrevs = BibleStore.abbreviations(for: bookName)
 
             for chapter in book.chapters {
-                let chapterID = "spark-bible:\(bookName):\(chapter.number)"
+                let chapterID = "zephyr-bible:\(bookName):\(chapter.number)"
                 let chapterTitle = "\(bookName) \(chapter.number)"
 
                 let preview = chapter.verses
@@ -53,13 +53,13 @@ struct SpotlightIndexer {
 
                 items.append(CSSearchableItem(
                     uniqueIdentifier: chapterID,
-                    domainIdentifier: "com.spark.bible",
+                    domainIdentifier: "com.zephyr.bible",
                     attributeSet: chapterAttrs
                 ))
 
                 // Index each verse
                 for verse in chapter.verses {
-                    let verseID = "spark-bible:\(bookName):\(chapter.number):\(verse.number)"
+                    let verseID = "zephyr-bible:\(bookName):\(chapter.number):\(verse.number)"
                     let verseTitle = "\(bookName) \(chapter.number):\(verse.number)"
                     let verseRef = "\(chapter.number):\(verse.number)"
 
@@ -74,7 +74,7 @@ struct SpotlightIndexer {
 
                     items.append(CSSearchableItem(
                         uniqueIdentifier: verseID,
-                        domainIdentifier: "com.spark.bible",
+                        domainIdentifier: "com.zephyr.bible",
                         attributeSet: verseAttrs
                     ))
                 }
@@ -93,10 +93,10 @@ struct SpotlightIndexer {
     }
 
     /// Parse a Spotlight identifier back into components.
-    /// Format: "spark-bible:{Book}:{Chapter}" or "spark-bible:{Book}:{Chapter}:{Verse}"
+    /// Format: "zephyr-bible:{Book}:{Chapter}" or "zephyr-bible:{Book}:{Chapter}:{Verse}"
     static func parseIdentifier(_ identifier: String) -> (book: String, chapter: Int, verse: Int?)? {
         let parts = identifier.split(separator: ":", maxSplits: 3).map(String.init)
-        guard parts.count >= 3, parts[0] == "spark-bible" else { return nil }
+        guard parts.count >= 3, parts[0] == "zephyr-bible" else { return nil }
 
         let book = parts[1]
         guard let chapter = Int(parts[2]) else { return nil }

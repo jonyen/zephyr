@@ -11,7 +11,7 @@ class HistoryManager {
             self.storageURL = url
         } else {
             let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
-            let appDir = appSupport.appendingPathComponent("Spark", isDirectory: true)
+            let appDir = appSupport.appendingPathComponent("Zephyr", isDirectory: true)
             try? FileManager.default.createDirectory(at: appDir, withIntermediateDirectories: true)
             self.storageURL = appDir.appendingPathComponent("history.json")
         }
