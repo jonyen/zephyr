@@ -70,11 +70,24 @@ private struct LabelPanelContent: View {
     let onTapBook: (String) -> Void
     let labelScaleFn: (Int, CGFloat) -> CGFloat
 
+    private var firstLabelY: CGFloat {
+        guard let first = spacedFractions.first else { return 0 }
+        return buffer + trackInset + first * trackHeight
+    }
+
+    private var lastLabelY: CGFloat {
+        guard let last = spacedFractions.last else { return 0 }
+        return buffer + trackInset + last * trackHeight
+    }
+
     var body: some View {
+        let padding: CGFloat = 12
         ZStack(alignment: .topLeading) {
             RoundedRectangle(cornerRadius: 8)
                 .fill(.regularMaterial)
                 .shadow(color: .black.opacity(0.15), radius: 8, x: 2, y: 0)
+                .frame(height: lastLabelY - firstLabelY + padding * 2)
+                .offset(y: firstLabelY - padding)
 
             ForEach(Array(spacedFractions.enumerated()), id: \.offset) { index, fraction in
                 let range = bookRanges[index]
@@ -179,6 +192,15 @@ struct BibleScrubber: View {
                         diamond.addLine(to: CGPoint(x: trackX, y: y))
                         diamond.closeSubpath()
                         context.fill(diamond, with: .color(.accentColor))
+                    }
+
+                    // Note markers (right of track) — small filled circle
+                    for note in highlightManager.notes {
+                        let idx = CGFloat(BibleStore.globalChapterIndex(book: note.book, chapter: note.chapter))
+                        let fraction = idx / totalChapters
+                        let y = trackTop + fraction * trackHeight
+                        let noteRect = CGRect(x: trackX + 8, y: y - 2, width: 4, height: 4)
+                        context.fill(Path(ellipseIn: noteRect), with: .color(.orange.opacity(0.8)))
                     }
 
                     // Thumb
