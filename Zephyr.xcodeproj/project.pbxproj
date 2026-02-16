@@ -31,6 +31,8 @@
 		AA00003E /* NoteEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00003D /* NoteEditorView.swift */; };
 		AA000042 /* NotePopoverView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000043 /* NotePopoverView.swift */; };
 		AA000045 /* NotesSidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000044 /* NotesSidebarView.swift */; };
+		AA000046 /* UpdateService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000047 /* UpdateService.swift */; };
+		AA000048 /* UpdateServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000049 /* UpdateServiceTests.swift */; };
 		AA000035 /* red_letter_verses.json in Resources */ = {isa = PBXBuildFile; fileRef = AA000036 /* red_letter_verses.json */; };
 		AA3A3F952F40A2C5004087F5 /* ReadingPaneView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA3A3F942F40A2C5004087F5 /* ReadingPaneView.swift */; };
 		AACC86CE2F409FA300E50F90 /* 1Chronicles.json in Resources */ = {isa = PBXBuildFile; fileRef = AACC868B2F409F1F00E50F90 /* 1Chronicles.json */; };
@@ -138,6 +140,8 @@
 		AA00003D /* NoteEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteEditorView.swift; sourceTree = "<group>"; };
 		AA000043 /* NotePopoverView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotePopoverView.swift; sourceTree = "<group>"; };
 		AA000044 /* NotesSidebarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotesSidebarView.swift; sourceTree = "<group>"; };
+		AA000047 /* UpdateService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateService.swift; sourceTree = "<group>"; };
+		AA000049 /* UpdateServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateServiceTests.swift; sourceTree = "<group>"; };
 		AA000036 /* red_letter_verses.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = red_letter_verses.json; sourceTree = "<group>"; };
 		AA000040 /* Zephyr.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Zephyr.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA000041 /* ZephyrTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ZephyrTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -253,6 +257,7 @@
 				AA00001B /* HistoryManagerTests.swift */,
 				AA00002F /* SearchServiceTests.swift */,
 				AA00003C /* HighlightManagerTests.swift */,
+				AA000049 /* UpdateServiceTests.swift */,
 			);
 			path = ESVBibleTests;
 			sourceTree = "<group>";
@@ -287,6 +292,7 @@
 				AA00002D /* SearchService.swift */,
 				AA000034 /* RedLetterService.swift */,
 				AA000038 /* HighlightManager.swift */,
+				AA000047 /* UpdateService.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -541,6 +547,7 @@
 				AA00003E /* NoteEditorView.swift in Sources */,
 				AA000042 /* NotePopoverView.swift in Sources */,
 				AA000045 /* NotesSidebarView.swift in Sources */,
+				AA000046 /* UpdateService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -555,6 +562,7 @@
 				AA00000B /* HistoryManagerTests.swift in Sources */,
 				AA00002E /* SearchServiceTests.swift in Sources */,
 				AA00003B /* HighlightManagerTests.swift in Sources */,
+				AA000048 /* UpdateServiceTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
