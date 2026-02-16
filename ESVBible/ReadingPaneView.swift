@@ -6,8 +6,16 @@ private struct ChapterID: Hashable {
     let chapterNumber: Int
 }
 
+private struct VerseAnchorID: Hashable {
+    let bookName: String
+    let chapterNumber: Int
+    let verse: Int
+}
+
+
 struct ReadingPaneView: View {
     let initialPosition: ChapterPosition
+    let navigationID: Int
     let highlightVerseStart: Int?
     let highlightVerseEnd: Int?
     let bibleStore: BibleStore
@@ -23,57 +31,114 @@ struct ReadingPaneView: View {
     @State private var visiblePosition: ChapterPosition?
 
     var body: some View {
-        ScrollView {
-            LazyVStack(alignment: .leading, spacing: 0, pinnedViews: []) {
-                ForEach(loadedChapters, id: \.self) { position in
-                    if let book = bibleStore.findBook(position.bookName),
-                       let chapter = book.chapters.first(where: { $0.number == position.chapterNumber }) {
-                        ChapterView(
-                            chapter: chapter,
-                            bookName: book.name,
-                            highlightVerseStart: position == initialPosition ? highlightVerseStart : nil,
-                            highlightVerseEnd: position == initialPosition ? highlightVerseEnd : nil,
-                            highlightManager: highlightManager
-                        )
-                        .id(ChapterID(bookName: position.bookName, chapterNumber: position.chapterNumber))
-                        .onAppear {
-                            if position == loadedChapters.first {
-                                prependPreviousChapter()
-                            }
-                            if position == loadedChapters.last {
-                                appendNextChapter()
+        ScrollViewReader { proxy in
+            ScrollView {
+                LazyVStack(alignment: .leading, spacing: 0, pinnedViews: []) {
+                    ForEach(loadedChapters, id: \.self) { position in
+                        if let book = bibleStore.findBook(position.bookName),
+                           let chapter = book.chapters.first(where: { $0.number == position.chapterNumber }) {
+                            ChapterView(
+                                chapter: chapter,
+                                bookName: book.name,
+                                highlightVerseStart: position == initialPosition ? highlightVerseStart : nil,
+                                highlightVerseEnd: position == initialPosition ? highlightVerseEnd : nil,
+                                highlightManager: highlightManager,
+                                notes: highlightManager.notes(forBook: book.name, chapter: chapter.number)
+                            )
+                            .id(ChapterID(bookName: position.bookName, chapterNumber: position.chapterNumber))
+                            .onAppear {
+                                if position == loadedChapters.first {
+                                    prependPreviousChapter()
+                                }
+                                if position == loadedChapters.last {
+                                    appendNextChapter()
+                                }
                             }
                         }
                     }
                 }
+                .scrollTargetLayout()
             }
-            .scrollTargetLayout()
+            .scrollIndicators(.hidden)
+            .scrollPosition(id: $scrolledID, anchor: .top)
+            .overlay(alignment: .trailing) {
+                BibleScrubber(
+                    currentPosition: visiblePosition ?? initialPosition,
+                    onNavigate: { position in
+                        onNavigateRequested?(position)
+                    },
+                    highlightManager: highlightManager
+                )
+            }
+            .onAppear {
+                loadedChapters = [initialPosition]
+                scrollToChapter(initialPosition, proxy: proxy)
+            }
+            .onChange(of: navigationID) { _, _ in
+                loadedChapters = [initialPosition]
+                scrollToChapter(initialPosition, proxy: proxy)
+            }
+            .onChange(of: scrolledID) { _, newID in
+                guard let newID else { return }
+                let position = ChapterPosition(bookName: newID.bookName, chapterNumber: newID.chapterNumber)
+                visiblePosition = position
+                onPositionChanged?(position)
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .scrollPageUp)) { _ in
+                pageScroll(up: true)
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .scrollPageDown)) { _ in
+                pageScroll(up: false)
+            }
         }
-        .scrollIndicators(.hidden)
-        .scrollPosition(id: $scrolledID, anchor: .top)
-        .overlay(alignment: .trailing) {
-            BibleScrubber(
-                currentPosition: visiblePosition ?? initialPosition,
-                onNavigate: { position in
-                    onNavigateRequested?(position)
-                },
-                highlightManager: highlightManager
-            )
+    }
+
+    private func pageScroll(up: Bool) {
+        guard let window = NSApp.keyWindow,
+              let scrollView = findScrollView(in: window.contentView) else { return }
+        let clipView = scrollView.contentView
+        let visible = clipView.bounds
+        let pageAmount = visible.height - 40 // overlap a few lines for context
+        let newY = up
+            ? max(visible.origin.y - pageAmount, 0)
+            : min(visible.origin.y + pageAmount, scrollView.documentView!.frame.height - visible.height)
+        NSAnimationContext.runAnimationGroup { ctx in
+            ctx.duration = 0.2
+            ctx.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+            clipView.animator().setBoundsOrigin(NSPoint(x: visible.origin.x, y: newY))
         }
-        .onAppear {
-            loadedChapters = [initialPosition]
-            scrolledID = ChapterID(bookName: initialPosition.bookName, chapterNumber: initialPosition.chapterNumber)
+    }
+
+    private func findScrollView(in view: NSView?) -> NSScrollView? {
+        guard let view else { return nil }
+        // Look for the SwiftUI ScrollView's underlying NSScrollView (skip the inspector's)
+        if let sv = view as? NSScrollView, sv.documentView is NSView, !(sv.documentView is NSTextView) {
+            // Verify it's our main scroll by checking it has significant height
+            if sv.frame.height > 200 {
+                return sv
+            }
         }
-        .onChange(of: initialPosition) { _, newPosition in
-            // A new navigation was requested — reset the list.
-            loadedChapters = [newPosition]
-            scrolledID = ChapterID(bookName: newPosition.bookName, chapterNumber: newPosition.chapterNumber)
+        for subview in view.subviews {
+            if let found = findScrollView(in: subview) {
+                return found
+            }
         }
-        .onChange(of: scrolledID) { _, newID in
-            guard let newID else { return }
-            let position = ChapterPosition(bookName: newID.bookName, chapterNumber: newID.chapterNumber)
-            visiblePosition = position
-            onPositionChanged?(position)
+        return nil
+    }
+
+    private func scrollToChapter(_ position: ChapterPosition, proxy: ScrollViewProxy) {
+        let chapterID = ChapterID(bookName: position.bookName, chapterNumber: position.chapterNumber)
+        scrolledID = chapterID
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+            proxy.scrollTo(chapterID, anchor: .top)
+            if let verse = highlightVerseStart {
+                let verseID = VerseAnchorID(bookName: position.bookName, chapterNumber: position.chapterNumber, verse: verse)
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                    withAnimation(.easeOut(duration: 0.25)) {
+                        proxy.scrollTo(verseID, anchor: UnitPoint(x: 0, y: 0.15))
+                    }
+                }
+            }
         }
     }
 
@@ -132,8 +197,13 @@ private struct ChapterView: View {
     let highlightVerseStart: Int?
     let highlightVerseEnd: Int?
     let highlightManager: HighlightManager
-
+    let notes: [Note]
     @State private var textHeight: CGFloat = 100
+    @State private var verseYOffset: CGFloat?
+    @State private var showNotePopover = false
+    @State private var notePopoverVerseStart: Int = 1
+    @State private var notePopoverVerseEnd: Int = 1
+    @State private var editingNote: Note? = nil
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -168,10 +238,65 @@ private struct ChapterView: View {
                         verse: verse, startChar: startChar, endChar: endChar
                     )
                 },
-                contentHeight: $textHeight
+                contentHeight: $textHeight,
+                onHighlightVerseYOffset: highlightVerseStart != nil ? { offset in
+                    verseYOffset = offset
+                } : nil,
+                notes: notes,
+                onAddNote: { verseStart, verseEnd in
+                    notePopoverVerseStart = verseStart
+                    notePopoverVerseEnd = verseEnd
+                    editingNote = nil
+                    showNotePopover = true
+                },
+                onEditNote: { note in
+                    notePopoverVerseStart = note.verseStart
+                    notePopoverVerseEnd = note.verseEnd
+                    editingNote = note
+                    showNotePopover = true
+                }
             )
             .frame(height: textHeight)
+            .popover(isPresented: $showNotePopover) {
+                NotePopoverView(
+                    book: bookName,
+                    chapter: chapter.number,
+                    verseStart: notePopoverVerseStart,
+                    verseEnd: notePopoverVerseEnd,
+                    existingNote: editingNote,
+                    onSave: { rtfData in
+                        if let note = editingNote {
+                            highlightManager.updateNote(id: note.id, rtfData: rtfData)
+                        } else {
+                            highlightManager.addNote(
+                                book: bookName,
+                                chapter: chapter.number,
+                                verseStart: notePopoverVerseStart,
+                                verseEnd: notePopoverVerseEnd,
+                                rtfData: rtfData
+                            )
+                        }
+                        showNotePopover = false
+                        editingNote = nil
+                    },
+                    onDelete: editingNote != nil ? {
+                        if let note = editingNote {
+                            highlightManager.removeNote(id: note.id)
+                        }
+                        showNotePopover = false
+                        editingNote = nil
+                    } : nil
+                )
+            }
             .padding(.horizontal, 8)
+            .overlay(alignment: .topLeading) {
+                if let verse = highlightVerseStart, let yOffset = verseYOffset {
+                    Color.clear
+                        .frame(width: 1, height: 1)
+                        .id(VerseAnchorID(bookName: bookName, chapterNumber: chapter.number, verse: verse))
+                        .offset(y: yOffset)
+                }
+            }
 
             Divider()
                 .padding(.vertical, 24)
