@@ -4,8 +4,10 @@ import Foundation
 class HighlightManager {
     private(set) var highlights: [Highlight] = []
     private(set) var bookmarks: [Bookmark] = []
+    private(set) var notes: [Note] = []
     private let highlightsURL: URL
     private let bookmarksURL: URL
+    private let notesURL: URL
 
     init(storageDirectory: URL? = nil) {
         let dir: URL
@@ -18,8 +20,10 @@ class HighlightManager {
         }
         self.highlightsURL = dir.appendingPathComponent("highlights.json")
         self.bookmarksURL = dir.appendingPathComponent("bookmarks.json")
+        self.notesURL = dir.appendingPathComponent("notes.json")
         loadHighlights()
         loadBookmarks()
+        loadNotes()
     }
 
     // MARK: - Highlights
@@ -77,6 +81,47 @@ class HighlightManager {
         bookmarks.contains { $0.book == book && $0.chapter == chapter }
     }
 
+    // MARK: - Notes
+
+    func addNote(book: String, chapter: Int, verseStart: Int, verseEnd: Int, rtfData: Data) {
+        let note = Note(
+            id: UUID(),
+            book: book,
+            chapter: chapter,
+            verseStart: verseStart,
+            verseEnd: verseEnd,
+            rtfData: rtfData,
+            createdAt: Date(),
+            updatedAt: Date()
+        )
+        notes.append(note)
+        saveNotes()
+    }
+
+    func updateNote(id: UUID, rtfData: Data) {
+        guard let index = notes.firstIndex(where: { $0.id == id }) else { return }
+        notes[index] = Note(
+            id: notes[index].id,
+            book: notes[index].book,
+            chapter: notes[index].chapter,
+            verseStart: notes[index].verseStart,
+            verseEnd: notes[index].verseEnd,
+            rtfData: rtfData,
+            createdAt: notes[index].createdAt,
+            updatedAt: Date()
+        )
+        saveNotes()
+    }
+
+    func removeNote(id: UUID) {
+        notes.removeAll { $0.id == id }
+        saveNotes()
+    }
+
+    func notes(forBook book: String, chapter: Int) -> [Note] {
+        notes.filter { $0.book == book && $0.chapter == chapter }
+    }
+
     // MARK: - Persistence
 
     private func saveHighlights() {
@@ -105,5 +150,19 @@ class HighlightManager {
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
         bookmarks = (try? decoder.decode([Bookmark].self, from: data)) ?? []
+    }
+
+    private func saveNotes() {
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        guard let data = try? encoder.encode(notes) else { return }
+        try? data.write(to: notesURL, options: .atomic)
+    }
+
+    private func loadNotes() {
+        guard let data = try? Data(contentsOf: notesURL) else { return }
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        notes = (try? decoder.decode([Note].self, from: data)) ?? []
     }
 }

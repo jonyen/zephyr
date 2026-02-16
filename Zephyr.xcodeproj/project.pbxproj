@@ -23,6 +23,7 @@
 		AA00002A /* SpotlightIndexer.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00002B /* SpotlightIndexer.swift */; };
 		AA00002C /* SearchService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00002D /* SearchService.swift */; };
 		AA00002E /* SearchServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00002F /* SearchServiceTests.swift */; };
+		AA00003B /* HighlightManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00003C /* HighlightManagerTests.swift */; };
 		AA000032 /* BibleScrubber.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000031 /* BibleScrubber.swift */; };
 		AA000033 /* RedLetterService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000034 /* RedLetterService.swift */; };
 		AA000037 /* HighlightManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000038 /* HighlightManager.swift */; };
@@ -126,6 +127,7 @@
 		AA00002B /* SpotlightIndexer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpotlightIndexer.swift; sourceTree = "<group>"; };
 		AA00002D /* SearchService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchService.swift; sourceTree = "<group>"; };
 		AA00002F /* SearchServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchServiceTests.swift; sourceTree = "<group>"; };
+		AA00003C /* HighlightManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HighlightManagerTests.swift; sourceTree = "<group>"; };
 		AA000031 /* BibleScrubber.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BibleScrubber.swift; sourceTree = "<group>"; };
 		AA000034 /* RedLetterService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RedLetterService.swift; sourceTree = "<group>"; };
 		AA000038 /* HighlightManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HighlightManager.swift; sourceTree = "<group>"; };
@@ -244,6 +246,7 @@
 				AA000019 /* ReferenceParserTests.swift */,
 				AA00001B /* HistoryManagerTests.swift */,
 				AA00002F /* SearchServiceTests.swift */,
+				AA00003C /* HighlightManagerTests.swift */,
 			);
 			path = ESVBibleTests;
 			sourceTree = "<group>";
@@ -539,6 +542,7 @@
 				AA000009 /* ReferenceParserTests.swift in Sources */,
 				AA00000B /* HistoryManagerTests.swift in Sources */,
 				AA00002E /* SearchServiceTests.swift in Sources */,
+				AA00003B /* HighlightManagerTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
