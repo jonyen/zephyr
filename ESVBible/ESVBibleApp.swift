@@ -87,6 +87,11 @@ struct ESVBibleApp: App {
                 }
                 .keyboardShortcut("y", modifiers: .command)
 
+                Button("Toggle Notes") {
+                    NotificationCenter.default.post(name: .toggleNotes, object: nil)
+                }
+                .keyboardShortcut("n", modifiers: .command)
+
                 Divider()
 
                 Button("Toggle Bookmark") {
@@ -138,4 +143,7 @@ extension Notification.Name {
     static let navigatePreviousHighlight = Notification.Name("navigatePreviousHighlight")
     static let navigateNextHighlight = Notification.Name("navigateNextHighlight")
     static let showKeyboardShortcuts = Notification.Name("showKeyboardShortcuts")
+    static let toggleNotes = Notification.Name("toggleNotes")
+    static let scrollPageUp = Notification.Name("scrollPageUp")
+    static let scrollPageDown = Notification.Name("scrollPageDown")
 }

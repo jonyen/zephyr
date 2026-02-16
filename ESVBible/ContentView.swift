@@ -11,6 +11,7 @@ struct ContentView: View {
     @State private var highlightStart: Int? = nil
     @State private var highlightEnd: Int? = nil
     @State private var showHistory = false
+    @State private var showNotes = false
     @State private var errorMessage: String? = nil
     @State private var isTOCVisible = false
     @State private var hoveredBook: String? = nil
@@ -23,6 +24,7 @@ struct ContentView: View {
     @State private var searchResults: [SearchService.VerseResult] = []
     @State private var isKeywordSearch = false
     @State private var searchTask: Task<Void, Never>? = nil
+    @State private var navigationCounter: Int = 0
 
     var body: some View {
         mainContent
@@ -57,6 +59,7 @@ struct ContentView: View {
                 if let position = currentPosition {
                     ReadingPaneView(
                         initialPosition: position,
+                        navigationID: navigationCounter,
                         highlightVerseStart: highlightStart,
                         highlightVerseEnd: highlightEnd,
                         bibleStore: bibleStore,
@@ -221,17 +224,39 @@ struct ContentView: View {
                     .transition(.opacity)
             }
         }
-        .inspector(isPresented: $showHistory) {
-            HistorySidebarView(
-                entries: historyManager.entries,
-                onSelect: { entry in
-                    navigateToHistory(entry)
-                },
-                onClear: {
-                    historyManager.clearHistory()
+        .inspector(isPresented: Binding(
+            get: { showHistory || showNotes },
+            set: { newValue in
+                if !newValue {
+                    showHistory = false
+                    showNotes = false
                 }
-            )
-            .frame(minWidth: 150, maxWidth: 300)
+            }
+        )) {
+            if showNotes {
+                NotesSidebarView(
+                    notes: highlightManager.notes,
+                    onSelect: { note in
+                        showNotes = false
+                        navigateTo(book: note.book, chapter: note.chapter, verseStart: note.verseStart, verseEnd: note.verseEnd, addToHistory: true)
+                    },
+                    onDelete: { id in
+                        highlightManager.removeNote(id: id)
+                    }
+                )
+                .frame(minWidth: 150, maxWidth: 300)
+            } else {
+                HistorySidebarView(
+                    entries: historyManager.entries,
+                    onSelect: { entry in
+                        navigateToHistory(entry)
+                    },
+                    onClear: {
+                        historyManager.clearHistory()
+                    }
+                )
+                .frame(minWidth: 150, maxWidth: 300)
+            }
         }
         .navigationTitle(currentTitle)
         .frame(minWidth: 400, minHeight: 500)
@@ -244,6 +269,15 @@ struct ContentView: View {
                 }
                 if event.keyCode == 53 /* Escape */ && showKeyboardShortcuts {
                     showKeyboardShortcuts = false
+                    return nil
+                }
+                // Page Up (fn+up) / Page Down (fn+down)
+                if event.specialKey == .pageUp {
+                    NotificationCenter.default.post(name: .scrollPageUp, object: nil)
+                    return nil
+                }
+                if event.specialKey == .pageDown {
+                    NotificationCenter.default.post(name: .scrollPageDown, object: nil)
                     return nil
                 }
                 return event
@@ -285,7 +319,12 @@ struct ContentView: View {
             toggleTOC()
         }
         .onReceive(NotificationCenter.default.publisher(for: .toggleHistory)) { _ in
+            if showNotes { showNotes = false }
             showHistory.toggle()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .toggleNotes)) { _ in
+            if showHistory { showHistory = false }
+            showNotes.toggle()
         }
         .onReceive(NotificationCenter.default.publisher(for: .toggleBookmark)) { _ in
             let position = visiblePosition ?? currentPosition
@@ -485,6 +524,7 @@ struct ContentView: View {
             ("Search for Passage", "\u{2318}F"),
             ("Table of Contents", "\u{2318}T"),
             ("Toggle History", "\u{2318}Y"),
+            ("Toggle Notes", "\u{2318}N"),
             ("Previous Chapter", "\u{2318}["),
             ("Next Chapter", "\u{2318}]"),
             ("Toggle Bookmark", "\u{2318}B"),
@@ -534,9 +574,12 @@ struct ContentView: View {
             errorMessage = "Chapter \(chapter) not found in \(foundBook.name)"
             return
         }
-        currentPosition = ChapterPosition(bookName: foundBook.name, chapterNumber: chapter)
+        let newPosition = ChapterPosition(bookName: foundBook.name, chapterNumber: chapter)
         highlightStart = verseStart
         highlightEnd = verseEnd
+        currentPosition = newPosition
+        visiblePosition = newPosition
+        navigationCounter += 1
         errorMessage = nil
         lastBook = foundBook.name
         lastChapter = chapter
@@ -587,25 +630,23 @@ struct ContentView: View {
 
         let currentIndex = BibleStore.globalChapterIndex(book: position.bookName, chapter: position.chapterNumber)
 
-        // Deduplicate to unique chapters and sort by Bible position
-        var seen = Set<Int>()
+        // Sort all highlights by Bible position (chapter then verse)
         let sorted = highlights
-            .compactMap { h -> (highlight: Highlight, index: Int)? in
-                let idx = BibleStore.globalChapterIndex(book: h.book, chapter: h.chapter)
-                guard seen.insert(idx).inserted else { return nil }
-                return (highlight: h, index: idx)
+            .map { h in (highlight: h, index: BibleStore.globalChapterIndex(book: h.book, chapter: h.chapter)) }
+            .sorted { a, b in
+                if a.index != b.index { return a.index < b.index }
+                return a.highlight.verse < b.highlight.verse
             }
-            .sorted { $0.index < $1.index }
 
         let target: (highlight: Highlight, index: Int)?
         if direction > 0 {
-            target = sorted.first(where: { $0.index > currentIndex }) ?? sorted.first
+            target = sorted.first(where: { $0.index > currentIndex || ($0.index == currentIndex && $0.highlight.verse > (highlightStart ?? 0)) }) ?? sorted.first
         } else {
-            target = sorted.last(where: { $0.index < currentIndex }) ?? sorted.last
+            target = sorted.last(where: { $0.index < currentIndex || ($0.index == currentIndex && $0.highlight.verse < (highlightStart ?? Int.max)) }) ?? sorted.last
         }
 
         if let target {
-            navigateTo(book: target.highlight.book, chapter: target.highlight.chapter, verseStart: nil, verseEnd: nil, addToHistory: true)
+            navigateTo(book: target.highlight.book, chapter: target.highlight.chapter, verseStart: target.highlight.verse, verseEnd: target.highlight.verse, addToHistory: true)
         }
     }
 
@@ -617,10 +658,7 @@ struct ContentView: View {
         let newChapterNum = position.chapterNumber + delta
 
         if book.chapters.contains(where: { $0.number == newChapterNum }) {
-            // Still within the same book.
-            currentPosition = ChapterPosition(bookName: position.bookName, chapterNumber: newChapterNum)
-            highlightStart = nil
-            highlightEnd = nil
+            navigateTo(book: position.bookName, chapter: newChapterNum, verseStart: nil, verseEnd: nil, addToHistory: false)
         } else {
             // Cross a book boundary.
             let bookNames = BibleStore.bookNames
@@ -630,15 +668,12 @@ struct ContentView: View {
             guard bookNames.indices.contains(nextBookIndex),
                   let nextBook = bibleStore.findBook(bookNames[nextBookIndex]) else { return }
 
-            // When going forward, land on chapter 1; when going back, land on the last chapter.
             let targetChapter = delta > 0
                 ? nextBook.chapters.first
                 : nextBook.chapters.last
 
             guard let targetChapter else { return }
-            currentPosition = ChapterPosition(bookName: nextBook.name, chapterNumber: targetChapter.number)
-            highlightStart = nil
-            highlightEnd = nil
+            navigateTo(book: nextBook.name, chapter: targetChapter.number, verseStart: nil, verseEnd: nil, addToHistory: false)
         }
     }
 }
