@@ -99,3 +99,14 @@ struct Bookmark: Codable, Identifiable {
     let chapter: Int
     let createdAt: Date
 }
+
+struct Note: Codable, Identifiable {
+    let id: UUID
+    let book: String
+    let chapter: Int
+    let verseStart: Int
+    let verseEnd: Int
+    let rtfData: Data
+    let createdAt: Date
+    var updatedAt: Date
+}

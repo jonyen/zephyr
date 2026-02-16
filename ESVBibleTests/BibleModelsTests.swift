@@ -29,6 +29,40 @@ final class BibleModelsTests: XCTestCase {
         XCTAssertEqual(book.chapters.count, 1)
     }
 
+    func testNoteEncoding() throws {
+        let rtfString = "Test note content"
+        let attrStr = NSAttributedString(string: rtfString)
+        let rtfData = try! attrStr.data(
+            from: NSRange(location: 0, length: attrStr.length),
+            documentAttributes: [.documentType: NSAttributedString.DocumentType.rtf]
+        )
+
+        let note = Note(
+            id: UUID(),
+            book: "John",
+            chapter: 3,
+            verseStart: 16,
+            verseEnd: 18,
+            rtfData: rtfData,
+            createdAt: Date(),
+            updatedAt: Date()
+        )
+
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        let data = try encoder.encode(note)
+
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        let decoded = try decoder.decode(Note.self, from: data)
+
+        XCTAssertEqual(decoded.book, "John")
+        XCTAssertEqual(decoded.chapter, 3)
+        XCTAssertEqual(decoded.verseStart, 16)
+        XCTAssertEqual(decoded.verseEnd, 18)
+        XCTAssertEqual(decoded.rtfData, rtfData)
+    }
+
     func testBibleReferenceDisplayString() {
         let ref1 = BibleReference(book: "John", chapter: 3, verseStart: 16, verseEnd: nil)
         XCTAssertEqual(ref1.displayString, "John 3:16")
