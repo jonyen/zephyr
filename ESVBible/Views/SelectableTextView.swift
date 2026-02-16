@@ -10,6 +10,10 @@ struct SelectableTextView: NSViewRepresentable {
     let onHighlight: (Int, Int, Int, HighlightColor) -> Void  // verse, startChar, endChar, color
     let onRemoveHighlights: (Int, Int, Int) -> Void  // verse, startChar, endChar
     @Binding var contentHeight: CGFloat
+    var onHighlightVerseYOffset: ((CGFloat) -> Void)?
+    let notes: [Note]
+    let onAddNote: (Int, Int) -> Void  // verseStart, verseEnd
+    let onEditNote: (Note) -> Void
 
     func makeNSView(context: Context) -> NSScrollView {
         let textView = HighlightableTextView()
@@ -27,6 +31,9 @@ struct SelectableTextView: NSViewRepresentable {
         context.coordinator.textView = textView
         context.coordinator.onHighlight = onHighlight
         context.coordinator.onRemoveHighlights = onRemoveHighlights
+        context.coordinator.onAddNote = onAddNote
+        context.coordinator.onEditNote = onEditNote
+        context.coordinator.notes = notes
 
         let scrollView = NSScrollView()
         scrollView.documentView = textView
@@ -42,18 +49,31 @@ struct SelectableTextView: NSViewRepresentable {
         guard let textView = scrollView.documentView as? HighlightableTextView else { return }
         context.coordinator.onHighlight = onHighlight
         context.coordinator.onRemoveHighlights = onRemoveHighlights
+        context.coordinator.onAddNote = onAddNote
+        context.coordinator.onEditNote = onEditNote
+        context.coordinator.notes = notes
         context.coordinator.verseBoundaries = []
 
         let attrStr = buildAttributedString(coordinator: context.coordinator)
         textView.textStorage?.setAttributedString(attrStr)
 
         // Calculate and report content height
+        let highlightVerse = searchHighlightStart
+        let reportOffset = onHighlightVerseYOffset
+        let boundaries = context.coordinator.verseBoundaries
         DispatchQueue.main.async {
             if let layoutManager = textView.layoutManager, let container = textView.textContainer {
                 layoutManager.ensureLayout(for: container)
                 let usedRect = layoutManager.usedRect(for: container)
                 if abs(contentHeight - usedRect.height) > 1 {
                     contentHeight = usedRect.height + 8
+                }
+
+                if let verse = highlightVerse,
+                   let boundary = boundaries.first(where: { $0.verse == verse }) {
+                    let glyphRange = layoutManager.glyphRange(forCharacterRange: NSRange(location: boundary.start, length: boundary.end - boundary.start), actualCharacterRange: nil)
+                    let rect = layoutManager.boundingRect(forGlyphRange: glyphRange, in: container)
+                    reportOffset?(rect.origin.y)
                 }
             }
         }
@@ -82,6 +102,20 @@ struct SelectableTextView: NSViewRepresentable {
                 .paragraphStyle: paragraphStyle
             ]
             result.append(NSAttributedString(string: "\(verse.number) ", attributes: numAttrs))
+
+            // Note indicator icon
+            let verseNotes = coordinator.notes.filter { verse.number >= $0.verseStart && verse.number <= $0.verseEnd }
+            if !verseNotes.isEmpty {
+                let attachment = NSTextAttachment()
+                if let image = NSImage(systemSymbolName: "text.bubble.fill", accessibilityDescription: "Note") {
+                    let config = NSImage.SymbolConfiguration(pointSize: 10, weight: .regular)
+                    attachment.image = image.withSymbolConfiguration(config)
+                }
+                let attachStr = NSMutableAttributedString(attachment: attachment)
+                attachStr.addAttribute(.foregroundColor, value: NSColor.controlAccentColor, range: NSRange(location: 0, length: attachStr.length))
+                attachStr.append(NSAttributedString(string: " "))
+                result.append(attachStr)
+            }
 
             // Verse text
             let verseStart = result.length
@@ -168,6 +202,9 @@ struct SelectableTextView: NSViewRepresentable {
         weak var textView: HighlightableTextView?
         var onHighlight: ((Int, Int, Int, HighlightColor) -> Void)?
         var onRemoveHighlights: ((Int, Int, Int) -> Void)?
+        var onAddNote: ((Int, Int) -> Void)?
+        var onEditNote: ((Note) -> Void)?
+        var notes: [Note] = []
         var verseBoundaries: [(verse: Int, start: Int, end: Int)] = []
 
         func mapToVerse(_ charIndex: Int) -> (verse: Int, offset: Int)? {
@@ -209,6 +246,12 @@ class HighlightableTextView: NSTextView {
         let copyItem = NSMenuItem(title: "Copy", action: #selector(copy(_:)), keyEquivalent: "c")
         menu.addItem(copyItem)
 
+        menu.addItem(NSMenuItem.separator())
+
+        let noteItem = NSMenuItem(title: "Add Note", action: #selector(addNote(_:)), keyEquivalent: "")
+        noteItem.target = self
+        menu.addItem(noteItem)
+
         return menu
     }
 
@@ -228,6 +271,26 @@ class HighlightableTextView: NSTextView {
                 coordinator.onHighlight?(boundary.verse, charStart, charEnd, color)
             }
         }
+    }
+
+    @objc private func addNote(_ sender: NSMenuItem) {
+        guard let coordinator = (delegate as? SelectableTextView.Coordinator) else { return }
+        let range = selectedRange()
+        guard range.length > 0 else { return }
+
+        var verseStart = Int.max
+        var verseEnd = Int.min
+        for boundary in coordinator.verseBoundaries {
+            let overlapStart = max(range.location, boundary.start)
+            let overlapEnd = min(range.location + range.length, boundary.end)
+            if overlapStart < overlapEnd {
+                verseStart = min(verseStart, boundary.verse)
+                verseEnd = max(verseEnd, boundary.verse)
+            }
+        }
+
+        guard verseStart <= verseEnd else { return }
+        coordinator.onAddNote?(verseStart, verseEnd)
     }
 
     @objc private func removeHighlight(_ sender: NSMenuItem) {
