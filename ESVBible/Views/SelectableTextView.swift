@@ -42,6 +42,16 @@ struct SelectableTextView: NSViewRepresentable {
         scrollView.drawsBackground = false
         scrollView.autohidesScrollers = true
 
+        // Observe frame changes so we can recalculate height after SwiftUI sets the frame
+        scrollView.postsFrameChangedNotifications = true
+        context.coordinator.scrollView = scrollView
+        NotificationCenter.default.addObserver(
+            context.coordinator,
+            selector: #selector(Coordinator.scrollViewFrameDidChange),
+            name: NSView.frameDidChangeNotification,
+            object: scrollView
+        )
+
         return scrollView
     }
 
@@ -57,24 +67,28 @@ struct SelectableTextView: NSViewRepresentable {
         let attrStr = buildAttributedString(coordinator: context.coordinator)
         textView.textStorage?.setAttributedString(attrStr)
 
-        // Calculate and report content height
+        // Store height callback for frame-change-driven recalculation
+        let heightBinding = $contentHeight
+        context.coordinator.contentHeightCallback = { newHeight in
+            if abs(heightBinding.wrappedValue - newHeight) > 1 {
+                heightBinding.wrappedValue = newHeight
+            }
+        }
+
+        // Immediate async fallback for height + verse offset calculation
         let highlightVerse = searchHighlightStart
         let reportOffset = onHighlightVerseYOffset
         let boundaries = context.coordinator.verseBoundaries
         DispatchQueue.main.async {
-            if let layoutManager = textView.layoutManager, let container = textView.textContainer {
-                layoutManager.ensureLayout(for: container)
-                let usedRect = layoutManager.usedRect(for: container)
-                if abs(contentHeight - usedRect.height) > 1 {
-                    contentHeight = usedRect.height + 8
-                }
+            context.coordinator.recalculateHeight()
 
-                if let verse = highlightVerse,
-                   let boundary = boundaries.first(where: { $0.verse == verse }) {
-                    let glyphRange = layoutManager.glyphRange(forCharacterRange: NSRange(location: boundary.start, length: boundary.end - boundary.start), actualCharacterRange: nil)
-                    let rect = layoutManager.boundingRect(forGlyphRange: glyphRange, in: container)
-                    reportOffset?(rect.origin.y)
-                }
+            if let verse = highlightVerse,
+               let layoutManager = textView.layoutManager,
+               let container = textView.textContainer,
+               let boundary = boundaries.first(where: { $0.verse == verse }) {
+                let glyphRange = layoutManager.glyphRange(forCharacterRange: NSRange(location: boundary.start, length: boundary.end - boundary.start), actualCharacterRange: nil)
+                let rect = layoutManager.boundingRect(forGlyphRange: glyphRange, in: container)
+                reportOffset?(rect.origin.y)
             }
         }
     }
@@ -200,12 +214,32 @@ struct SelectableTextView: NSViewRepresentable {
 
     class Coordinator: NSObject, NSTextViewDelegate {
         weak var textView: HighlightableTextView?
+        weak var scrollView: NSScrollView?
         var onHighlight: ((Int, Int, Int, HighlightColor) -> Void)?
         var onRemoveHighlights: ((Int, Int, Int) -> Void)?
         var onAddNote: ((Int, Int) -> Void)?
         var onEditNote: ((Note) -> Void)?
         var notes: [Note] = []
         var verseBoundaries: [(verse: Int, start: Int, end: Int)] = []
+        var contentHeightCallback: ((CGFloat) -> Void)?
+
+        @objc func scrollViewFrameDidChange(_ notification: Notification) {
+            recalculateHeight()
+        }
+
+        func recalculateHeight() {
+            guard let textView = textView,
+                  let layoutManager = textView.layoutManager,
+                  let container = textView.textContainer,
+                  let scrollView = scrollView else { return }
+            let width = scrollView.contentView.bounds.width
+            guard width > 0 else { return }
+            // Explicitly set container width to match the actual available width
+            container.containerSize = NSSize(width: width, height: .greatestFiniteMagnitude)
+            layoutManager.ensureLayout(for: container)
+            let usedRect = layoutManager.usedRect(for: container)
+            contentHeightCallback?(usedRect.height + 8)
+        }
 
         func mapToVerse(_ charIndex: Int) -> (verse: Int, offset: Int)? {
             for boundary in verseBoundaries {
@@ -214,6 +248,10 @@ struct SelectableTextView: NSViewRepresentable {
                 }
             }
             return nil
+        }
+
+        deinit {
+            NotificationCenter.default.removeObserver(self)
         }
     }
 }

@@ -64,11 +64,10 @@ private struct LabelPanelContent: View {
     let trackInset: CGFloat
     let trackHeight: CGFloat
     let buffer: CGFloat
-    let currentFraction: CGFloat
+    let currentBookIndex: Int?
     let hoveredBookIndex: Int?
     let onHoverBook: (Int?) -> Void
     let onTapBook: (String) -> Void
-    let labelScaleFn: (Int, CGFloat) -> CGFloat
 
     private var firstLabelY: CGFloat {
         guard let first = spacedFractions.first else { return 0 }
@@ -91,13 +90,12 @@ private struct LabelPanelContent: View {
 
             ForEach(Array(spacedFractions.enumerated()), id: \.offset) { index, fraction in
                 let range = bookRanges[index]
-                // Offset by buffer so labels sit in the center portion of the taller panel
                 let y = buffer + trackInset + fraction * trackHeight
-                let scale = labelScaleFn(index, currentFraction)
+                let isCurrent = index == currentBookIndex || index == hoveredBookIndex
 
                 Text(range.name)
-                    .font(.system(size: 13 * scale, weight: scale > 1.3 ? .medium : .regular))
-                    .foregroundStyle(scale > 1.3 ? .primary : .secondary)
+                    .font(.system(size: 13))
+                    .foregroundStyle(isCurrent ? .primary : .secondary)
                     .lineLimit(1)
                     .fixedSize()
                 .position(x: 90, y: y)
@@ -327,14 +325,13 @@ struct BibleScrubber: View {
             trackInset: trackInset,
             trackHeight: trackHeight,
             buffer: buffer,
-            currentFraction: fraction,
+            currentBookIndex: focusedIdx,
             hoveredBookIndex: hovered,
             onHoverBook: { idx in hoveredBookIndex = idx },
             onTapBook: { name in
                 let pos = ChapterPosition(bookName: name, chapterNumber: 1)
                 onNavigate(pos)
-            },
-            labelScaleFn: labelScale
+            }
         )
 
         panelState.show(
@@ -346,16 +343,6 @@ struct BibleScrubber: View {
 
     private func clampedFraction(y: CGFloat, trackTop: CGFloat, trackHeight: CGFloat) -> CGFloat {
         min(1, max(0, (y - trackTop) / trackHeight))
-    }
-
-    private func labelScale(for index: Int, thumbFraction: CGFloat) -> CGFloat {
-        if hoveredBookIndex == index { return 2.0 }
-        let range = bookRanges[index]
-        let distance = abs(range.midFraction - thumbFraction)
-        if distance < 0.02 { return 1.6 }
-        if distance < 0.05 { return 1.3 }
-        if distance < 0.1 { return 1.1 }
-        return 1.0
     }
 
     /// Space labels with a minimum gap, using forward+backward pass.
