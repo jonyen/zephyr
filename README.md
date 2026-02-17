@@ -17,6 +17,7 @@ Open the DMG and drag Zephyr to your Applications folder.
 - **Bookmarks** — Save your place and quickly return to passages
 - **Highlights** — Mark verses with color highlights as you read
 - **Private Notes** — Add personal notes to any verse range, stored locally on your device
+- **Bible Scrubber** — Scan through the Bible with a scrubber that feels like flipping through a physical book
 - **Keyword Search** — Full-text search across the entire Bible
 - **Red Letter** — Words of Christ displayed in red
 - **Reading History** — Automatically tracks where you've been
