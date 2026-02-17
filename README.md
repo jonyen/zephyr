@@ -6,7 +6,7 @@ Zephyr is a native Mac app built with SwiftUI that puts Scripture front and cent
 
 ## Download
 
-**[Download Zephyr v1.0.0](https://github.com/jonyen/zephyr/releases/download/v1.0.0/Zephyr-1.0.0.dmg)** (macOS 14+)
+**[Download Zephyr v0.8.0](https://github.com/jonyen/zephyr/releases/download/v0.8.0/Zephyr-0.8.0.dmg)** (macOS 14+)
 
 Open the DMG and drag Zephyr to your Applications folder.
 
