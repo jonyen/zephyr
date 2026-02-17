@@ -26,6 +26,7 @@ struct ContentView: View {
     @State private var searchTask: Task<Void, Never>? = nil
     @State private var navigationCounter: Int = 0
     @State private var updateService = UpdateService()
+    @State private var isWindowOnTop = false
 
     var body: some View {
         mainContent
@@ -339,6 +340,12 @@ struct ContentView: View {
                 await updateService.checkForUpdate()
             }
         }
+        .onReceive(NotificationCenter.default.publisher(for: .toggleWindowOnTop)) { _ in
+            isWindowOnTop.toggle()
+            if let window = NSApp.keyWindow {
+                window.level = isWindowOnTop ? .floating : .normal
+            }
+        }
         .onReceive(NotificationCenter.default.publisher(for: .toggleBookmark)) { _ in
             let position = visiblePosition ?? currentPosition
             guard let position else { return }
@@ -545,6 +552,8 @@ struct ContentView: View {
             ("Next Bookmark", "\u{21E7}\u{2318}\u{2192}"),
             ("Previous Highlight", "\u{2318}{"),
             ("Next Highlight", "\u{2318}}"),
+            ("Keep Window on Top", "\u{21E7}\u{2318}P"),
+            ("Check for Updates", "\u{2318}U"),
             ("Show Shortcuts", "?"),
             ("Dismiss", "Esc"),
         ]

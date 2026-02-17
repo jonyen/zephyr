@@ -118,9 +118,16 @@ struct ESVBibleApp: App {
                     NotificationCenter.default.post(name: .navigateNextHighlight, object: nil)
                 }
                 .keyboardShortcut("}", modifiers: .command)
+            }
 
-                Divider()
+            CommandGroup(after: .windowArrangement) {
+                Button("Keep Window on Top") {
+                    NotificationCenter.default.post(name: .toggleWindowOnTop, object: nil)
+                }
+                .keyboardShortcut("p", modifiers: [.command, .shift])
+            }
 
+            CommandGroup(replacing: .help) {
                 Button("Keyboard Shortcuts") {
                     NotificationCenter.default.post(name: .showKeyboardShortcuts, object: nil)
                 }
@@ -154,4 +161,5 @@ extension Notification.Name {
     static let scrollPageUp = Notification.Name("scrollPageUp")
     static let scrollPageDown = Notification.Name("scrollPageDown")
     static let checkForUpdates = Notification.Name("checkForUpdates")
+    static let toggleWindowOnTop = Notification.Name("toggleWindowOnTop")
 }
