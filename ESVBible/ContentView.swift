@@ -25,6 +25,7 @@ struct ContentView: View {
     @State private var isKeywordSearch = false
     @State private var searchTask: Task<Void, Never>? = nil
     @State private var navigationCounter: Int = 0
+    @State private var updateService = UpdateService()
 
     var body: some View {
         mainContent
@@ -75,6 +76,10 @@ struct ContentView: View {
                         description: Text("Enter a reference like \"John 3:16\" or \"Genesis 1\""))
                 }
             }
+
+            // Update banner overlay
+            UpdateBannerView(updateService: updateService)
+                .zIndex(5)
 
             // Tap-to-dismiss layer (before overlays so it sits behind them)
             if isSearchVisible || isTOCVisible {
@@ -288,6 +293,9 @@ struct ContentView: View {
             } else {
                 navigateTo(book: lastBook, chapter: lastChapter, verseStart: nil, verseEnd: nil, addToHistory: false)
             }
+            Task {
+                await updateService.checkForUpdate()
+            }
         }
         .onReceive(NotificationCenter.default.publisher(for: .navigatePreviousChapter)) { _ in
             navigateChapter(delta: -1)
@@ -325,6 +333,11 @@ struct ContentView: View {
         .onReceive(NotificationCenter.default.publisher(for: .toggleNotes)) { _ in
             if showHistory { showHistory = false }
             showNotes.toggle()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .checkForUpdates)) { _ in
+            Task {
+                await updateService.checkForUpdate()
+            }
         }
         .onReceive(NotificationCenter.default.publisher(for: .toggleBookmark)) { _ in
             let position = visiblePosition ?? currentPosition

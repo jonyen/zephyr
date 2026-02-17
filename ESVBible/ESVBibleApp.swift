@@ -125,6 +125,13 @@ struct ESVBibleApp: App {
                     NotificationCenter.default.post(name: .showKeyboardShortcuts, object: nil)
                 }
                 .keyboardShortcut("/", modifiers: .command)
+
+                Divider()
+
+                Button("Check for Updates...") {
+                    NotificationCenter.default.post(name: .checkForUpdates, object: nil)
+                }
+                .keyboardShortcut("u", modifiers: .command)
             }
         }
     }
@@ -146,4 +153,5 @@ extension Notification.Name {
     static let toggleNotes = Notification.Name("toggleNotes")
     static let scrollPageUp = Notification.Name("scrollPageUp")
     static let scrollPageDown = Notification.Name("scrollPageDown")
+    static let checkForUpdates = Notification.Name("checkForUpdates")
 }
