@@ -90,8 +90,18 @@ class UpdateService {
 
             let (data, response) = try await URLSession.shared.data(for: request)
 
-            guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
-                state = .error("Failed to check for updates")
+            guard let httpResponse = response as? HTTPURLResponse else {
+                state = .idle
+                return
+            }
+
+            // 404 means no releases exist yet — not an error
+            guard httpResponse.statusCode == 200 else {
+                if httpResponse.statusCode == 404 {
+                    state = .idle
+                } else {
+                    state = .error("Failed to check for updates (HTTP \(httpResponse.statusCode))")
+                }
                 return
             }
 
