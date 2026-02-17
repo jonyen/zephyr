@@ -32,6 +32,7 @@
 		AA000042 /* NotePopoverView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000043 /* NotePopoverView.swift */; };
 		AA000045 /* NotesSidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000044 /* NotesSidebarView.swift */; };
 		AA000046 /* UpdateService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000047 /* UpdateService.swift */; };
+		AA00004B /* UpdateBannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00004A /* UpdateBannerView.swift */; };
 		AA000048 /* UpdateServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000049 /* UpdateServiceTests.swift */; };
 		AA000035 /* red_letter_verses.json in Resources */ = {isa = PBXBuildFile; fileRef = AA000036 /* red_letter_verses.json */; };
 		AA3A3F952F40A2C5004087F5 /* ReadingPaneView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA3A3F942F40A2C5004087F5 /* ReadingPaneView.swift */; };
@@ -141,6 +142,7 @@
 		AA000043 /* NotePopoverView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotePopoverView.swift; sourceTree = "<group>"; };
 		AA000044 /* NotesSidebarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotesSidebarView.swift; sourceTree = "<group>"; };
 		AA000047 /* UpdateService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateService.swift; sourceTree = "<group>"; };
+		AA00004A /* UpdateBannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateBannerView.swift; sourceTree = "<group>"; };
 		AA000049 /* UpdateServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateServiceTests.swift; sourceTree = "<group>"; };
 		AA000036 /* red_letter_verses.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = red_letter_verses.json; sourceTree = "<group>"; };
 		AA000040 /* Zephyr.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Zephyr.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -278,6 +280,7 @@
 				AA000043 /* NotePopoverView.swift */,
 				AA000044 /* NotesSidebarView.swift */,
 				AA00003A /* SelectableTextView.swift */,
+				AA00004A /* UpdateBannerView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -548,6 +551,7 @@
 				AA000042 /* NotePopoverView.swift in Sources */,
 				AA000045 /* NotesSidebarView.swift in Sources */,
 				AA000046 /* UpdateService.swift in Sources */,
+				AA00004B /* UpdateBannerView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
