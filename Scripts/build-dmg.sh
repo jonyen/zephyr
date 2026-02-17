@@ -44,9 +44,16 @@ hdiutil create \
     -format UDZO \
     "$DIST_DIR/$DMG_NAME"
 
+# Create .app.zip for auto-update
+cd "$BUILD_DIR/Build/Products/Release"
+zip -r -y "$DIST_DIR/${APP_NAME}.app.zip" "${APP_NAME}.app"
+cd "$ROOT_DIR"
+
 # Clean up
 rm -rf "$STAGING_DIR"
 
 echo ""
 echo "DMG created: dist/$DMG_NAME"
-echo "Size: $(du -h "$DIST_DIR/$DMG_NAME" | cut -f1)"
+echo "ZIP created: dist/${APP_NAME}.app.zip"
+echo "Size (DMG): $(du -h "$DIST_DIR/$DMG_NAME" | cut -f1)"
+echo "Size (ZIP): $(du -h "$DIST_DIR/${APP_NAME}.app.zip" | cut -f1)"
