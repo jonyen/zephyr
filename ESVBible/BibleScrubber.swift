@@ -241,7 +241,10 @@ struct BibleScrubber: View {
                         withAnimation(.easeInOut(duration: 0.15)) {
                             isHovered = hovering
                         }
-                        if !hovering {
+                        if hovering {
+                            NSCursor.pointingHand.push()
+                        } else {
+                            NSCursor.pop()
                             hoveredBookIndex = nil
                         }
                     }
@@ -311,12 +314,15 @@ struct BibleScrubber: View {
         let labelY = trackInset + fractions[focusedIdx] * trackHeight
         let delta = thumbY - labelY
 
-        let panelX = window.frame.maxX + 4
+        let isFullScreen = window.styleMask.contains(.fullScreen)
+        let panelWidth: CGFloat = 180
+        let panelX = isFullScreen
+            ? window.frame.maxX - scrubberWidth - panelWidth - 4
+            : window.frame.maxX + 4
         let panelBaseY = windowOrigin.y + contentRect.origin.y
         // Panel is taller by 2*buffer; shift its origin down by buffer to center the content,
         // then apply the delta to align the focused book with the thumb
         let panelY = panelBaseY - buffer - delta
-        let panelWidth: CGFloat = 180
         let panelHeight = height + buffer * 2
 
         let content = LabelPanelContent(
