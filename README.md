@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="ESVBible/Assets.xcassets/AppIcon.appiconset/icon_128@2x.png" width="128" height="128" alt="Zephyr icon">
+</p>
+
 # Zephyr
 
 A minimalistic ESV Bible reader for macOS.
@@ -6,7 +10,7 @@ Zephyr is a native Mac app built with SwiftUI that puts Scripture front and cent
 
 ## Download
 
-**[Download Zephyr v0.8.1](https://github.com/jonyen/zephyr/releases/download/v0.8.1/Zephyr-0.8.1.dmg)** (macOS 14+)
+**[Download Zephyr v0.8.2](https://github.com/jonyen/zephyr/releases/download/v0.8.2/Zephyr-0.8.2.dmg)** (macOS 14+)
 
 Open the DMG and drag Zephyr to your Applications folder.
 

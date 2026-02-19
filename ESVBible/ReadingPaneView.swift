@@ -57,6 +57,8 @@ struct ReadingPaneView: View {
                         }
                     }
                 }
+                .frame(maxWidth: 700)
+                .frame(maxWidth: .infinity)
                 .scrollTargetLayout()
             }
             .scrollIndicators(.hidden)
