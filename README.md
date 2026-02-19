@@ -23,6 +23,16 @@ Zephyr is a native Mac app built with SwiftUI that puts Scripture front and cent
   </td></tr>
 </table>
 
+## Why Zephyr?
+
+Most Bible apps try to do everything — social features, devotional plans, video content, push notifications. I just wanted to read Scripture. No clutter, no accounts, no internet required.
+
+I couldn't find a native macOS Bible reader that felt like it belonged on the Mac — lightweight, fast, and focused. So I built one. Zephyr is the app I wanted for my own daily reading: open it, read, close it. Nothing else getting in the way.
+
+The name comes from the Greek word for a gentle breeze — that's exactly how reading Scripture should feel.
+
+Zephyr will always be free. If you find it useful, consider [sponsoring the project on GitHub](https://github.com/sponsors/jonyen).
+
 ## Download
 
 **[Download Zephyr v0.8.2](https://github.com/jonyen/zephyr/releases/download/v0.8.2/Zephyr-0.8.2.dmg)** (macOS 14+)
