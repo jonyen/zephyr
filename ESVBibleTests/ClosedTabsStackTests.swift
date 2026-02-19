@@ -1,6 +1,7 @@
 import XCTest
 @testable import ESVBible
 
+@MainActor
 final class ClosedTabsStackTests: XCTestCase {
     var stack: ClosedTabsStack!
 
@@ -41,5 +42,12 @@ final class ClosedTabsStackTests: XCTestCase {
         var count = 0
         while stack.pop() != nil { count += 1 }
         XCTAssertEqual(count, 20)
+    }
+
+    func testPersistsAcrossInstances() {
+        let pos = ChapterPosition(bookName: "Romans", chapterNumber: 8)
+        stack.push(pos)
+        let stack2 = ClosedTabsStack(defaults: UserDefaults(suiteName: "ClosedTabsStackTests")!)
+        XCTAssertEqual(stack2.pop()?.bookName, "Romans")
     }
 }

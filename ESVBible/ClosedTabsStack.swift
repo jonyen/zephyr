@@ -1,9 +1,11 @@
 import Foundation
 
+@MainActor
 final class ClosedTabsStack {
     static let shared = ClosedTabsStack()
 
-    private let key = "closedTabsStack"
+    // Cap at 20 to match browser convention and avoid unbounded UserDefaults growth.
+    private static let key = "closedTabsStack"
     private let maxSize = 20
     private let defaults: UserDefaults
 
@@ -31,7 +33,7 @@ final class ClosedTabsStack {
     }
 
     private func load() -> [ChapterPosition] {
-        guard let data = defaults.data(forKey: key),
+        guard let data = defaults.data(forKey: Self.key),
               let stack = try? JSONDecoder().decode([ChapterPosition].self, from: data) else {
             return []
         }
@@ -40,7 +42,7 @@ final class ClosedTabsStack {
 
     private func save(_ stack: [ChapterPosition]) {
         if let data = try? JSONEncoder().encode(stack) {
-            defaults.set(data, forKey: key)
+            defaults.set(data, forKey: Self.key)
         }
     }
 }
