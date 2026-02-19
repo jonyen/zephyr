@@ -138,7 +138,13 @@ struct ESVBibleApp: App {
                 Button("Check for Updates...") {
                     NotificationCenter.default.post(name: .checkForUpdates, object: nil)
                 }
-                .keyboardShortcut("u", modifiers: .command)
+                .keyboardShortcut("u", modifiers: [.command, .shift])
+
+                Button("Send Feedback...") {
+                    if let url = URL(string: "https://forms.gle/ggskiDeBvWPaBAt39") {
+                        NSWorkspace.shared.open(url)
+                    }
+                }
             }
         }
     }

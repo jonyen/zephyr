@@ -553,7 +553,7 @@ struct ContentView: View {
             ("Previous Highlight", "\u{2318}{"),
             ("Next Highlight", "\u{2318}}"),
             ("Keep Window on Top", "\u{21E7}\u{2318}P"),
-            ("Check for Updates", "\u{2318}U"),
+            ("Check for Updates", "\u{21E7}\u{2318}U"),
             ("Show Shortcuts", "?"),
             ("Dismiss", "Esc"),
         ]
