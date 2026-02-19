@@ -106,6 +106,7 @@
 		AACC870F2F409FA300E50F90 /* Zephaniah.json in Resources */ = {isa = PBXBuildFile; fileRef = AACC86CC2F409F1F00E50F90 /* Zephaniah.json */; };
 		AACC87112F40A09A00E50F90 /* ChapterPosition.swift in Sources */ = {isa = PBXBuildFile; fileRef = AACC87102F40A09A00E50F90 /* ChapterPosition.swift */; };
 		AA000078 /* ClosedTabsStack.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000079 /* ClosedTabsStack.swift */; };
+		AA00007A /* WindowAccessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00007B /* WindowAccessor.swift */; };
 		AACC87212F409FA300E50F90 /* search_index.json in Resources */ = {isa = PBXBuildFile; fileRef = AACC87202F409F1F00E50F90 /* search_index.json */; };
 /* End PBXBuildFile section */
 
@@ -223,6 +224,7 @@
 		AACC86CC2F409F1F00E50F90 /* Zephaniah.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = Zephaniah.json; sourceTree = "<group>"; };
 		AACC87102F40A09A00E50F90 /* ChapterPosition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChapterPosition.swift; sourceTree = "<group>"; };
 		AA000079 /* ClosedTabsStack.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClosedTabsStack.swift; sourceTree = "<group>"; };
+		AA00007B /* WindowAccessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowAccessor.swift; sourceTree = "<group>"; };
 		AACC87202F409F1F00E50F90 /* search_index.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = search_index.json; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -249,6 +251,7 @@
 				AA000027 /* Resources */,
 				AACC87102F40A09A00E50F90 /* ChapterPosition.swift */,
 				AA000079 /* ClosedTabsStack.swift */,
+				AA00007B /* WindowAccessor.swift */,
 				AA3A3F942F40A2C5004087F5 /* ReadingPaneView.swift */,
 				AA000031 /* BibleScrubber.swift */,
 				AA000029 /* Assets.xcassets */,
@@ -545,6 +548,7 @@
 				AA3A3F952F40A2C5004087F5 /* ReadingPaneView.swift in Sources */,
 				AACC87112F40A09A00E50F90 /* ChapterPosition.swift in Sources */,
 				AA000078 /* ClosedTabsStack.swift in Sources */,
+				AA00007A /* WindowAccessor.swift in Sources */,
 				AA000002 /* ContentView.swift in Sources */,
 				AA000004 /* BibleModels.swift in Sources */,
 				AA000006 /* BibleStore.swift in Sources */,

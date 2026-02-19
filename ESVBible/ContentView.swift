@@ -29,6 +29,9 @@ struct ContentView: View {
     @State private var navigationCounter: Int = 0
     @State private var updateService = UpdateService()
     @State private var isWindowOnTop = false
+    @State private var hostWindow: NSWindow? = nil
+    @State private var hasAppeared = false
+    @State private var windowCloseObserver: Any? = nil
     @Environment(\.openWindow) private var openWindow
 
     var body: some View {
@@ -55,11 +58,13 @@ struct ContentView: View {
                 navigateTo(book: book, chapter: chapter, verseStart: verse, verseEnd: verse, addToHistory: true)
             }
         }
-        .onReceive(NotificationCenter.default.publisher(for: .newTab)) { _ in
+        .onReceive(NotificationCenter.default.publisher(for: .newTab)) { notification in
+            guard (notification.object as? NSWindow) == hostWindow else { return }
             let position = visiblePosition ?? currentPosition ?? ChapterPosition(bookName: "Genesis", chapterNumber: 1)
             openWindow(value: position)
         }
-        .onReceive(NotificationCenter.default.publisher(for: .reopenClosedTab)) { _ in
+        .onReceive(NotificationCenter.default.publisher(for: .reopenClosedTab)) { notification in
+            guard (notification.object as? NSWindow) == hostWindow else { return }
             if let position = ClosedTabsStack.shared.pop() {
                 openWindow(value: position)
             }
@@ -275,11 +280,16 @@ struct ContentView: View {
                 )
                 .frame(minWidth: 150, maxWidth: 300)
             }
+            WindowAccessor(window: $hostWindow)
+                .frame(width: 0, height: 0)
         }
         .navigationTitle(currentTitle)
         .frame(minWidth: 400, minHeight: 500)
         .toolbar(.hidden)
         .onAppear {
+            guard !hasAppeared else { return }
+            hasAppeared = true
+
             keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
                 if event.charactersIgnoringModifiers == "?" && !isSearchVisible {
                     showKeyboardShortcuts.toggle()
@@ -300,6 +310,22 @@ struct ContentView: View {
                 }
                 return event
             }
+
+            // Subscribe to window close (replaces onDisappear push)
+            DispatchQueue.main.async {
+                if let window = hostWindow {
+                    windowCloseObserver = NotificationCenter.default.addObserver(
+                        forName: NSWindow.willCloseNotification,
+                        object: window,
+                        queue: .main
+                    ) { _ in
+                        if let position = self.visiblePosition ?? self.currentPosition {
+                            ClosedTabsStack.shared.push(position)
+                        }
+                    }
+                }
+            }
+
             if let initial = initialPosition {
                 navigateTo(book: initial.bookName, chapter: initial.chapterNumber, verseStart: nil, verseEnd: nil, addToHistory: false)
             } else if let pending = AppDelegate.pendingNavigation {
@@ -330,12 +356,13 @@ struct ContentView: View {
             return .ignored
         }
         .onDisappear {
-            if let position = visiblePosition ?? currentPosition {
-                ClosedTabsStack.shared.push(position)
-            }
             if let monitor = keyMonitor {
                 NSEvent.removeMonitor(monitor)
                 keyMonitor = nil
+            }
+            if let observer = windowCloseObserver {
+                NotificationCenter.default.removeObserver(observer)
+                windowCloseObserver = nil
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: .showSearch)) { _ in
