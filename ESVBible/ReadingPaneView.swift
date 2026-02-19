@@ -40,6 +40,7 @@ struct ReadingPaneView: View {
                             ChapterView(
                                 chapter: chapter,
                                 bookName: book.name,
+                                isFirstChapter: chapter.number == 1,
                                 highlightVerseStart: position == initialPosition ? highlightVerseStart : nil,
                                 highlightVerseEnd: position == initialPosition ? highlightVerseEnd : nil,
                                 highlightManager: highlightManager,
@@ -196,6 +197,7 @@ struct ReadingPaneView: View {
 private struct ChapterView: View {
     let chapter: Chapter
     let bookName: String
+    let isFirstChapter: Bool
     let highlightVerseStart: Int?
     let highlightVerseEnd: Int?
     let highlightManager: HighlightManager
@@ -206,25 +208,22 @@ private struct ChapterView: View {
     @State private var notePopoverVerseStart: Int = 1
     @State private var notePopoverVerseEnd: Int = 1
     @State private var editingNote: Note? = nil
+    @State private var dropCapFontSize: CGFloat = 42
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            HStack {
-                Text("\(bookName) \(chapter.number)")
-                    .font(.title)
-                    .fontWeight(.semibold)
-
-                if highlightManager.isBookmarked(book: bookName, chapter: chapter.number) {
-                    Image(systemName: "bookmark.fill")
-                        .foregroundStyle(Color.accentColor)
-                        .font(.title3)
-                }
+            if isFirstChapter {
+                Text(bookName)
+                    .font(.largeTitle)
+                    .fontWeight(.bold)
+                    .padding(.top, 16)
+                    .padding(.bottom, 12)
             }
-            .padding(.bottom, 16)
 
             SelectableTextView(
                 chapter: chapter,
                 bookName: bookName,
+                chapterNumber: chapter.number,
                 highlights: highlightManager.highlights(forBook: bookName, chapter: chapter.number),
                 searchHighlightStart: highlightVerseStart,
                 searchHighlightEnd: highlightVerseEnd,
@@ -241,6 +240,7 @@ private struct ChapterView: View {
                     )
                 },
                 contentHeight: $textHeight,
+                dropCapFontSize: $dropCapFontSize,
                 onHighlightVerseYOffset: highlightVerseStart != nil ? { offset in
                     verseYOffset = offset
                 } : nil,
@@ -259,6 +259,19 @@ private struct ChapterView: View {
                 }
             )
             .frame(height: textHeight)
+            .overlay(alignment: .topLeading) {
+                HStack(alignment: .firstTextBaseline, spacing: 4) {
+                    Text("\(chapter.number)")
+                        .font(.system(size: dropCapFontSize, weight: .medium, design: .serif))
+                    if highlightManager.isBookmarked(book: bookName, chapter: chapter.number) {
+                        Image(systemName: "bookmark.fill")
+                            .foregroundStyle(Color.accentColor)
+                            .font(.caption)
+                    }
+                }
+                .offset(y: -4)
+                .allowsHitTesting(false)
+            }
             .popover(isPresented: $showNotePopover) {
                 NotePopoverView(
                     book: bookName,

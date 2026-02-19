@@ -43,11 +43,26 @@ private class LabelPanelState: ObservableObject {
         } else {
             panel?.setFrame(frame, display: true)
         }
+        if panel?.isVisible != true {
+            panel?.alphaValue = 0
+        }
         panel?.orderFront(nil)
+        NSAnimationContext.runAnimationGroup { ctx in
+            ctx.duration = 0.2
+            ctx.timingFunction = CAMediaTimingFunction(name: .easeOut)
+            panel?.animator().alphaValue = 1.0
+        }
     }
 
     func hide() {
-        panel?.orderOut(nil)
+        guard let panel = panel, panel.isVisible else { return }
+        NSAnimationContext.runAnimationGroup({ ctx in
+            ctx.duration = 0.2
+            ctx.timingFunction = CAMediaTimingFunction(name: .easeIn)
+            panel.animator().alphaValue = 0
+        }, completionHandler: { [weak self] in
+            self?.panel?.orderOut(nil)
+        })
     }
 
     deinit {
@@ -64,10 +79,15 @@ private struct LabelPanelContent: View {
     let trackInset: CGFloat
     let trackHeight: CGFloat
     let buffer: CGFloat
+    let panelWidth: CGFloat
     let currentBookIndex: Int?
     let hoveredBookIndex: Int?
     let onHoverBook: (Int?) -> Void
     let onTapBook: (String) -> Void
+
+    private var activeIndex: Int {
+        hoveredBookIndex ?? currentBookIndex ?? 0
+    }
 
     private var firstLabelY: CGFloat {
         guard let first = spacedFractions.first else { return 0 }
@@ -81,6 +101,7 @@ private struct LabelPanelContent: View {
 
     var body: some View {
         let padding: CGFloat = 12
+
         ZStack(alignment: .topLeading) {
             RoundedRectangle(cornerRadius: 8)
                 .fill(.regularMaterial)
@@ -91,20 +112,23 @@ private struct LabelPanelContent: View {
             ForEach(Array(spacedFractions.enumerated()), id: \.offset) { index, fraction in
                 let range = bookRanges[index]
                 let y = buffer + trackInset + fraction * trackHeight
-                let isCurrent = index == currentBookIndex || index == hoveredBookIndex
+                let isCurrent = index == activeIndex
+                let distance = currentBookIndex.map { abs(index - $0) } ?? 0
+                let opacity = isCurrent ? 1.0 : max(0.3, 1.0 - Double(distance) * 0.07)
 
                 Text(range.name)
                     .font(.system(size: 13))
-                    .foregroundStyle(isCurrent ? .primary : .secondary)
+                    .fontWeight(isCurrent ? .semibold : .light)
+                    .foregroundStyle(.primary.opacity(opacity))
                     .lineLimit(1)
                     .fixedSize()
-                .position(x: 90, y: y)
-                .onHover { hovering in
-                    onHoverBook(hovering ? index : nil)
-                }
-                .onTapGesture {
-                    onTapBook(range.name)
-                }
+                    .position(x: panelWidth / 2, y: y)
+                    .onHover { hovering in
+                        onHoverBook(hovering ? index : nil)
+                    }
+                    .onTapGesture {
+                        onTapBook(range.name)
+                    }
             }
         }
     }
@@ -331,6 +355,7 @@ struct BibleScrubber: View {
             trackInset: trackInset,
             trackHeight: trackHeight,
             buffer: buffer,
+            panelWidth: panelWidth,
             currentBookIndex: focusedIdx,
             hoveredBookIndex: hovered,
             onHoverBook: { idx in hoveredBookIndex = idx },

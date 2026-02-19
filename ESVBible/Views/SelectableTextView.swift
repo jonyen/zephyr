@@ -4,12 +4,14 @@ import AppKit
 struct SelectableTextView: NSViewRepresentable {
     let chapter: Chapter
     let bookName: String
+    let chapterNumber: Int
     let highlights: [Highlight]
     let searchHighlightStart: Int?
     let searchHighlightEnd: Int?
     let onHighlight: (Int, Int, Int, HighlightColor) -> Void  // verse, startChar, endChar, color
     let onRemoveHighlights: (Int, Int, Int) -> Void  // verse, startChar, endChar
     @Binding var contentHeight: CGFloat
+    @Binding var dropCapFontSize: CGFloat
     var onHighlightVerseYOffset: ((CGFloat) -> Void)?
     let notes: [Note]
     let onAddNote: (Int, Int) -> Void  // verseStart, verseEnd
@@ -64,6 +66,31 @@ struct SelectableTextView: NSViewRepresentable {
         context.coordinator.notes = notes
         context.coordinator.verseBoundaries = []
 
+        // Compute drop-cap size from body font metrics so the number spans exactly two lines
+        let serifDescriptor = NSFontDescriptor.preferredFontDescriptor(forTextStyle: .body).withDesign(.serif) ?? NSFontDescriptor.preferredFontDescriptor(forTextStyle: .body)
+        let bodyFont = NSFont(descriptor: serifDescriptor, size: 16) ?? NSFont.systemFont(ofSize: 16)
+        let lineHeight = bodyFont.ascender + abs(bodyFont.descender) + bodyFont.leading
+        let twoLineHeight = lineHeight * 2 + 6 // 6 = paragraphStyle.lineSpacing
+
+        let computedFontSize = twoLineHeight
+
+        let dropCapFont = NSFont(descriptor: serifDescriptor, size: computedFontSize) ?? NSFont.systemFont(ofSize: computedFontSize)
+        let dropCapStr = NSAttributedString(string: "\(chapterNumber)", attributes: [.font: dropCapFont])
+        let dropCapSize = dropCapStr.size()
+        let exclusionWidth = ceil(dropCapSize.width) + 12
+        context.coordinator.dropCapWidth = exclusionWidth
+
+        // Report font size back to SwiftUI
+        DispatchQueue.main.async {
+            if abs(self.dropCapFontSize - computedFontSize) > 0.5 {
+                self.dropCapFontSize = computedFontSize
+            }
+        }
+
+        textView.textContainer?.exclusionPaths = [
+            NSBezierPath(rect: CGRect(x: 0, y: 0, width: exclusionWidth, height: twoLineHeight))
+        ]
+
         let attrStr = buildAttributedString(coordinator: context.coordinator)
         textView.textStorage?.setAttributedString(attrStr)
 
@@ -108,14 +135,16 @@ struct SelectableTextView: NSViewRepresentable {
         var boundaries: [(verse: Int, start: Int, end: Int)] = []
 
         for verse in chapter.verses {
-            // Verse number (superscript)
-            let numAttrs: [NSAttributedString.Key: Any] = [
-                .font: verseNumFont,
-                .foregroundColor: NSColor.secondaryLabelColor,
-                .baselineOffset: 6,
-                .paragraphStyle: paragraphStyle
-            ]
-            result.append(NSAttributedString(string: "\(verse.number) ", attributes: numAttrs))
+            // Skip verse 1 number — it's replaced by the drop-cap chapter number
+            if verse.number > 1 {
+                let numAttrs: [NSAttributedString.Key: Any] = [
+                    .font: verseNumFont,
+                    .foregroundColor: NSColor.secondaryLabelColor,
+                    .baselineOffset: 6,
+                    .paragraphStyle: paragraphStyle
+                ]
+                result.append(NSAttributedString(string: "\(verse.number) ", attributes: numAttrs))
+            }
 
             // Note indicator icon
             let verseNotes = coordinator.notes.filter { verse.number >= $0.verseStart && verse.number <= $0.verseEnd }
@@ -222,6 +251,7 @@ struct SelectableTextView: NSViewRepresentable {
         var notes: [Note] = []
         var verseBoundaries: [(verse: Int, start: Int, end: Int)] = []
         var contentHeightCallback: ((CGFloat) -> Void)?
+        var dropCapWidth: CGFloat = 0
 
         @objc func scrollViewFrameDidChange(_ notification: Notification) {
             recalculateHeight()
