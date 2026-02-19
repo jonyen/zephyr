@@ -1,6 +1,8 @@
 import SwiftUI
 
 struct ContentView: View {
+    let initialPosition: ChapterPosition?
+
     @State private var bibleStore = BibleStore()
     @State private var historyManager = HistoryManager()
     @State private var highlightManager = HighlightManager()
@@ -27,6 +29,7 @@ struct ContentView: View {
     @State private var navigationCounter: Int = 0
     @State private var updateService = UpdateService()
     @State private var isWindowOnTop = false
+    @Environment(\.openWindow) private var openWindow
 
     var body: some View {
         mainContent
@@ -50,6 +53,15 @@ struct ContentView: View {
                let chapter = notification.userInfo?["chapter"] as? Int {
                 let verse = notification.userInfo?["verse"] as? Int
                 navigateTo(book: book, chapter: chapter, verseStart: verse, verseEnd: verse, addToHistory: true)
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .newTab)) { _ in
+            let position = visiblePosition ?? currentPosition ?? ChapterPosition(bookName: "Genesis", chapterNumber: 1)
+            openWindow(value: position)
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .reopenClosedTab)) { _ in
+            if let position = ClosedTabsStack.shared.pop() {
+                openWindow(value: position)
             }
         }
     }
@@ -288,7 +300,9 @@ struct ContentView: View {
                 }
                 return event
             }
-            if let pending = AppDelegate.pendingNavigation {
+            if let initial = initialPosition {
+                navigateTo(book: initial.bookName, chapter: initial.chapterNumber, verseStart: nil, verseEnd: nil, addToHistory: false)
+            } else if let pending = AppDelegate.pendingNavigation {
                 AppDelegate.pendingNavigation = nil
                 navigateTo(book: pending.book, chapter: pending.chapter, verseStart: pending.verse, verseEnd: pending.verse, addToHistory: true)
             } else {
@@ -316,6 +330,9 @@ struct ContentView: View {
             return .ignored
         }
         .onDisappear {
+            if let position = visiblePosition ?? currentPosition {
+                ClosedTabsStack.shared.push(position)
+            }
             if let monitor = keyMonitor {
                 NSEvent.removeMonitor(monitor)
                 keyMonitor = nil
