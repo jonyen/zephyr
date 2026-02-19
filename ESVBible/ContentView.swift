@@ -379,7 +379,7 @@ struct ContentView: View {
         }
         .onReceive(NotificationCenter.default.publisher(for: .checkForUpdates)) { _ in
             Task {
-                await updateService.checkForUpdate()
+                await updateService.checkForUpdate(manual: true)
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: .toggleWindowOnTop)) { _ in

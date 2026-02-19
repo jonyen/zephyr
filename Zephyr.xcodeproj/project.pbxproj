@@ -658,7 +658,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 0.8.5;
+				CURRENT_PROJECT_VERSION = 0.8.6;
 				EAGER_LINKING = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = ESVBible/Info.plist;
@@ -669,7 +669,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 0.8.5;
+				MARKETING_VERSION = 0.8.6;
 				PRODUCT_BUNDLE_IDENTIFIER = com.esv.bible.zephyr;
 				PRODUCT_MODULE_NAME = ESVBible;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -687,7 +687,7 @@
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 0.8.5;
+				CURRENT_PROJECT_VERSION = 0.8.6;
 				EAGER_LINKING = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = ESVBible/Info.plist;
@@ -698,7 +698,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 0.8.5;
+				MARKETING_VERSION = 0.8.6;
 				PRODUCT_BUNDLE_IDENTIFIER = com.esv.bible.zephyr;
 				PRODUCT_MODULE_NAME = ESVBible;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -712,9 +712,9 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 0.8.5;
+				CURRENT_PROJECT_VERSION = 0.8.6;
 				GENERATE_INFOPLIST_FILE = YES;
-				MARKETING_VERSION = 0.8.5;
+				MARKETING_VERSION = 0.8.6;
 				PRODUCT_BUNDLE_IDENTIFIER = com.esv.bible.zephyr.tests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
@@ -728,9 +728,9 @@
 			buildSettings = {
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 0.8.5;
+				CURRENT_PROJECT_VERSION = 0.8.6;
 				GENERATE_INFOPLIST_FILE = YES;
-				MARKETING_VERSION = 0.8.5;
+				MARKETING_VERSION = 0.8.6;
 				PRODUCT_BUNDLE_IDENTIFIER = com.esv.bible.zephyr.tests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;

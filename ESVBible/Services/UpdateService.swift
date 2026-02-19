@@ -77,7 +77,7 @@ class UpdateService {
 
     // MARK: - Check for updates
 
-    func checkForUpdate() async {
+    func checkForUpdate(manual: Bool = false) async {
         state = .checking
         let urlString = "https://api.github.com/repos/\(repoOwner)/\(repoName)/releases/latest"
         guard let url = URL(string: urlString) else {
@@ -110,7 +110,7 @@ class UpdateService {
             let remoteVersion = release.tagName
 
             guard Self.isNewer(remoteVersion, than: currentAppVersion) else {
-                state = .upToDate
+                state = manual ? .upToDate : .idle
                 return
             }
 
