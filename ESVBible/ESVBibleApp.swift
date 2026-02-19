@@ -121,12 +121,12 @@ struct ESVBibleApp: App {
 
             CommandGroup(after: .windowArrangement) {
                 Button("New Tab") {
-                    NotificationCenter.default.post(name: .newTab, object: nil)
+                    NotificationCenter.default.post(name: .newTab, object: NSApp.keyWindow)
                 }
                 .keyboardShortcut("t", modifiers: .command)
 
                 Button("Reopen Closed Tab") {
-                    NotificationCenter.default.post(name: .reopenClosedTab, object: nil)
+                    NotificationCenter.default.post(name: .reopenClosedTab, object: NSApp.keyWindow)
                 }
                 .keyboardShortcut("t", modifiers: [.command, .shift])
 
