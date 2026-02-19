@@ -35,6 +35,7 @@
 		AA00004B /* UpdateBannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00004A /* UpdateBannerView.swift */; };
 		AA000048 /* UpdateServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000049 /* UpdateServiceTests.swift */; };
 		AA000072 /* ChapterPositionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000073 /* ChapterPositionTests.swift */; };
+		AA000076 /* ClosedTabsStackTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000077 /* ClosedTabsStackTests.swift */; };
 		AA000035 /* red_letter_verses.json in Resources */ = {isa = PBXBuildFile; fileRef = AA000036 /* red_letter_verses.json */; };
 		AA3A3F952F40A2C5004087F5 /* ReadingPaneView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA3A3F942F40A2C5004087F5 /* ReadingPaneView.swift */; };
 		AACC86CE2F409FA300E50F90 /* 1Chronicles.json in Resources */ = {isa = PBXBuildFile; fileRef = AACC868B2F409F1F00E50F90 /* 1Chronicles.json */; };
@@ -104,6 +105,7 @@
 		AACC870E2F409FA300E50F90 /* Zechariah.json in Resources */ = {isa = PBXBuildFile; fileRef = AACC86CB2F409F1F00E50F90 /* Zechariah.json */; };
 		AACC870F2F409FA300E50F90 /* Zephaniah.json in Resources */ = {isa = PBXBuildFile; fileRef = AACC86CC2F409F1F00E50F90 /* Zephaniah.json */; };
 		AACC87112F40A09A00E50F90 /* ChapterPosition.swift in Sources */ = {isa = PBXBuildFile; fileRef = AACC87102F40A09A00E50F90 /* ChapterPosition.swift */; };
+		AA000078 /* ClosedTabsStack.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000079 /* ClosedTabsStack.swift */; };
 		AACC87212F409FA300E50F90 /* search_index.json in Resources */ = {isa = PBXBuildFile; fileRef = AACC87202F409F1F00E50F90 /* search_index.json */; };
 /* End PBXBuildFile section */
 
@@ -146,6 +148,7 @@
 		AA00004A /* UpdateBannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateBannerView.swift; sourceTree = "<group>"; };
 		AA000049 /* UpdateServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateServiceTests.swift; sourceTree = "<group>"; };
 		AA000073 /* ChapterPositionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChapterPositionTests.swift; sourceTree = "<group>"; };
+		AA000077 /* ClosedTabsStackTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClosedTabsStackTests.swift; sourceTree = "<group>"; };
 		AA000036 /* red_letter_verses.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = red_letter_verses.json; sourceTree = "<group>"; };
 		AA000040 /* Zephyr.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Zephyr.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA000041 /* ZephyrTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ZephyrTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -219,6 +222,7 @@
 		AACC86CB2F409F1F00E50F90 /* Zechariah.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = Zechariah.json; sourceTree = "<group>"; };
 		AACC86CC2F409F1F00E50F90 /* Zephaniah.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = Zephaniah.json; sourceTree = "<group>"; };
 		AACC87102F40A09A00E50F90 /* ChapterPosition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChapterPosition.swift; sourceTree = "<group>"; };
+		AA000079 /* ClosedTabsStack.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClosedTabsStack.swift; sourceTree = "<group>"; };
 		AACC87202F409F1F00E50F90 /* search_index.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = search_index.json; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -244,6 +248,7 @@
 				AA000026 /* Services */,
 				AA000027 /* Resources */,
 				AACC87102F40A09A00E50F90 /* ChapterPosition.swift */,
+				AA000079 /* ClosedTabsStack.swift */,
 				AA3A3F942F40A2C5004087F5 /* ReadingPaneView.swift */,
 				AA000031 /* BibleScrubber.swift */,
 				AA000029 /* Assets.xcassets */,
@@ -263,6 +268,7 @@
 				AA00003C /* HighlightManagerTests.swift */,
 				AA000049 /* UpdateServiceTests.swift */,
 				AA000073 /* ChapterPositionTests.swift */,
+				AA000077 /* ClosedTabsStackTests.swift */,
 			);
 			path = ESVBibleTests;
 			sourceTree = "<group>";
@@ -538,6 +544,7 @@
 				AA000001 /* ESVBibleApp.swift in Sources */,
 				AA3A3F952F40A2C5004087F5 /* ReadingPaneView.swift in Sources */,
 				AACC87112F40A09A00E50F90 /* ChapterPosition.swift in Sources */,
+				AA000078 /* ClosedTabsStack.swift in Sources */,
 				AA000002 /* ContentView.swift in Sources */,
 				AA000004 /* BibleModels.swift in Sources */,
 				AA000006 /* BibleStore.swift in Sources */,
@@ -571,6 +578,7 @@
 				AA00003B /* HighlightManagerTests.swift in Sources */,
 				AA000048 /* UpdateServiceTests.swift in Sources */,
 				AA000072 /* ChapterPositionTests.swift in Sources */,
+				AA000076 /* ClosedTabsStackTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
