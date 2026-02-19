@@ -52,8 +52,8 @@ struct ESVBibleApp: App {
     }
 
     var body: some Scene {
-        WindowGroup {
-            ContentView()
+        WindowGroup(for: ChapterPosition.self) { $position in
+            ContentView(initialPosition: position.wrappedValue)
         }
         .defaultSize(width: 800, height: 600)
         .commands {
@@ -80,7 +80,6 @@ struct ESVBibleApp: App {
                 Button("Table of Contents") {
                     NotificationCenter.default.post(name: .showTableOfContents, object: nil)
                 }
-                .keyboardShortcut("t", modifiers: .command)
 
                 Button("Toggle History") {
                     NotificationCenter.default.post(name: .toggleHistory, object: nil)
@@ -121,6 +120,16 @@ struct ESVBibleApp: App {
             }
 
             CommandGroup(after: .windowArrangement) {
+                Button("New Tab") {
+                    NotificationCenter.default.post(name: .newTab, object: nil)
+                }
+                .keyboardShortcut("t", modifiers: .command)
+
+                Button("Reopen Closed Tab") {
+                    NotificationCenter.default.post(name: .reopenClosedTab, object: nil)
+                }
+                .keyboardShortcut("t", modifiers: [.command, .shift])
+
                 Button("Keep Window on Top") {
                     NotificationCenter.default.post(name: .toggleWindowOnTop, object: nil)
                 }
@@ -168,4 +177,6 @@ extension Notification.Name {
     static let scrollPageDown = Notification.Name("scrollPageDown")
     static let checkForUpdates = Notification.Name("checkForUpdates")
     static let toggleWindowOnTop = Notification.Name("toggleWindowOnTop")
+    static let newTab = Notification.Name("newTab")
+    static let reopenClosedTab = Notification.Name("reopenClosedTab")
 }
