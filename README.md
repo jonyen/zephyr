@@ -8,20 +8,20 @@ A minimalistic ESV Bible reader for macOS.
 
 Zephyr is a native Mac app built with SwiftUI that puts Scripture front and center — no accounts, no ads, no distractions. Just the Word.
 
-<table align="center"><tr><td align="center">
-  <img src="docs/bible_view.png" width="600" alt="Zephyr reading view"><br>
-  <em>Clean, distraction-free reading</em>
-</td></tr></table>
-
-<table align="center"><tr><td align="center">
-  <img src="docs/bible_scrubber.png" width="600" alt="Bible scrubber navigation"><br>
-  <em>Scrubber for quick navigation through all 66 books</em>
-</td></tr></table>
-
-<table align="center"><tr><td align="center">
-  <img src="docs/spotlight_integration.png" width="600" alt="Spotlight integration"><br>
-  <em>Search for any verse directly from Spotlight</em>
-</td></tr></table>
+<table align="center">
+  <tr><td align="center">
+    <img src="docs/bible_view.png" width="600" alt="Zephyr reading view"><br>
+    <em>Clean, distraction-free reading</em>
+  </td></tr>
+  <tr><td align="center">
+    <img src="docs/bible_scrubber.png" width="600" alt="Bible scrubber navigation"><br>
+    <em>Scrubber for quick navigation through all 66 books</em>
+  </td></tr>
+  <tr><td align="center">
+    <img src="docs/spotlight_integration.png" width="600" alt="Spotlight integration"><br>
+    <em>Search for any verse directly from Spotlight</em>
+  </td></tr>
+</table>
 
 ## Download
 
