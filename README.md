@@ -35,7 +35,7 @@ Zephyr will always be free. If you find it useful, consider [sponsoring the proj
 
 ## Download
 
-**[Download Zephyr v0.8.2](https://github.com/jonyen/zephyr/releases/download/v0.8.2/Zephyr-0.8.2.dmg)** (macOS 14+)
+**[Download Zephyr v0.8.5](https://github.com/jonyen/zephyr/releases/download/v0.8.5/Zephyr-0.8.5.dmg)** (macOS 14+)
 
 Open the DMG and drag Zephyr to your Applications folder.
 
@@ -49,7 +49,9 @@ Open the DMG and drag Zephyr to your Applications folder.
 - **Bible Scrubber** — Scan through the Bible with a scrubber that feels like flipping through a physical book
 - **Keyword Search** — Full-text search across the entire Bible
 - **Red Letter** — Words of Christ displayed in red
+- **Tabbed Browsing** — Open multiple passages in separate tabs
 - **Reading History** — Automatically tracks where you've been
+- **Auto-Update** — Get notified when a new version is available
 - **Completely Free** — No ads, no in-app purchases, no accounts, no tracking
 
 ## Building from Source
