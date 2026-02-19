@@ -53,7 +53,7 @@ struct ESVBibleApp: App {
 
     var body: some Scene {
         WindowGroup(for: ChapterPosition.self) { $position in
-            ContentView(initialPosition: position.wrappedValue)
+            ContentView(initialPosition: position)
         }
         .defaultSize(width: 800, height: 600)
         .commands {
