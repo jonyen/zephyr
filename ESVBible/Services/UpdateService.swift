@@ -6,6 +6,7 @@ class UpdateService {
     enum State: Equatable {
         case idle
         case checking
+        case upToDate
         case updateAvailable(version: String, notes: String, downloadURL: URL)
         case downloading(progress: Double)
         case readyToInstall(localURL: URL)
@@ -13,7 +14,7 @@ class UpdateService {
 
         static func == (lhs: State, rhs: State) -> Bool {
             switch (lhs, rhs) {
-            case (.idle, .idle), (.checking, .checking): return true
+            case (.idle, .idle), (.checking, .checking), (.upToDate, .upToDate): return true
             case let (.updateAvailable(v1, n1, u1), .updateAvailable(v2, n2, u2)):
                 return v1 == v2 && n1 == n2 && u1 == u2
             case let (.downloading(p1), .downloading(p2)): return p1 == p2
@@ -109,7 +110,7 @@ class UpdateService {
             let remoteVersion = release.tagName
 
             guard Self.isNewer(remoteVersion, than: currentAppVersion) else {
-                state = .idle
+                state = .upToDate
                 return
             }
 

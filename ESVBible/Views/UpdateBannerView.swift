@@ -8,6 +8,37 @@ struct UpdateBannerView: View {
         case .idle, .checking:
             EmptyView()
 
+        case .upToDate:
+            HStack {
+                Image(systemName: "checkmark.circle.fill")
+                    .foregroundStyle(.green)
+                Text("You're up to date! (v\(updateService.currentAppVersion))")
+                    .font(.headline)
+                Spacer()
+                Button {
+                    updateService.dismiss()
+                } label: {
+                    Image(systemName: "xmark")
+                        .foregroundStyle(.secondary)
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(12)
+            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 10))
+            .overlay {
+                RoundedRectangle(cornerRadius: 10)
+                    .strokeBorder(.separator, lineWidth: 0.5)
+            }
+            .shadow(color: .black.opacity(0.15), radius: 8, x: 0, y: 4)
+            .padding(.horizontal, 48)
+            .padding(.top, 12)
+            .transition(.move(edge: .top).combined(with: .opacity))
+            .onAppear {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                    withAnimation { updateService.dismiss() }
+                }
+            }
+
         case let .updateAvailable(version, notes, downloadURL):
             VStack(alignment: .leading, spacing: 8) {
                 HStack {
