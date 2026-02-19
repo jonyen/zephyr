@@ -584,7 +584,6 @@ struct ContentView: View {
     private var shortcutItems: [(action: String, keys: String)] {
         [
             ("Search for Passage", "\u{2318}F"),
-            ("Table of Contents", "\u{2318}T"),
             ("Toggle History", "\u{2318}Y"),
             ("Toggle Notes", "\u{2318}N"),
             ("Previous Chapter", "\u{2318}["),
@@ -594,6 +593,8 @@ struct ContentView: View {
             ("Next Bookmark", "\u{21E7}\u{2318}\u{2192}"),
             ("Previous Highlight", "\u{2318}{"),
             ("Next Highlight", "\u{2318}}"),
+            ("New Tab", "\u{2318}T"),
+            ("Reopen Closed Tab", "\u{21E7}\u{2318}T"),
             ("Keep Window on Top", "\u{21E7}\u{2318}P"),
             ("Check for Updates", "\u{21E7}\u{2318}U"),
             ("Show Shortcuts", "?"),
