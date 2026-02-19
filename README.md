@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="ESVBible/Assets.xcassets/AppIcon.appiconset/icon_128@2x.png" width="128" height="128" alt="Zephyr icon">
+  <img src="docs/icon_readme.png" width="128" height="128" alt="Zephyr icon">
 </p>
 
 # Zephyr
