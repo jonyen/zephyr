@@ -246,6 +246,8 @@ struct ContentView: View {
                 keyboardShortcutsOverlay
                     .transition(.opacity)
             }
+            WindowAccessor(window: $hostWindow)
+                .frame(width: 0, height: 0)
         }
         .inspector(isPresented: Binding(
             get: { showHistory || showNotes },
@@ -280,8 +282,6 @@ struct ContentView: View {
                 )
                 .frame(minWidth: 150, maxWidth: 300)
             }
-            WindowAccessor(window: $hostWindow)
-                .frame(width: 0, height: 0)
         }
         .navigationTitle(currentTitle)
         .frame(minWidth: 400, minHeight: 500)
@@ -309,21 +309,6 @@ struct ContentView: View {
                     return nil
                 }
                 return event
-            }
-
-            // Subscribe to window close (replaces onDisappear push)
-            DispatchQueue.main.async {
-                if let window = hostWindow {
-                    windowCloseObserver = NotificationCenter.default.addObserver(
-                        forName: NSWindow.willCloseNotification,
-                        object: window,
-                        queue: .main
-                    ) { _ in
-                        if let position = self.visiblePosition ?? self.currentPosition {
-                            ClosedTabsStack.shared.push(position)
-                        }
-                    }
-                }
             }
 
             if let initial = initialPosition {
@@ -363,6 +348,19 @@ struct ContentView: View {
             if let observer = windowCloseObserver {
                 NotificationCenter.default.removeObserver(observer)
                 windowCloseObserver = nil
+            }
+        }
+        .onChange(of: hostWindow) { _, newWindow in
+            guard let window = newWindow else { return }
+            guard windowCloseObserver == nil else { return }
+            windowCloseObserver = NotificationCenter.default.addObserver(
+                forName: NSWindow.willCloseNotification,
+                object: window,
+                queue: .main
+            ) { [self] _ in
+                if let position = self.visiblePosition ?? self.currentPosition {
+                    ClosedTabsStack.shared.push(position)
+                }
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: .showSearch)) { _ in
