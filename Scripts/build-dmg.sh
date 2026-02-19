@@ -17,7 +17,7 @@ xcodebuild -project "$ROOT_DIR/Zephyr.xcodeproj" \
     -scheme Zephyr \
     -configuration Release \
     -derivedDataPath "$BUILD_DIR" \
-    CURRENT_PROJECT_VERSION="$(git -C "$ROOT_DIR" rev-list --count HEAD)" \
+    CURRENT_PROJECT_VERSION="$VERSION" \
     clean build 2>&1 | tail -3
 
 APP_PATH="$BUILD_DIR/Build/Products/Release/${APP_NAME}.app"
