@@ -7,7 +7,7 @@ struct AppearanceSettingsView: View {
     var body: some View {
         Form {
             Section("Font") {
-                Picker("Font", selection: $selectedFont) {
+                Picker("", selection: $selectedFont) {
                     Text("Georgia")
                         .font(.custom("Georgia", size: 14))
                         .tag("Georgia")
