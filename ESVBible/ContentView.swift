@@ -61,12 +61,12 @@ struct ContentView: View {
         .onReceive(NotificationCenter.default.publisher(for: .newTab)) { notification in
             guard (notification.object as? NSWindow) == hostWindow else { return }
             let position = visiblePosition ?? currentPosition ?? ChapterPosition(bookName: "Genesis", chapterNumber: 1)
-            openWindow(value: position)
+            openTab(at: position)
         }
         .onReceive(NotificationCenter.default.publisher(for: .reopenClosedTab)) { notification in
             guard (notification.object as? NSWindow) == hostWindow else { return }
             if let position = ClosedTabsStack.shared.pop() {
-                openWindow(value: position)
+                openTab(at: position)
             }
         }
     }
@@ -712,6 +712,26 @@ struct ContentView: View {
 
         if let target {
             navigateTo(book: target.highlight.book, chapter: target.highlight.chapter, verseStart: target.highlight.verse, verseEnd: target.highlight.verse, addToHistory: true)
+        }
+    }
+
+    private func openTab(at position: ChapterPosition) {
+        guard let host = hostWindow else { return }
+        let priorIDs = Set(NSApp.windows.map { ObjectIdentifier($0) })
+        openWindow(value: position)
+        // Wait for the new NSWindow to become key, then join it to the current tab group.
+        // NSWindow.didBecomeKeyNotification fires exactly when the window is ready — no arbitrary delay needed.
+        var observer: Any?
+        observer = NotificationCenter.default.addObserver(
+            forName: NSWindow.didBecomeKeyNotification,
+            object: nil,
+            queue: .main
+        ) { notification in
+            guard let newWindow = notification.object as? NSWindow,
+                  !priorIDs.contains(ObjectIdentifier(newWindow)) else { return }
+            NotificationCenter.default.removeObserver(observer as Any)
+            host.addTabbedWindow(newWindow, ordered: .above)
+            newWindow.makeKeyAndOrderFront(nil)
         }
     }
 
