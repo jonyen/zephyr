@@ -31,3 +31,7 @@ struct AppearanceSettingsView: View {
         .padding(.vertical, 8)
     }
 }
+
+#Preview {
+    AppearanceSettingsView()
+}

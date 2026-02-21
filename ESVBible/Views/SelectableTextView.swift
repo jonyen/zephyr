@@ -247,6 +247,7 @@ struct SelectableTextView: NSViewRepresentable {
     }
 
     private var resolvedBodyFont: NSFont {
+        // Falls back to system font if selectedFont is an unrecognized PostScript name.
         NSFont(name: selectedFont, size: 16) ?? NSFont.systemFont(ofSize: 16)
     }
 
