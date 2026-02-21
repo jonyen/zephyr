@@ -18,6 +18,7 @@ struct SelectableTextView: NSViewRepresentable {
     let onEditNote: (Note) -> Void
     let selectedFont: String
     let bionicReadingEnabled: Bool
+    let theme: ReadingTheme
 
     func makeNSView(context: Context) -> NSScrollView {
         let textView = HighlightableTextView()
@@ -141,7 +142,7 @@ struct SelectableTextView: NSViewRepresentable {
             if verse.number > 1 {
                 let numAttrs: [NSAttributedString.Key: Any] = [
                     .font: verseNumFont,
-                    .foregroundColor: NSColor.secondaryLabelColor,
+                    .foregroundColor: theme.nsSecondaryColor,
                     .baselineOffset: 6,
                     .paragraphStyle: paragraphStyle
                 ]
@@ -177,13 +178,13 @@ struct SelectableTextView: NSViewRepresentable {
                 textStr = NSMutableAttributedString(string: verse.text + " ", attributes: attrs)
             } else if isRedLetter {
                 textStr = buildRedLetterAttributedString(
-                    text: verse.text, font: bodyFont, paragraphStyle: paragraphStyle
+                    text: verse.text, font: bodyFont, paragraphStyle: paragraphStyle, theme: theme
                 )
             } else {
                 let attrs: [NSAttributedString.Key: Any] = [
                     .font: bodyFont,
                     .paragraphStyle: paragraphStyle,
-                    .foregroundColor: NSColor.labelColor
+                    .foregroundColor: theme.nsTextColor
                 ]
                 textStr = NSMutableAttributedString(string: verse.text + " ", attributes: attrs)
             }
@@ -213,11 +214,11 @@ struct SelectableTextView: NSViewRepresentable {
     }
 
     /// Renders verse text with only the quoted speech in red, matching the original ChapterView behavior.
-    private func buildRedLetterAttributedString(text: String, font: NSFont, paragraphStyle: NSParagraphStyle) -> NSMutableAttributedString {
+    private func buildRedLetterAttributedString(text: String, font: NSFont, paragraphStyle: NSParagraphStyle, theme: ReadingTheme) -> NSMutableAttributedString {
         let defaultAttrs: [NSAttributedString.Key: Any] = [
             .font: font,
             .paragraphStyle: paragraphStyle,
-            .foregroundColor: NSColor.labelColor
+            .foregroundColor: theme.nsTextColor
         ]
         let redAttrs: [NSAttributedString.Key: Any] = [
             .font: font,

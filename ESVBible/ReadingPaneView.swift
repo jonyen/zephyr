@@ -211,6 +211,7 @@ private struct ChapterView: View {
     @State private var dropCapFontSize: CGFloat = 42
     @AppStorage("selectedFont") private var selectedFont: String = "Georgia"
     @AppStorage("bionicReadingEnabled") private var bionicReadingEnabled: Bool = false
+    @AppStorage("readingTheme") private var readingTheme: ReadingTheme = .system
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -260,7 +261,8 @@ private struct ChapterView: View {
                     showNotePopover = true
                 },
                 selectedFont: selectedFont,
-                bionicReadingEnabled: bionicReadingEnabled
+                bionicReadingEnabled: bionicReadingEnabled,
+                theme: readingTheme
             )
             .frame(height: textHeight)
             .overlay(alignment: .topLeading) {
