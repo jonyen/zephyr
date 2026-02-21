@@ -156,6 +156,10 @@ struct ESVBibleApp: App {
                 }
             }
         }
+
+        Settings {
+            AppearanceSettingsView()
+        }
     }
 }
 
