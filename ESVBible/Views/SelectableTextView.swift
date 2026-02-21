@@ -16,6 +16,8 @@ struct SelectableTextView: NSViewRepresentable {
     let notes: [Note]
     let onAddNote: (Int, Int) -> Void  // verseStart, verseEnd
     let onEditNote: (Note) -> Void
+    let selectedFont: String
+    let bionicReadingEnabled: Bool
 
     func makeNSView(context: Context) -> NSScrollView {
         let textView = HighlightableTextView()
@@ -67,13 +69,13 @@ struct SelectableTextView: NSViewRepresentable {
         context.coordinator.verseBoundaries = []
 
         // Compute drop-cap size from body font metrics so the number spans exactly two lines
-        let serifDescriptor = NSFontDescriptor.preferredFontDescriptor(forTextStyle: .body).withDesign(.serif) ?? NSFontDescriptor.preferredFontDescriptor(forTextStyle: .body)
-        let bodyFont = NSFont(descriptor: serifDescriptor, size: 16) ?? NSFont.systemFont(ofSize: 16)
+        let bodyFont = NSFont(name: selectedFont, size: 16) ?? NSFont.systemFont(ofSize: 16)
         let lineHeight = bodyFont.ascender + abs(bodyFont.descender) + bodyFont.leading
         let twoLineHeight = lineHeight * 2 + 6 // 6 = paragraphStyle.lineSpacing
 
         let computedFontSize = twoLineHeight
 
+        let serifDescriptor = NSFontDescriptor.preferredFontDescriptor(forTextStyle: .body).withDesign(.serif) ?? NSFontDescriptor.preferredFontDescriptor(forTextStyle: .body)
         let dropCapFont = NSFont(descriptor: serifDescriptor, size: computedFontSize) ?? NSFont.systemFont(ofSize: computedFontSize)
         let dropCapStr = NSAttributedString(string: "\(chapterNumber)", attributes: [.font: dropCapFont])
         let dropCapSize = dropCapStr.size()
@@ -129,7 +131,7 @@ struct SelectableTextView: NSViewRepresentable {
         let paragraphStyle = NSMutableParagraphStyle()
         paragraphStyle.lineSpacing = 6
 
-        let bodyFont = NSFont(descriptor: NSFontDescriptor.preferredFontDescriptor(forTextStyle: .body).withDesign(.serif) ?? NSFontDescriptor.preferredFontDescriptor(forTextStyle: .body), size: 16) ?? NSFont.systemFont(ofSize: 16)
+        let bodyFont = NSFont(name: selectedFont, size: 16) ?? NSFont.systemFont(ofSize: 16)
         let verseNumFont = NSFont.systemFont(ofSize: 10)
 
         var boundaries: [(verse: Int, start: Int, end: Int)] = []
@@ -196,6 +198,11 @@ struct SelectableTextView: NSViewRepresentable {
                 }
             }
 
+            // Apply bionic reading if enabled
+            if bionicReadingEnabled {
+                applyBionicReading(to: textStr, font: bodyFont)
+            }
+
             result.append(textStr)
             let verseEnd = result.length
             boundaries.append((verse: verse.number, start: verseStart, end: verseEnd))
@@ -237,6 +244,19 @@ struct SelectableTextView: NSViewRepresentable {
         guard let start = searchHighlightStart else { return false }
         let end = searchHighlightEnd ?? start
         return verseNumber >= start && verseNumber <= end
+    }
+
+    private func applyBionicReading(to attrStr: NSMutableAttributedString, font: NSFont) {
+        let boldFont = NSFontManager.shared.convert(font, toHaveTrait: .boldFontMask)
+        let nsString = attrStr.string as NSString
+        nsString.enumerateSubstrings(
+            in: NSRange(location: 0, length: nsString.length),
+            options: .byWords
+        ) { _, wordRange, _, _ in
+            let boldLength = max(1, Int(ceil(Double(wordRange.length) / 2.0)))
+            let boldRange = NSRange(location: wordRange.location, length: boldLength)
+            attrStr.addAttribute(.font, value: boldFont, range: boldRange)
+        }
     }
 
     // MARK: - Coordinator
