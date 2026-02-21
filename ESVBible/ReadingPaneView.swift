@@ -209,6 +209,8 @@ private struct ChapterView: View {
     @State private var notePopoverVerseEnd: Int = 1
     @State private var editingNote: Note? = nil
     @State private var dropCapFontSize: CGFloat = 42
+    @AppStorage("selectedFont") private var selectedFont: String = "Georgia"
+    @AppStorage("bionicReadingEnabled") private var bionicReadingEnabled: Bool = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -256,7 +258,9 @@ private struct ChapterView: View {
                     notePopoverVerseEnd = note.verseEnd
                     editingNote = note
                     showNotePopover = true
-                }
+                },
+                selectedFont: selectedFont,
+                bionicReadingEnabled: bionicReadingEnabled
             )
             .frame(height: textHeight)
             .overlay(alignment: .topLeading) {
