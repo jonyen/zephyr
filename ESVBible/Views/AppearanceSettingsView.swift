@@ -7,7 +7,7 @@ struct AppearanceSettingsView: View {
     var body: some View {
         Form {
             Section("Font") {
-                Picker("", selection: $selectedFont) {
+                Picker("Font", selection: $selectedFont) {
                     Text("Georgia")
                         .font(.custom("Georgia", size: 14))
                         .tag("Georgia")
@@ -18,6 +18,7 @@ struct AppearanceSettingsView: View {
                         .font(.custom("HelveticaNeue", size: 14))
                         .tag("HelveticaNeue")
                 }
+                .labelsHidden()
                 .pickerStyle(.radioGroup)
             }
 
