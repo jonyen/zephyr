@@ -69,7 +69,7 @@ struct SelectableTextView: NSViewRepresentable {
         context.coordinator.verseBoundaries = []
 
         // Compute drop-cap size from body font metrics so the number spans exactly two lines
-        let bodyFont = NSFont(name: selectedFont, size: 16) ?? NSFont.systemFont(ofSize: 16)
+        let bodyFont = resolvedBodyFont
         let lineHeight = bodyFont.ascender + abs(bodyFont.descender) + bodyFont.leading
         let twoLineHeight = lineHeight * 2 + 6 // 6 = paragraphStyle.lineSpacing
 
@@ -131,7 +131,7 @@ struct SelectableTextView: NSViewRepresentable {
         let paragraphStyle = NSMutableParagraphStyle()
         paragraphStyle.lineSpacing = 6
 
-        let bodyFont = NSFont(name: selectedFont, size: 16) ?? NSFont.systemFont(ofSize: 16)
+        let bodyFont = resolvedBodyFont
         let verseNumFont = NSFont.systemFont(ofSize: 10)
 
         var boundaries: [(verse: Int, start: Int, end: Int)] = []
@@ -246,7 +246,13 @@ struct SelectableTextView: NSViewRepresentable {
         return verseNumber >= start && verseNumber <= end
     }
 
+    private var resolvedBodyFont: NSFont {
+        NSFont(name: selectedFont, size: 16) ?? NSFont.systemFont(ofSize: 16)
+    }
+
     private func applyBionicReading(to attrStr: NSMutableAttributedString, font: NSFont) {
+        // If the selected font has no bold variant, NSFontManager returns the same font
+        // unchanged and bionic reading will have no visible effect.
         let boldFont = NSFontManager.shared.convert(font, toHaveTrait: .boldFontMask)
         let nsString = attrStr.string as NSString
         nsString.enumerateSubstrings(
