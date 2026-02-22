@@ -219,6 +219,7 @@ private struct ChapterView: View {
                 Text(bookName)
                     .font(.largeTitle)
                     .fontWeight(.bold)
+                    .foregroundStyle(Color(readingTheme.nsTextColor))
                     .padding(.top, 16)
                     .padding(.bottom, 12)
             }
@@ -269,6 +270,7 @@ private struct ChapterView: View {
                 HStack(alignment: .firstTextBaseline, spacing: 4) {
                     Text("\(chapter.number)")
                         .font(.system(size: dropCapFontSize, weight: .medium, design: .serif))
+                        .foregroundStyle(Color(readingTheme.nsTextColor))
                     if highlightManager.isBookmarked(book: bookName, chapter: chapter.number) {
                         Image(systemName: "bookmark.fill")
                             .foregroundStyle(Color.accentColor)
