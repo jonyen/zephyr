@@ -324,10 +324,12 @@ struct ContentView: View {
                 await updateService.checkForUpdate()
             }
         }
-        .onReceive(NotificationCenter.default.publisher(for: .navigatePreviousChapter)) { _ in
+        .onReceive(NotificationCenter.default.publisher(for: .navigatePreviousChapter)) { (notification: Notification) in
+            guard (notification.object as? NSWindow) == hostWindow else { return }
             navigateChapter(delta: -1)
         }
-        .onReceive(NotificationCenter.default.publisher(for: .navigateNextChapter)) { _ in
+        .onReceive(NotificationCenter.default.publisher(for: .navigateNextChapter)) { (notification: Notification) in
+            guard (notification.object as? NSWindow) == hostWindow else { return }
             navigateChapter(delta: 1)
         }
         .onKeyPress(.escape) {
