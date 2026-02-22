@@ -134,6 +134,7 @@ struct SelectableTextView: NSViewRepresentable {
 
         let bodyFont = resolvedBodyFont
         let verseNumFont = NSFont.systemFont(ofSize: 10)
+        let verseSeparator = bookName == "Proverbs" ? "\n" : " "
 
         var boundaries: [(verse: Int, start: Int, end: Int)] = []
 
@@ -175,10 +176,10 @@ struct SelectableTextView: NSViewRepresentable {
                     .paragraphStyle: paragraphStyle,
                     .foregroundColor: NSColor.controlAccentColor
                 ]
-                textStr = NSMutableAttributedString(string: verse.text + " ", attributes: attrs)
+                textStr = NSMutableAttributedString(string: verse.text + verseSeparator, attributes: attrs)
             } else if isRedLetter {
                 textStr = buildRedLetterAttributedString(
-                    text: verse.text, font: bodyFont, paragraphStyle: paragraphStyle, theme: theme
+                    text: verse.text, font: bodyFont, paragraphStyle: paragraphStyle, theme: theme, separator: verseSeparator
                 )
             } else {
                 let attrs: [NSAttributedString.Key: Any] = [
@@ -186,7 +187,7 @@ struct SelectableTextView: NSViewRepresentable {
                     .paragraphStyle: paragraphStyle,
                     .foregroundColor: theme.nsTextColor
                 ]
-                textStr = NSMutableAttributedString(string: verse.text + " ", attributes: attrs)
+                textStr = NSMutableAttributedString(string: verse.text + verseSeparator, attributes: attrs)
             }
 
             // Apply user highlights for this verse
@@ -214,7 +215,7 @@ struct SelectableTextView: NSViewRepresentable {
     }
 
     /// Renders verse text with only the quoted speech in red, matching the original ChapterView behavior.
-    private func buildRedLetterAttributedString(text: String, font: NSFont, paragraphStyle: NSParagraphStyle, theme: ReadingTheme) -> NSMutableAttributedString {
+    private func buildRedLetterAttributedString(text: String, font: NSFont, paragraphStyle: NSParagraphStyle, theme: ReadingTheme, separator: String = " ") -> NSMutableAttributedString {
         let defaultAttrs: [NSAttributedString.Key: Any] = [
             .font: font,
             .paragraphStyle: paragraphStyle,
@@ -233,11 +234,11 @@ struct SelectableTextView: NSViewRepresentable {
             if !before.isEmpty {
                 result.append(NSAttributedString(string: before, attributes: defaultAttrs))
             }
-            result.append(NSAttributedString(string: quoted + " ", attributes: redAttrs))
+            result.append(NSAttributedString(string: quoted + separator, attributes: redAttrs))
             return result
         } else {
             // No opening quote — continuation of a previous speech
-            return NSMutableAttributedString(string: text + " ", attributes: redAttrs)
+            return NSMutableAttributedString(string: text + separator, attributes: redAttrs)
         }
     }
 
