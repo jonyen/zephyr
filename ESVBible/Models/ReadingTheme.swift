@@ -34,7 +34,7 @@ enum ReadingTheme: String, CaseIterable {
         switch self {
         case .system: return .clear
         case .light:  return .white
-        case .dark:   return .clear
+        case .dark:   return Color(NSColor.windowBackgroundColor)
         case .sepia:  return Color(red: 0.957, green: 0.925, blue: 0.847) // #F4ECD8
         case .black:  return .black
         }
