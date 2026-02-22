@@ -66,12 +66,12 @@ struct ESVBibleApp: App {
                 Divider()
 
                 Button("Go to Previous Chapter") {
-                    NotificationCenter.default.post(name: .navigatePreviousChapter, object: nil)
+                    NotificationCenter.default.post(name: .navigatePreviousChapter, object: NSApp.keyWindow)
                 }
                 .keyboardShortcut("[", modifiers: .command)
 
                 Button("Go to Next Chapter") {
-                    NotificationCenter.default.post(name: .navigateNextChapter, object: nil)
+                    NotificationCenter.default.post(name: .navigateNextChapter, object: NSApp.keyWindow)
                 }
                 .keyboardShortcut("]", modifiers: .command)
 
