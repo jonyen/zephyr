@@ -42,7 +42,11 @@ struct AppearanceSettingsView: View {
             }
 
             Section("Reading") {
-                Toggle("Bionic Reading", isOn: $bionicReadingEnabled)
+                Toggle("Bionic Reading (Experimental)", isOn: $bionicReadingEnabled)
+                Link("What is Bionic Reading?",
+                     destination: URL(string: "https://bionic-reading.com")!)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
         }
         .formStyle(.grouped)

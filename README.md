@@ -35,13 +35,16 @@ Zephyr will always be free. If you find it useful, consider [sponsoring the proj
 
 ## Download
 
-**[Download Zephyr v0.8.6](https://github.com/jonyen/zephyr/releases/download/v0.8.6/Zephyr-0.8.6.dmg)** (macOS 14+)
+**[Download Zephyr v0.8.9](https://github.com/jonyen/zephyr/releases/download/v0.8.9/Zephyr-0.8.9.dmg)** (macOS 14+)
 
 Open the DMG and drag Zephyr to your Applications folder.
 
 ## Features
 
 - **Full ESV Bible** — All 66 books, offline and instantly accessible
+- **Reading Themes** — System, Light, Dark, Sepia, and Black themes for any lighting condition
+- **Font Selection** — Choose from Georgia, Palatino, or Helvetica Neue
+- **Bionic Reading** — Bold-leading-letters reading mode to improve reading speed
 - **Spotlight Integration** — Search for any verse or passage directly from macOS Spotlight
 - **Bookmarks** — Save your place and quickly return to passages
 - **Highlights** — Mark verses with color highlights as you read

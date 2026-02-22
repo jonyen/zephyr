@@ -10,7 +10,7 @@ enum ReadingTheme: String, CaseIterable {
 
     var displayName: String {
         switch self {
-        case .system: return "System"
+        case .system: return "System (Light/Dark)"
         case .light:  return "Light"
         case .dark:   return "Dark"
         case .sepia:  return "Sepia"
