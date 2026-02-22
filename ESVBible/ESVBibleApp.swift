@@ -109,14 +109,14 @@ struct ESVBibleApp: App {
                 .keyboardShortcut(.rightArrow, modifiers: [.command, .shift])
 
                 Button("Previous Highlight") {
-                    NotificationCenter.default.post(name: .navigatePreviousHighlight, object: nil)
+                    NotificationCenter.default.post(name: .navigatePreviousHighlight, object: NSApp.keyWindow)
                 }
-                .keyboardShortcut("{", modifiers: .command)
+                .keyboardShortcut(.leftArrow, modifiers: .command)
 
                 Button("Next Highlight") {
-                    NotificationCenter.default.post(name: .navigateNextHighlight, object: nil)
+                    NotificationCenter.default.post(name: .navigateNextHighlight, object: NSApp.keyWindow)
                 }
-                .keyboardShortcut("}", modifiers: .command)
+                .keyboardShortcut(.rightArrow, modifiers: .command)
             }
 
             CommandGroup(after: .windowArrangement) {
@@ -129,6 +129,16 @@ struct ESVBibleApp: App {
                     NotificationCenter.default.post(name: .reopenClosedTab, object: NSApp.keyWindow)
                 }
                 .keyboardShortcut("t", modifiers: [.command, .shift])
+
+                Button("Show Previous Tab") {
+                    NSApp.keyWindow?.selectPreviousTab(nil)
+                }
+                .keyboardShortcut("[", modifiers: [.command, .shift])
+
+                Button("Show Next Tab") {
+                    NSApp.keyWindow?.selectNextTab(nil)
+                }
+                .keyboardShortcut("]", modifiers: [.command, .shift])
 
                 Button("Keep Window on Top") {
                     NotificationCenter.default.post(name: .toggleWindowOnTop, object: nil)

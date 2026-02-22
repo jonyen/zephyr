@@ -43,10 +43,12 @@ struct ContentView: View {
         .onReceive(NotificationCenter.default.publisher(for: .navigateNextBookmark)) { _ in
             navigateToBookmark(direction: 1)
         }
-        .onReceive(NotificationCenter.default.publisher(for: .navigatePreviousHighlight)) { _ in
+        .onReceive(NotificationCenter.default.publisher(for: .navigatePreviousHighlight)) { (notification: Notification) in
+            guard (notification.object as? NSWindow) == hostWindow else { return }
             navigateToHighlight(direction: -1)
         }
-        .onReceive(NotificationCenter.default.publisher(for: .navigateNextHighlight)) { _ in
+        .onReceive(NotificationCenter.default.publisher(for: .navigateNextHighlight)) { (notification: Notification) in
+            guard (notification.object as? NSWindow) == hostWindow else { return }
             navigateToHighlight(direction: 1)
         }
         .onReceive(NotificationCenter.default.publisher(for: .showKeyboardShortcuts)) { _ in
@@ -594,8 +596,10 @@ struct ContentView: View {
             ("Toggle Bookmark", "\u{2318}B"),
             ("Previous Bookmark", "\u{21E7}\u{2318}\u{2190}"),
             ("Next Bookmark", "\u{21E7}\u{2318}\u{2192}"),
-            ("Previous Highlight", "\u{2318}{"),
-            ("Next Highlight", "\u{2318}}"),
+            ("Previous Highlight", "\u{2318}\u{2190}"),
+            ("Next Highlight", "\u{2318}\u{2192}"),
+            ("Previous Tab", "\u{21E7}\u{2318}["),
+            ("Next Tab", "\u{21E7}\u{2318}]"),
             ("New Tab", "\u{2318}T"),
             ("Reopen Closed Tab", "\u{21E7}\u{2318}T"),
             ("Keep Window on Top", "\u{21E7}\u{2318}P"),
