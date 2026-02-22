@@ -20,6 +20,7 @@ struct ContentView: View {
     @State private var showKeyboardShortcuts = false
     @AppStorage("lastBook") private var lastBook: String = "Genesis"
     @AppStorage("lastChapter") private var lastChapter: Int = 1
+    @AppStorage("readingTheme") private var readingTheme: ReadingTheme = .system
     @FocusState private var isSearchFocused: Bool
     @State private var keyMonitor: Any? = nil
     @State private var searchService = SearchService()
@@ -32,10 +33,10 @@ struct ContentView: View {
     @State private var hostWindow: NSWindow? = nil
     @State private var hasAppeared = false
     @State private var windowCloseObserver: Any? = nil
-    @Environment(\.openWindow) private var openWindow
-
     var body: some View {
         mainContent
+        .preferredColorScheme(readingTheme.colorScheme)
+        .background(readingTheme.backgroundColor.ignoresSafeArea())
         .onReceive(NotificationCenter.default.publisher(for: .navigatePreviousBookmark)) { _ in
             navigateToBookmark(direction: -1)
         }
@@ -717,22 +718,18 @@ struct ContentView: View {
 
     private func openTab(at position: ChapterPosition) {
         guard let host = hostWindow else { return }
-        let priorIDs = Set(NSApp.windows.map { ObjectIdentifier($0) })
-        openWindow(value: position)
-        // Wait for the new NSWindow to become key, then join it to the current tab group.
-        // NSWindow.didBecomeKeyNotification fires exactly when the window is ready — no arbitrary delay needed.
-        var observer: Any?
-        observer = NotificationCenter.default.addObserver(
-            forName: NSWindow.didBecomeKeyNotification,
-            object: nil,
-            queue: .main
-        ) { notification in
-            guard let newWindow = notification.object as? NSWindow,
-                  !priorIDs.contains(ObjectIdentifier(newWindow)) else { return }
-            NotificationCenter.default.removeObserver(observer as Any)
-            host.addTabbedWindow(newWindow, ordered: .above)
-            newWindow.makeKeyAndOrderFront(nil)
-        }
+        // Create the new window directly instead of going through SwiftUI's openWindow(value:).
+        // openWindow deduplicates by ChapterPosition value — if the same chapter is already open
+        // it focuses the existing window rather than creating a new one, so addTabbedWindow is
+        // never called. NSHostingController gives us a fresh NSWindow every time with no race.
+        let controller = NSHostingController(rootView: ContentView(initialPosition: position))
+        let newWindow = NSWindow(contentViewController: controller)
+        newWindow.setContentSize(NSSize(width: max(host.frame.width, 400), height: max(host.frame.height, 500)))
+        newWindow.styleMask = host.styleMask
+        newWindow.tabbingMode = .preferred
+        newWindow.tabbingIdentifier = host.tabbingIdentifier
+        host.addTabbedWindow(newWindow, ordered: .above)
+        newWindow.makeKeyAndOrderFront(nil)
     }
 
     private func navigateChapter(delta: Int) {
