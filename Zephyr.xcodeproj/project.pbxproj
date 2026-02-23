@@ -23,24 +23,27 @@
 		AA00002A /* SpotlightIndexer.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00002B /* SpotlightIndexer.swift */; };
 		AA00002C /* SearchService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00002D /* SearchService.swift */; };
 		AA00002E /* SearchServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00002F /* SearchServiceTests.swift */; };
-		AA00003B /* HighlightManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00003C /* HighlightManagerTests.swift */; };
 		AA000032 /* BibleScrubber.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000031 /* BibleScrubber.swift */; };
 		AA000033 /* RedLetterService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000034 /* RedLetterService.swift */; };
+		AA000035 /* red_letter_verses.json in Resources */ = {isa = PBXBuildFile; fileRef = AA000036 /* red_letter_verses.json */; };
 		AA000037 /* HighlightManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000038 /* HighlightManager.swift */; };
 		AA000039 /* SelectableTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00003A /* SelectableTextView.swift */; };
+		AA00003B /* HighlightManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00003C /* HighlightManagerTests.swift */; };
 		AA00003E /* NoteEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00003D /* NoteEditorView.swift */; };
 		AA000042 /* NotePopoverView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000043 /* NotePopoverView.swift */; };
 		AA000045 /* NotesSidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000044 /* NotesSidebarView.swift */; };
 		AA000046 /* UpdateService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000047 /* UpdateService.swift */; };
+		AA000048 /* UpdateServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000049 /* UpdateServiceTests.swift */; };
 		AA00004B /* UpdateBannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00004A /* UpdateBannerView.swift */; };
 		AA00004C /* AppearanceSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00004D /* AppearanceSettingsView.swift */; };
 		AA00004E /* ReadingTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00004F /* ReadingTheme.swift */; };
-		AA000048 /* UpdateServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000049 /* UpdateServiceTests.swift */; };
 		AA000072 /* ChapterPositionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000073 /* ChapterPositionTests.swift */; };
 		AA000076 /* ClosedTabsStackTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000077 /* ClosedTabsStackTests.swift */; };
-		AA000035 /* red_letter_verses.json in Resources */ = {isa = PBXBuildFile; fileRef = AA000036 /* red_letter_verses.json */; };
+		AA000078 /* ClosedTabsStack.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000079 /* ClosedTabsStack.swift */; };
+		AA00007A /* WindowAccessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00007B /* WindowAccessor.swift */; };
 		AA000082 /* red_letter_ranges.json in Resources */ = {isa = PBXBuildFile; fileRef = AA000083 /* red_letter_ranges.json */; };
 		AA3A3F952F40A2C5004087F5 /* ReadingPaneView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA3A3F942F40A2C5004087F5 /* ReadingPaneView.swift */; };
+		AA62DEA52F4CCB6E00D98FC2 /* KeybindingsSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA62DEA42F4CCB6E00D98FC2 /* KeybindingsSettingsView.swift */; };
 		AACC86CE2F409FA300E50F90 /* 1Chronicles.json in Resources */ = {isa = PBXBuildFile; fileRef = AACC868B2F409F1F00E50F90 /* 1Chronicles.json */; };
 		AACC86CF2F409FA300E50F90 /* 1Corinthians.json in Resources */ = {isa = PBXBuildFile; fileRef = AACC868C2F409F1F00E50F90 /* 1Corinthians.json */; };
 		AACC86D02F409FA300E50F90 /* 1John.json in Resources */ = {isa = PBXBuildFile; fileRef = AACC868D2F409F1F00E50F90 /* 1John.json */; };
@@ -108,8 +111,6 @@
 		AACC870E2F409FA300E50F90 /* Zechariah.json in Resources */ = {isa = PBXBuildFile; fileRef = AACC86CB2F409F1F00E50F90 /* Zechariah.json */; };
 		AACC870F2F409FA300E50F90 /* Zephaniah.json in Resources */ = {isa = PBXBuildFile; fileRef = AACC86CC2F409F1F00E50F90 /* Zephaniah.json */; };
 		AACC87112F40A09A00E50F90 /* ChapterPosition.swift in Sources */ = {isa = PBXBuildFile; fileRef = AACC87102F40A09A00E50F90 /* ChapterPosition.swift */; };
-		AA000078 /* ClosedTabsStack.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000079 /* ClosedTabsStack.swift */; };
-		AA00007A /* WindowAccessor.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00007B /* WindowAccessor.swift */; };
 		AACC87212F409FA300E50F90 /* search_index.json in Resources */ = {isa = PBXBuildFile; fileRef = AACC87202F409F1F00E50F90 /* search_index.json */; };
 /* End PBXBuildFile section */
 
@@ -140,28 +141,31 @@
 		AA00002B /* SpotlightIndexer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpotlightIndexer.swift; sourceTree = "<group>"; };
 		AA00002D /* SearchService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchService.swift; sourceTree = "<group>"; };
 		AA00002F /* SearchServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchServiceTests.swift; sourceTree = "<group>"; };
-		AA00003C /* HighlightManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HighlightManagerTests.swift; sourceTree = "<group>"; };
 		AA000031 /* BibleScrubber.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BibleScrubber.swift; sourceTree = "<group>"; };
 		AA000034 /* RedLetterService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RedLetterService.swift; sourceTree = "<group>"; };
+		AA000036 /* red_letter_verses.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = red_letter_verses.json; sourceTree = "<group>"; };
 		AA000038 /* HighlightManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HighlightManager.swift; sourceTree = "<group>"; };
 		AA00003A /* SelectableTextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectableTextView.swift; sourceTree = "<group>"; };
+		AA00003C /* HighlightManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HighlightManagerTests.swift; sourceTree = "<group>"; };
 		AA00003D /* NoteEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteEditorView.swift; sourceTree = "<group>"; };
+		AA000040 /* Zephyr.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Zephyr.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		AA000041 /* ZephyrTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ZephyrTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA000043 /* NotePopoverView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotePopoverView.swift; sourceTree = "<group>"; };
 		AA000044 /* NotesSidebarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotesSidebarView.swift; sourceTree = "<group>"; };
 		AA000047 /* UpdateService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateService.swift; sourceTree = "<group>"; };
+		AA000049 /* UpdateServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateServiceTests.swift; sourceTree = "<group>"; };
 		AA00004A /* UpdateBannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateBannerView.swift; sourceTree = "<group>"; };
 		AA00004D /* AppearanceSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppearanceSettingsView.swift; sourceTree = "<group>"; };
 		AA00004F /* ReadingTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadingTheme.swift; sourceTree = "<group>"; };
-		AA000049 /* UpdateServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateServiceTests.swift; sourceTree = "<group>"; };
 		AA000073 /* ChapterPositionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChapterPositionTests.swift; sourceTree = "<group>"; };
 		AA000077 /* ClosedTabsStackTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClosedTabsStackTests.swift; sourceTree = "<group>"; };
-		AA000036 /* red_letter_verses.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = red_letter_verses.json; sourceTree = "<group>"; };
+		AA000079 /* ClosedTabsStack.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClosedTabsStack.swift; sourceTree = "<group>"; };
+		AA00007B /* WindowAccessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowAccessor.swift; sourceTree = "<group>"; };
 		AA000083 /* red_letter_ranges.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = red_letter_ranges.json; sourceTree = "<group>"; };
-		AA000040 /* Zephyr.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Zephyr.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		AA000041 /* ZephyrTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ZephyrTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA3A3F942F40A2C5004087F5 /* ReadingPaneView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadingPaneView.swift; sourceTree = "<group>"; };
 		AA3A3F982F40AAB6004087F5 /* ESVBibleApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ESVBibleApp.swift; sourceTree = "<group>"; };
 		AA3A3F992F40AAB9004087F5 /* ESVBibleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ESVBibleTests.swift; sourceTree = "<group>"; };
+		AA62DEA42F4CCB6E00D98FC2 /* KeybindingsSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeybindingsSettingsView.swift; sourceTree = "<group>"; };
 		AACC868B2F409F1F00E50F90 /* 1Chronicles.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = 1Chronicles.json; sourceTree = "<group>"; };
 		AACC868C2F409F1F00E50F90 /* 1Corinthians.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = 1Corinthians.json; sourceTree = "<group>"; };
 		AACC868D2F409F1F00E50F90 /* 1John.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = 1John.json; sourceTree = "<group>"; };
@@ -229,8 +233,6 @@
 		AACC86CB2F409F1F00E50F90 /* Zechariah.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = Zechariah.json; sourceTree = "<group>"; };
 		AACC86CC2F409F1F00E50F90 /* Zephaniah.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = Zephaniah.json; sourceTree = "<group>"; };
 		AACC87102F40A09A00E50F90 /* ChapterPosition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChapterPosition.swift; sourceTree = "<group>"; };
-		AA000079 /* ClosedTabsStack.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClosedTabsStack.swift; sourceTree = "<group>"; };
-		AA00007B /* WindowAccessor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WindowAccessor.swift; sourceTree = "<group>"; };
 		AACC87202F409F1F00E50F90 /* search_index.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = search_index.json; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -250,6 +252,7 @@
 			isa = PBXGroup;
 			children = (
 				AA000011 /* ESVBibleApp.swift */,
+				AA62DEA42F4CCB6E00D98FC2 /* KeybindingsSettingsView.swift */,
 				AA000012 /* ContentView.swift */,
 				AA000024 /* Models */,
 				AA000025 /* Views */,
@@ -571,6 +574,7 @@
 				AA000033 /* RedLetterService.swift in Sources */,
 				AA000037 /* HighlightManager.swift in Sources */,
 				AA000039 /* SelectableTextView.swift in Sources */,
+				AA62DEA52F4CCB6E00D98FC2 /* KeybindingsSettingsView.swift in Sources */,
 				AA00003E /* NoteEditorView.swift in Sources */,
 				AA000042 /* NotePopoverView.swift in Sources */,
 				AA000045 /* NotesSidebarView.swift in Sources */,
