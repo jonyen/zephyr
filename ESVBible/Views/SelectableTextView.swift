@@ -166,28 +166,28 @@ struct SelectableTextView: NSViewRepresentable {
 
             // Verse text
             let verseStart = result.length
-            let isRedLetter = RedLetterService.shared.isRedLetter(book: bookName, chapter: chapter.number, verse: verse.number)
             let isSearchHighlighted = isSearchHighlight(verse.number)
 
-            let textStr: NSMutableAttributedString
-            if isSearchHighlighted {
-                let attrs: [NSAttributedString.Key: Any] = [
-                    .font: bodyFont,
-                    .paragraphStyle: paragraphStyle,
-                    .foregroundColor: NSColor.controlAccentColor
-                ]
-                textStr = NSMutableAttributedString(string: verse.text + verseSeparator, attributes: attrs)
-            } else if isRedLetter {
-                textStr = buildRedLetterAttributedString(
-                    text: verse.text, font: bodyFont, paragraphStyle: paragraphStyle, theme: theme, separator: verseSeparator
-                )
-            } else {
-                let attrs: [NSAttributedString.Key: Any] = [
-                    .font: bodyFont,
-                    .paragraphStyle: paragraphStyle,
-                    .foregroundColor: theme.nsTextColor
-                ]
-                textStr = NSMutableAttributedString(string: verse.text + verseSeparator, attributes: attrs)
+            let baseColor: NSColor = isSearchHighlighted ? .controlAccentColor : theme.nsTextColor
+            let baseAttrs: [NSAttributedString.Key: Any] = [
+                .font: bodyFont,
+                .paragraphStyle: paragraphStyle,
+                .foregroundColor: baseColor
+            ]
+            let textStr = NSMutableAttributedString(string: verse.text + verseSeparator, attributes: baseAttrs)
+
+            // Apply red-letter coloring from the authoritative data file.
+            // Each range is a (start, end) pair into verse.text (end exclusive).
+            if !isSearchHighlighted {
+                let redRanges = RedLetterService.shared.redLetterRanges(
+                    book: bookName, chapter: chapter.number, verse: verse.number)
+                for range in redRanges {
+                    let length = range.end - range.start
+                    if length > 0 && range.start >= 0 && range.end <= verse.text.count {
+                        textStr.addAttribute(.foregroundColor, value: NSColor.systemRed,
+                                             range: NSRange(location: range.start, length: length))
+                    }
+                }
             }
 
             // Apply user highlights for this verse
@@ -212,34 +212,6 @@ struct SelectableTextView: NSViewRepresentable {
 
         coordinator.verseBoundaries = boundaries
         return result
-    }
-
-    /// Renders verse text with only the quoted speech in red, matching the original ChapterView behavior.
-    private func buildRedLetterAttributedString(text: String, font: NSFont, paragraphStyle: NSParagraphStyle, theme: ReadingTheme, separator: String = " ") -> NSMutableAttributedString {
-        let defaultAttrs: [NSAttributedString.Key: Any] = [
-            .font: font,
-            .paragraphStyle: paragraphStyle,
-            .foregroundColor: theme.nsTextColor
-        ]
-        let redAttrs: [NSAttributedString.Key: Any] = [
-            .font: font,
-            .paragraphStyle: paragraphStyle,
-            .foregroundColor: NSColor.systemRed
-        ]
-
-        if let quoteIndex = text.firstIndex(of: "\u{201C}") {
-            let before = String(text[text.startIndex..<quoteIndex])
-            let quoted = String(text[quoteIndex...])
-            let result = NSMutableAttributedString()
-            if !before.isEmpty {
-                result.append(NSAttributedString(string: before, attributes: defaultAttrs))
-            }
-            result.append(NSAttributedString(string: quoted + separator, attributes: redAttrs))
-            return result
-        } else {
-            // No opening quote — continuation of a previous speech
-            return NSMutableAttributedString(string: text + separator, attributes: redAttrs)
-        }
     }
 
     private func isSearchHighlight(_ verseNumber: Int) -> Bool {

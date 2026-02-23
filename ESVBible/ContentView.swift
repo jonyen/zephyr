@@ -122,156 +122,8 @@ struct ContentView: View {
 
             // Floating search bar overlay
             if isSearchVisible {
-                VStack {
-                    HStack(spacing: 10) {
-                        Image(systemName: "magnifyingglass")
-                            .foregroundStyle(.secondary)
-                            .imageScale(.large)
-
-                        TextField("Search verses or go to reference...", text: $searchText)
-                            .textFieldStyle(.plain)
-                            .font(.title3)
-                            .focused($isSearchFocused)
-                            .onSubmit { performSearch() }
-                            .onChange(of: searchText) { _, newValue in
-                                searchTask?.cancel()
-                                errorMessage = nil
-
-                                let trimmed = newValue.trimmingCharacters(in: .whitespaces)
-                                guard !trimmed.isEmpty else {
-                                    searchResults = []
-                                    parsedReference = nil
-                                    isKeywordSearch = false
-                                    return
-                                }
-
-                                // If it parses as a reference, show it as a suggestion
-                                if let ref = ReferenceParser.parse(trimmed) {
-                                    let isValid = bibleStore.findBook(ref.book)
-                                        .flatMap { book in book.chapters.first(where: { $0.number == ref.chapter }) } != nil
-                                    parsedReference = isValid ? ref : nil
-                                    searchResults = []
-                                    isKeywordSearch = false
-                                    return
-                                }
-                                parsedReference = nil
-
-                                // Debounce keyword search
-                                isKeywordSearch = true
-                                searchTask = Task {
-                                    try? await Task.sleep(for: .milliseconds(300))
-                                    guard !Task.isCancelled else { return }
-                                    let results = searchService.search(query: trimmed, bibleStore: bibleStore)
-                                    await MainActor.run {
-                                        searchResults = results
-                                    }
-                                }
-                            }
-
-                        if !searchText.isEmpty {
-                            Button {
-                                searchText = ""
-                            } label: {
-                                Image(systemName: "xmark.circle.fill")
-                                    .foregroundStyle(.secondary)
-                            }
-                            .buttonStyle(.plain)
-                        }
-                    }
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 12)
-                    .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
-                    .overlay {
-                        RoundedRectangle(cornerRadius: 12)
-                            .strokeBorder(.separator, lineWidth: 0.5)
-                    }
-                    .shadow(color: .black.opacity(0.25), radius: 20, x: 0, y: 8)
-
-                    if let error = errorMessage {
-                        Text(error)
-                            .font(.callout)
-                            .foregroundStyle(.red)
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 8)
-                            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 8))
-                            .shadow(color: .black.opacity(0.15), radius: 8, x: 0, y: 4)
-                    }
-
-                    if parsedReference != nil || !searchResults.isEmpty {
-                        ScrollView {
-                            VStack(alignment: .leading, spacing: 0) {
-                                if let ref = parsedReference {
-                                    Button {
-                                        dismissSearch()
-                                        navigateTo(book: ref.book, chapter: ref.chapter, verseStart: ref.verseStart, verseEnd: ref.verseEnd, addToHistory: true)
-                                    } label: {
-                                        HStack(spacing: 8) {
-                                            Image(systemName: "book.closed")
-                                                .foregroundStyle(.accent)
-                                                .imageScale(.small)
-                                            Text(ref.displayString)
-                                                .font(.subheadline.bold())
-                                            Spacer()
-                                            Image(systemName: "return")
-                                                .foregroundStyle(.tertiary)
-                                                .imageScale(.small)
-                                        }
-                                        .frame(maxWidth: .infinity, alignment: .leading)
-                                        .padding(.horizontal, 12)
-                                        .padding(.vertical, 10)
-                                    }
-                                    .buttonStyle(.plain)
-
-                                    if !searchResults.isEmpty { Divider() }
-                                }
-
-                                if !searchResults.isEmpty {
-                                Text("\(searchResults.count)\(searchResults.count >= 50 ? "+" : "") result\(searchResults.count == 1 ? "" : "s")")
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                                    .padding(.horizontal, 12)
-                                    .padding(.vertical, 6)
-
-                                Divider()
-                                }
-
-                                ForEach(searchResults) { result in
-                                    Button {
-                                        dismissSearch()
-                                        navigateTo(book: result.book, chapter: result.chapter, verseStart: result.verse, verseEnd: result.verse, addToHistory: true)
-                                    } label: {
-                                        VStack(alignment: .leading, spacing: 2) {
-                                            Text("\(result.book) \(result.chapter):\(result.verse)")
-                                                .font(.subheadline.bold())
-                                            Text(result.text)
-                                                .font(.caption)
-                                                .foregroundStyle(.secondary)
-                                                .lineLimit(2)
-                                        }
-                                        .frame(maxWidth: .infinity, alignment: .leading)
-                                        .padding(.horizontal, 12)
-                                        .padding(.vertical, 8)
-                                    }
-                                    .buttonStyle(.plain)
-
-                                    if result.id != searchResults.last?.id {
-                                        Divider().padding(.leading, 12)
-                                    }
-                                }
-                            }
-                        }
-                        .frame(maxHeight: 300)
-                        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 8))
-                        .overlay {
-                            RoundedRectangle(cornerRadius: 8)
-                                .strokeBorder(.separator, lineWidth: 0.5)
-                        }
-                        .shadow(color: .black.opacity(0.15), radius: 8, x: 0, y: 4)
-                    }
-                }
-                .padding(.top, 24)
-                .padding(.horizontal, 48)
-                .transition(.move(edge: .top).combined(with: .opacity))
+                searchOverlay
+                    .transition(.move(edge: .top).combined(with: .opacity))
             }
             // Table of Contents overlay
             if isTOCVisible {
@@ -484,6 +336,162 @@ struct ContentView: View {
             isTOCVisible = false
         }
         hoveredBook = nil
+    }
+
+    @ViewBuilder
+    private var searchOverlay: some View {
+        VStack {
+            HStack(spacing: 10) {
+                Image(systemName: "magnifyingglass")
+                    .foregroundStyle(.secondary)
+                    .imageScale(.large)
+
+                TextField("Search verses or go to reference...", text: $searchText)
+                    .textFieldStyle(.plain)
+                    .font(.title3)
+                    .focused($isSearchFocused)
+                    .onSubmit { performSearch() }
+                    .onChange(of: searchText) { _, newValue in
+                        searchTask?.cancel()
+                        errorMessage = nil
+
+                        let trimmed = newValue.trimmingCharacters(in: .whitespaces)
+                        guard !trimmed.isEmpty else {
+                            searchResults = []
+                            parsedReference = nil
+                            isKeywordSearch = false
+                            return
+                        }
+
+                        if let ref = ReferenceParser.parse(trimmed) {
+                            let isValid = bibleStore.findBook(ref.book)
+                                .flatMap { book in book.chapters.first(where: { $0.number == ref.chapter }) } != nil
+                            parsedReference = isValid ? ref : nil
+                            searchResults = []
+                            isKeywordSearch = false
+                            return
+                        }
+                        parsedReference = nil
+
+                        isKeywordSearch = true
+                        searchTask = Task {
+                            try? await Task.sleep(for: .milliseconds(300))
+                            guard !Task.isCancelled else { return }
+                            let results = searchService.search(query: trimmed, bibleStore: bibleStore)
+                            await MainActor.run {
+                                searchResults = results
+                            }
+                        }
+                    }
+
+                if !searchText.isEmpty {
+                    Button {
+                        searchText = ""
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundStyle(.secondary)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
+            .overlay {
+                RoundedRectangle(cornerRadius: 12)
+                    .strokeBorder(.separator, lineWidth: 0.5)
+            }
+            .shadow(color: .black.opacity(0.25), radius: 20, x: 0, y: 8)
+
+            if let error = errorMessage {
+                Text(error)
+                    .font(.callout)
+                    .foregroundStyle(.red)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 8)
+                    .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 8))
+                    .shadow(color: .black.opacity(0.15), radius: 8, x: 0, y: 4)
+            }
+
+            if parsedReference != nil || !searchResults.isEmpty {
+                searchResultsList
+            }
+        }
+        .padding(.top, 24)
+        .padding(.horizontal, 48)
+    }
+
+    @ViewBuilder
+    private var searchResultsList: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 0) {
+                if let ref = parsedReference {
+                    Button {
+                        dismissSearch()
+                        navigateTo(book: ref.book, chapter: ref.chapter, verseStart: ref.verseStart, verseEnd: ref.verseEnd, addToHistory: true)
+                    } label: {
+                        HStack(spacing: 8) {
+                            Image(systemName: "book.closed")
+                                .foregroundStyle(Color.accentColor)
+                                .imageScale(.small)
+                            Text(ref.displayString)
+                                .font(.subheadline.bold())
+                            Spacer()
+                            Image(systemName: "return")
+                                .foregroundStyle(.tertiary)
+                                .imageScale(.small)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 10)
+                    }
+                    .buttonStyle(.plain)
+
+                    if !searchResults.isEmpty { Divider() }
+                }
+
+                if !searchResults.isEmpty {
+                    Text("\(searchResults.count)\(searchResults.count >= 50 ? "+" : "") result\(searchResults.count == 1 ? "" : "s")")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+
+                    Divider()
+                }
+
+                ForEach(searchResults) { result in
+                    Button {
+                        dismissSearch()
+                        navigateTo(book: result.book, chapter: result.chapter, verseStart: result.verse, verseEnd: result.verse, addToHistory: true)
+                    } label: {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("\(result.book) \(result.chapter):\(result.verse)")
+                                .font(.subheadline.bold())
+                            Text(result.text)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                                .lineLimit(2)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
+                    }
+                    .buttonStyle(.plain)
+
+                    if result.id != searchResults.last?.id {
+                        Divider().padding(.leading, 12)
+                    }
+                }
+            }
+        }
+        .frame(maxHeight: 300)
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 8))
+        .overlay {
+            RoundedRectangle(cornerRadius: 8)
+                .strokeBorder(.separator, lineWidth: 0.5)
+        }
+        .shadow(color: .black.opacity(0.15), radius: 8, x: 0, y: 4)
     }
 
     private var tocOverlay: some View {
