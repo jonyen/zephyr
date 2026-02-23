@@ -21,12 +21,19 @@ struct ContentView: View {
     @AppStorage("lastBook") private var lastBook: String = "Genesis"
     @AppStorage("lastChapter") private var lastChapter: Int = 1
     @AppStorage("readingTheme") private var readingTheme: ReadingTheme = .system
+    @AppStorage("keybinding_search") private var searchKey = "k"
+    @AppStorage("keybinding_prevChapter") private var prevChapterKey = "["
+    @AppStorage("keybinding_nextChapter") private var nextChapterKey = "]"
+    @AppStorage("keybinding_history") private var historyKey = "y"
+    @AppStorage("keybinding_notes") private var notesKey = "n"
+    @AppStorage("keybinding_bookmark") private var bookmarkKey = "b"
     @FocusState private var isSearchFocused: Bool
     @State private var keyMonitor: Any? = nil
     @State private var searchService = SearchService()
     @State private var searchResults: [SearchService.VerseResult] = []
     @State private var isKeywordSearch = false
     @State private var searchTask: Task<Void, Never>? = nil
+    @State private var parsedReference: BibleReference? = nil
     @State private var navigationCounter: Int = 0
     @State private var updateService = UpdateService()
     @State private var isWindowOnTop = false
@@ -133,16 +140,21 @@ struct ContentView: View {
                                 let trimmed = newValue.trimmingCharacters(in: .whitespaces)
                                 guard !trimmed.isEmpty else {
                                     searchResults = []
+                                    parsedReference = nil
                                     isKeywordSearch = false
                                     return
                                 }
 
-                                // If it parses as a reference, clear keyword results
-                                if ReferenceParser.parse(trimmed) != nil {
+                                // If it parses as a reference, show it as a suggestion
+                                if let ref = ReferenceParser.parse(trimmed) {
+                                    let isValid = bibleStore.findBook(ref.book)
+                                        .flatMap { book in book.chapters.first(where: { $0.number == ref.chapter }) } != nil
+                                    parsedReference = isValid ? ref : nil
                                     searchResults = []
                                     isKeywordSearch = false
                                     return
                                 }
+                                parsedReference = nil
 
                                 // Debounce keyword search
                                 isKeywordSearch = true
@@ -185,9 +197,35 @@ struct ContentView: View {
                             .shadow(color: .black.opacity(0.15), radius: 8, x: 0, y: 4)
                     }
 
-                    if !searchResults.isEmpty {
+                    if parsedReference != nil || !searchResults.isEmpty {
                         ScrollView {
                             VStack(alignment: .leading, spacing: 0) {
+                                if let ref = parsedReference {
+                                    Button {
+                                        dismissSearch()
+                                        navigateTo(book: ref.book, chapter: ref.chapter, verseStart: ref.verseStart, verseEnd: ref.verseEnd, addToHistory: true)
+                                    } label: {
+                                        HStack(spacing: 8) {
+                                            Image(systemName: "book.closed")
+                                                .foregroundStyle(.accent)
+                                                .imageScale(.small)
+                                            Text(ref.displayString)
+                                                .font(.subheadline.bold())
+                                            Spacer()
+                                            Image(systemName: "return")
+                                                .foregroundStyle(.tertiary)
+                                                .imageScale(.small)
+                                        }
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                        .padding(.horizontal, 12)
+                                        .padding(.vertical, 10)
+                                    }
+                                    .buttonStyle(.plain)
+
+                                    if !searchResults.isEmpty { Divider() }
+                                }
+
+                                if !searchResults.isEmpty {
                                 Text("\(searchResults.count)\(searchResults.count >= 50 ? "+" : "") result\(searchResults.count == 1 ? "" : "s")")
                                     .font(.caption)
                                     .foregroundStyle(.secondary)
@@ -195,6 +233,7 @@ struct ContentView: View {
                                     .padding(.vertical, 6)
 
                                 Divider()
+                                }
 
                                 ForEach(searchResults) { result in
                                     Button {
@@ -424,6 +463,7 @@ struct ContentView: View {
         }
         isSearchFocused = false
         searchResults = []
+        parsedReference = nil
         isKeywordSearch = false
         searchTask?.cancel()
     }
@@ -588,12 +628,12 @@ struct ContentView: View {
 
     private var shortcutItems: [(action: String, keys: String)] {
         [
-            ("Search for Passage", "\u{2318}F"),
-            ("Toggle History", "\u{2318}Y"),
-            ("Toggle Notes", "\u{2318}N"),
-            ("Previous Chapter", "\u{2318}["),
-            ("Next Chapter", "\u{2318}]"),
-            ("Toggle Bookmark", "\u{2318}B"),
+            ("Search for Passage", "\u{2318}\(searchKey.uppercased())"),
+            ("Toggle History", "\u{2318}\(historyKey.uppercased())"),
+            ("Toggle Notes", "\u{2318}\(notesKey.uppercased())"),
+            ("Previous Chapter", "\u{2318}\(prevChapterKey.uppercased())"),
+            ("Next Chapter", "\u{2318}\(nextChapterKey.uppercased())"),
+            ("Toggle Bookmark", "\u{2318}\(bookmarkKey.uppercased())"),
             ("Previous Bookmark", "\u{21E7}\u{2318}\u{2190}"),
             ("Next Bookmark", "\u{21E7}\u{2318}\u{2192}"),
             ("Previous Highlight", "\u{2318}\u{2190}"),

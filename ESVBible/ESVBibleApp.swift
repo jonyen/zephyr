@@ -47,6 +47,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 struct ESVBibleApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 
+    @AppStorage("keybinding_search") private var searchKey = "k"
+    @AppStorage("keybinding_prevChapter") private var prevChapterKey = "["
+    @AppStorage("keybinding_nextChapter") private var nextChapterKey = "]"
+    @AppStorage("keybinding_history") private var historyKey = "y"
+    @AppStorage("keybinding_notes") private var notesKey = "n"
+    @AppStorage("keybinding_bookmark") private var bookmarkKey = "b"
+
     init() {
         SpotlightIndexer.indexIfNeeded()
     }
@@ -61,19 +68,19 @@ struct ESVBibleApp: App {
                 Button("Search for Passage") {
                     NotificationCenter.default.post(name: .showSearch, object: nil)
                 }
-                .keyboardShortcut("f", modifiers: .command)
+                .keyboardShortcut(KeyEquivalent(searchKey.first ?? "k"), modifiers: .command)
 
                 Divider()
 
                 Button("Go to Previous Chapter") {
                     NotificationCenter.default.post(name: .navigatePreviousChapter, object: NSApp.keyWindow)
                 }
-                .keyboardShortcut("[", modifiers: .command)
+                .keyboardShortcut(KeyEquivalent(prevChapterKey.first ?? "["), modifiers: .command)
 
                 Button("Go to Next Chapter") {
                     NotificationCenter.default.post(name: .navigateNextChapter, object: NSApp.keyWindow)
                 }
-                .keyboardShortcut("]", modifiers: .command)
+                .keyboardShortcut(KeyEquivalent(nextChapterKey.first ?? "]"), modifiers: .command)
 
                 Divider()
 
@@ -84,19 +91,19 @@ struct ESVBibleApp: App {
                 Button("Toggle History") {
                     NotificationCenter.default.post(name: .toggleHistory, object: nil)
                 }
-                .keyboardShortcut("y", modifiers: .command)
+                .keyboardShortcut(KeyEquivalent(historyKey.first ?? "y"), modifiers: .command)
 
                 Button("Toggle Notes") {
                     NotificationCenter.default.post(name: .toggleNotes, object: nil)
                 }
-                .keyboardShortcut("n", modifiers: .command)
+                .keyboardShortcut(KeyEquivalent(notesKey.first ?? "n"), modifiers: .command)
 
                 Divider()
 
                 Button("Toggle Bookmark") {
                     NotificationCenter.default.post(name: .toggleBookmark, object: nil)
                 }
-                .keyboardShortcut("b", modifiers: .command)
+                .keyboardShortcut(KeyEquivalent(bookmarkKey.first ?? "b"), modifiers: .command)
 
                 Button("Previous Bookmark") {
                     NotificationCenter.default.post(name: .navigatePreviousBookmark, object: nil)
@@ -168,7 +175,12 @@ struct ESVBibleApp: App {
         }
 
         Settings {
-            AppearanceSettingsView()
+            TabView {
+                AppearanceSettingsView()
+                    .tabItem { Label("Appearance", systemImage: "paintbrush") }
+                KeybindingsSettingsView()
+                    .tabItem { Label("Shortcuts", systemImage: "keyboard") }
+            }
         }
     }
 }
