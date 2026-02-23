@@ -3,7 +3,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 ROOT_DIR="$(dirname "$SCRIPT_DIR")"
-VERSION=$(cat "$ROOT_DIR/VERSION")
+VERSION="${VERSION:-$(cat "$ROOT_DIR/VERSION")}"
 APP_NAME="Zephyr"
 DMG_NAME="${APP_NAME}-${VERSION}.dmg"
 BUILD_DIR="$ROOT_DIR/build"
