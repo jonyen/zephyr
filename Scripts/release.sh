@@ -137,8 +137,12 @@ if [[ "$CONFIRM" =~ ^[Nn]$ ]]; then
     exit 0
 fi
 
-# ── update version files ──────────────────────────────────────────────────────
+# ── build ─────────────────────────────────────────────────────────────────────
 echo ""
+echo "${CYAN}Building DMG...${RESET}"
+VERSION="$VERSION" "$SCRIPT_DIR/build-dmg.sh"
+
+# ── update version files ──────────────────────────────────────────────────────
 echo "${CYAN}Updating version files...${RESET}"
 
 echo "$VERSION" > "$ROOT_DIR/VERSION"
@@ -149,10 +153,6 @@ sed -i '' "s/MARKETING_VERSION = [0-9.]*;/MARKETING_VERSION = $VERSION;/g" \
 sed -i '' \
     "s|\[Download Zephyr v[0-9.]*\](https://github.com/jonyen/zephyr/releases/download/v[0-9.]*/Zephyr-[0-9.]*.dmg)|[Download Zephyr v$VERSION](https://github.com/jonyen/zephyr/releases/download/v$VERSION/Zephyr-$VERSION.dmg)|g" \
     "$ROOT_DIR/README.md"
-
-# ── build ─────────────────────────────────────────────────────────────────────
-echo "${CYAN}Building DMG...${RESET}"
-"$SCRIPT_DIR/build-dmg.sh"
 
 # ── commit, push, release ─────────────────────────────────────────────────────
 echo "${CYAN}Committing...${RESET}"
