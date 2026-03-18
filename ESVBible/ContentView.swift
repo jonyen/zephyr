@@ -34,6 +34,7 @@ struct ContentView: View {
     @State private var isKeywordSearch = false
     @State private var searchTask: Task<Void, Never>? = nil
     @State private var parsedReference: BibleReference? = nil
+    @State private var parsedMultiReference: [BibleReference]? = nil
     @State private var navigationCounter: Int = 0
     @State private var updateService = UpdateService()
     @State private var isWindowOnTop = false
@@ -316,6 +317,7 @@ struct ContentView: View {
         isSearchFocused = false
         searchResults = []
         parsedReference = nil
+        parsedMultiReference = nil
         isKeywordSearch = false
         searchTask?.cancel()
     }
@@ -363,16 +365,56 @@ struct ContentView: View {
                             return
                         }
 
-                        if let ref = ReferenceParser.parse(trimmed) {
-                            let isValid = bibleStore.findBook(ref.book)
-                                .flatMap { book in book.chapters.first(where: { $0.number == ref.chapter }) } != nil
-                            parsedReference = isValid ? ref : nil
-                            searchResults = []
-                            isKeywordSearch = false
-                            return
+                        // Try to parse as one or more Bible references
+                        if let refs = ReferenceParser.parseMultiple(trimmed), !refs.isEmpty {
+                            // Validate: all referenced book+chapters must exist (including endBook/endChapter for ranges)
+                            let allValid = refs.allSatisfy { ref in
+                                let startOk = bibleStore.findBook(ref.book)?.chapters.first(where: { $0.number == ref.chapter }) != nil
+                                let endOk: Bool
+                                if let eb = ref.endBook, let ec = ref.endChapter {
+                                    endOk = bibleStore.findBook(eb)?.chapters.first(where: { $0.number == ec }) != nil
+                                } else if let ec = ref.endChapter {
+                                    endOk = bibleStore.findBook(ref.book)?.chapters.first(where: { $0.number == ec }) != nil
+                                } else {
+                                    endOk = true
+                                }
+                                return startOk && endOk
+                            }
+                            if allValid {
+                                // Cross-book range canonical ordering check
+                                let isValidOrder: Bool
+                                if refs.count == 1, let endBook = refs[0].endBook, let endChapter = refs[0].endChapter {
+                                    let startCanonical = bibleStore.findBook(refs[0].book)?.name ?? refs[0].book
+                                    let endCanonical   = bibleStore.findBook(endBook)?.name ?? endBook
+                                    isValidOrder = BibleStore.globalChapterIndex(book: endCanonical, chapter: endChapter)
+                                                 > BibleStore.globalChapterIndex(book: startCanonical, chapter: refs[0].chapter)
+                                } else {
+                                    isValidOrder = true
+                                }
+
+                                if isValidOrder {
+                                    searchResults = []
+                                    isKeywordSearch = false
+                                    searchTask?.cancel()
+
+                                    if refs.count >= 2 {
+                                        parsedMultiReference = refs
+                                        parsedReference = nil
+                                    } else {
+                                        parsedMultiReference = nil
+                                        parsedReference = refs[0]
+                                    }
+                                    return
+                                }
+                            }
+                            // Invalid references — fall through to keyword search
+                            parsedReference = nil
+                            parsedMultiReference = nil
                         }
                         parsedReference = nil
+                        parsedMultiReference = nil
 
+                        // Keyword search (existing logic — keep unchanged)
                         isKeywordSearch = true
                         searchTask = Task {
                             try? await Task.sleep(for: .milliseconds(300))
@@ -413,7 +455,7 @@ struct ContentView: View {
                     .shadow(color: .black.opacity(0.15), radius: 8, x: 0, y: 4)
             }
 
-            if parsedReference != nil || !searchResults.isEmpty {
+            if parsedReference != nil || parsedMultiReference != nil || !searchResults.isEmpty {
                 searchResultsList
             }
         }
@@ -425,10 +467,39 @@ struct ContentView: View {
     private var searchResultsList: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
-                if let ref = parsedReference {
+                if let refs = parsedMultiReference {
+                    // Multi-reference row
                     Button {
-                        dismissSearch()
-                        navigateTo(book: ref.book, chapter: ref.chapter, verseStart: ref.verseStart, verseEnd: ref.verseEnd, addToHistory: true)
+                        openVerseRangeTab(references: refs)
+                    } label: {
+                        HStack(spacing: 8) {
+                            Image(systemName: "book.closed")
+                                .foregroundStyle(Color.accentColor)
+                                .imageScale(.small)
+                            Text(refs.map { $0.displayString }.joined(separator: " \u{00B7} "))
+                                .font(.subheadline.bold())
+                            Spacer()
+                            Image(systemName: "return")
+                                .foregroundStyle(.tertiary)
+                                .imageScale(.small)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 10)
+                    }
+                    .buttonStyle(.plain)
+
+                    if !searchResults.isEmpty { Divider() }
+                } else if let ref = parsedReference {
+                    Button {
+                        if ref.verseStart != nil {
+                            // Verse reference → open focused tab
+                            openVerseRangeTab(references: [ref])
+                        } else {
+                            // Whole chapter → navigate in current tab
+                            dismissSearch()
+                            navigateTo(book: ref.book, chapter: ref.chapter, verseStart: ref.verseStart, verseEnd: ref.verseEnd, addToHistory: true)
+                        }
                     } label: {
                         HStack(spacing: 8) {
                             Image(systemName: "book.closed")
@@ -668,8 +739,13 @@ struct ContentView: View {
             return
         }
 
-        guard let ref = ReferenceParser.parse(searchText) else {
-            // If not a reference, trigger keyword search immediately
+        // Multi-reference → open tab
+        if let refs = parsedMultiReference {
+            openVerseRangeTab(references: refs)
+            return
+        }
+
+        guard let ref = ReferenceParser.parse(searchText.trimmingCharacters(in: .whitespaces)) else {
             if !searchText.trimmingCharacters(in: .whitespaces).isEmpty {
                 isKeywordSearch = true
                 searchResults = searchService.search(query: searchText.trimmingCharacters(in: .whitespaces), bibleStore: bibleStore)
@@ -681,8 +757,13 @@ struct ContentView: View {
             }
             return
         }
-        dismissSearch()
-        navigateTo(book: ref.book, chapter: ref.chapter, verseStart: ref.verseStart, verseEnd: ref.verseEnd, addToHistory: true)
+
+        if ref.verseStart != nil {
+            openVerseRangeTab(references: [ref])
+        } else {
+            dismissSearch()
+            navigateTo(book: ref.book, chapter: ref.chapter, verseStart: ref.verseStart, verseEnd: ref.verseEnd, addToHistory: true)
+        }
     }
 
     private func navigateTo(book: String, chapter: Int, verseStart: Int?, verseEnd: Int?, addToHistory: Bool) {
@@ -768,6 +849,22 @@ struct ContentView: View {
         if let target {
             navigateTo(book: target.highlight.book, chapter: target.highlight.chapter, verseStart: target.highlight.verse, verseEnd: target.highlight.verse, addToHistory: true)
         }
+    }
+
+    private func openVerseRangeTab(references: [BibleReference]) {
+        guard let host = hostWindow else {
+            errorMessage = "No host window available."
+            return
+        }
+        let controller = NSHostingController(rootView: VerseRangeView(references: references, bibleStore: bibleStore))
+        let newWindow = NSWindow(contentViewController: controller)
+        newWindow.setContentSize(NSSize(width: max(host.frame.width, 400), height: max(host.frame.height, 500)))
+        newWindow.styleMask = host.styleMask
+        newWindow.tabbingMode = .preferred
+        newWindow.tabbingIdentifier = host.tabbingIdentifier
+        host.addTabbedWindow(newWindow, ordered: .above)
+        newWindow.makeKeyAndOrderFront(nil)
+        dismissSearch()
     }
 
     private func openTab(at position: ChapterPosition) {
