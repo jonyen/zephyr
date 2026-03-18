@@ -689,7 +689,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 0.9.5;
+				MARKETING_VERSION = 0.9.6;
 				PRODUCT_BUNDLE_IDENTIFIER = com.esv.bible.zephyr;
 				PRODUCT_MODULE_NAME = ESVBible;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -718,7 +718,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 0.9.5;
+				MARKETING_VERSION = 0.9.6;
 				PRODUCT_BUNDLE_IDENTIFIER = com.esv.bible.zephyr;
 				PRODUCT_MODULE_NAME = ESVBible;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -734,7 +734,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 0.8.6;
 				GENERATE_INFOPLIST_FILE = YES;
-				MARKETING_VERSION = 0.9.5;
+				MARKETING_VERSION = 0.9.6;
 				PRODUCT_BUNDLE_IDENTIFIER = com.esv.bible.zephyr.tests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
@@ -750,7 +750,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 0.8.6;
 				GENERATE_INFOPLIST_FILE = YES;
-				MARKETING_VERSION = 0.9.5;
+				MARKETING_VERSION = 0.9.6;
 				PRODUCT_BUNDLE_IDENTIFIER = com.esv.bible.zephyr.tests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
