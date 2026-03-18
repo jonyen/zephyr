@@ -28,9 +28,35 @@ struct BibleReference: Equatable, Hashable {
     let book: String
     let chapter: Int
     let verseStart: Int?
+    let endBook: String?    // nil for single-chapter/same-book ranges
+    let endChapter: Int?    // nil for single-chapter references
     let verseEnd: Int?
 
+    // Memberwise init with default nil values keeps all existing call sites unchanged.
+    init(book: String, chapter: Int, verseStart: Int? = nil,
+         endBook: String? = nil, endChapter: Int? = nil, verseEnd: Int? = nil) {
+        self.book = book
+        self.chapter = chapter
+        self.verseStart = verseStart
+        self.endBook = endBook
+        self.endChapter = endChapter
+        self.verseEnd = verseEnd
+    }
+
     var displayString: String {
+        if let eb = endBook, let ec = endChapter {
+            // Cross-book: "John 3:36 – Acts 1:1"
+            let startVerse = verseStart.map { ":\($0)" } ?? ""
+            let endVerse = verseEnd.map { ":\($0)" } ?? ""
+            return "\(book) \(chapter)\(startVerse) \u{2013} \(eb) \(ec)\(endVerse)"
+        }
+        if let ec = endChapter {
+            // Cross-chapter same book: "John 3:36–4:2"
+            let sv = verseStart ?? 1
+            let ev = verseEnd ?? 1
+            return "\(book) \(chapter):\(sv)\u{2013}\(ec):\(ev)"
+        }
+        // Existing single-chapter logic (unchanged)
         if let start = verseStart, let end = verseEnd, start != end {
             return "\(book) \(chapter):\(start)-\(end)"
         } else if let start = verseStart {

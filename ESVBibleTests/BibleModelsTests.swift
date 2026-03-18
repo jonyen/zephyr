@@ -73,4 +73,23 @@ final class BibleModelsTests: XCTestCase {
         let ref3 = BibleReference(book: "Genesis", chapter: 1, verseStart: nil, verseEnd: nil)
         XCTAssertEqual(ref3.displayString, "Genesis 1")
     }
+
+    func testCrossChapterDisplayString() {
+        let ref = BibleReference(book: "John", chapter: 3, verseStart: 36, endBook: nil, endChapter: 4, verseEnd: 2)
+        XCTAssertEqual(ref.displayString, "John 3:36\u{2013}4:2")
+    }
+
+    func testCrossBookDisplayString() {
+        let ref = BibleReference(book: "John", chapter: 3, verseStart: 36, endBook: "Acts", endChapter: 1, verseEnd: 1)
+        XCTAssertEqual(ref.displayString, "John 3:36 \u{2013} Acts 1:1")
+    }
+
+    func testExistingDisplayStringsUnchanged() {
+        let ref1 = BibleReference(book: "John", chapter: 3, verseStart: 16, verseEnd: nil)
+        XCTAssertEqual(ref1.displayString, "John 3:16")
+        let ref2 = BibleReference(book: "Romans", chapter: 8, verseStart: 28, verseEnd: 30)
+        XCTAssertEqual(ref2.displayString, "Romans 8:28-30")
+        let ref3 = BibleReference(book: "Genesis", chapter: 1, verseStart: nil, verseEnd: nil)
+        XCTAssertEqual(ref3.displayString, "Genesis 1")
+    }
 }
