@@ -77,6 +77,11 @@ final class ReferenceParserTests: XCTestCase {
         XCTAssertEqual(ref?.verseEnd, 1)
     }
 
+    func testCrossBookRangeRightSideRequiresVerse() {
+        // Right side "Acts 1" has no verse — should return nil (asymmetric range not supported)
+        XCTAssertNil(ReferenceParser.parse("John 3:36 - Acts 1"))
+    }
+
     func testCrossBookRangeWithNumberedBook() {
         let ref = ReferenceParser.parse("1 Corinthians 13:1 - 1 Corinthians 13:13")
         XCTAssertEqual(ref?.book, "1 Corinthians")

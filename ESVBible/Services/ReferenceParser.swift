@@ -3,9 +3,11 @@ import Foundation
 enum ReferenceParser {
     // Existing single-chapter pattern (Format 1)
     private static let singlePattern = #"^(\d?\s?[A-Za-z]+(?:\s+[A-Za-z]+(?:\s+[A-Za-z]+)?)?)\s+(\d+)(?::(\d+)(?:-(\d+))?)?$"#
+    private static let singleRegex = try! NSRegularExpression(pattern: singlePattern)
 
     // Cross-chapter same-book pattern (Format 2): "Book chap:verse-chap:verse"
     private static let crossChapterPattern = #"^(\d?\s?[A-Za-z]+(?:\s+[A-Za-z]+(?:\s+[A-Za-z]+)?)?)\s+(\d+):(\d+)-(\d+):(\d+)$"#
+    private static let crossChapterRegex = try! NSRegularExpression(pattern: crossChapterPattern)
 
     static func parse(_ input: String) -> BibleReference? {
         let trimmed = input.trimmingCharacters(in: .whitespaces)
@@ -33,7 +35,7 @@ enum ReferenceParser {
 
         // Parse each half using Format 1 only (no recursion into Format 3)
         guard let left = parseSingle(leftStr), left.verseStart != nil,
-              let right = parseSingle(rightStr) else { return nil }
+              let right = parseSingle(rightStr), right.verseStart != nil else { return nil }
 
         return BibleReference(
             book: left.book,
@@ -48,8 +50,7 @@ enum ReferenceParser {
     // MARK: - Format 2: Cross-chapter same book
 
     private static func parseCrossChapter(_ input: String) -> BibleReference? {
-        guard let regex = try? NSRegularExpression(pattern: crossChapterPattern),
-              let match = regex.firstMatch(in: input, range: NSRange(input.startIndex..., in: input)) else {
+        guard let match = crossChapterRegex.firstMatch(in: input, range: NSRange(input.startIndex..., in: input)) else {
             return nil
         }
 
@@ -80,8 +81,7 @@ enum ReferenceParser {
 
     private static func parseSingle(_ input: String) -> BibleReference? {
         let trimmed = input.trimmingCharacters(in: .whitespaces)
-        guard let regex = try? NSRegularExpression(pattern: singlePattern),
-              let match = regex.firstMatch(in: trimmed, range: NSRange(trimmed.startIndex..., in: trimmed)) else {
+        guard let match = singleRegex.firstMatch(in: trimmed, range: NSRange(trimmed.startIndex..., in: trimmed)) else {
             return nil
         }
 
