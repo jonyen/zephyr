@@ -70,6 +70,11 @@ struct ESVBibleApp: App {
                 }
                 .keyboardShortcut(KeyEquivalent(searchKey.first ?? "k"), modifiers: .command)
 
+                Button("Search for Passage") {
+                    NotificationCenter.default.post(name: .showSearch, object: nil)
+                }
+                .keyboardShortcut("f", modifiers: .command)
+
                 Divider()
 
                 Button("Go to Previous Chapter") {

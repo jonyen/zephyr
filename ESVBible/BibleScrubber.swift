@@ -3,9 +3,13 @@ import AppKit
 
 // MARK: - Floating label panel
 
+private class ClickableHostingView: NSHostingView<AnyView> {
+    override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
+}
+
 private class LabelPanelState: ObservableObject {
     private var panel: NSPanel?
-    private var hostingView: NSHostingView<AnyView>?
+    private var hostingView: ClickableHostingView?
 
     func show(content: AnyView, screenOrigin: CGPoint, size: CGSize, animate: Bool = true) {
         if panel == nil {
@@ -23,7 +27,7 @@ private class LabelPanelState: ObservableObject {
             p.isMovable = false
             p.hidesOnDeactivate = false
 
-            let hosting = NSHostingView(rootView: content)
+            let hosting = ClickableHostingView(rootView: content)
             hosting.frame = NSRect(origin: .zero, size: size)
             p.contentView = hosting
 
@@ -81,13 +85,10 @@ private struct LabelPanelContent: View {
     let buffer: CGFloat
     let panelWidth: CGFloat
     let currentBookIndex: Int?
-    let hoveredBookIndex: Int?
-    let onHoverBook: (Int?) -> Void
+    let onHoverPanel: (Bool) -> Void
     let onTapBook: (String) -> Void
 
-    private var activeIndex: Int {
-        hoveredBookIndex ?? currentBookIndex ?? 0
-    }
+    @State private var hoveredBookIndex: Int? = nil
 
     private var firstLabelY: CGFloat {
         guard let first = spacedFractions.first else { return 0 }
@@ -112,23 +113,46 @@ private struct LabelPanelContent: View {
             ForEach(Array(spacedFractions.enumerated()), id: \.offset) { index, fraction in
                 let range = bookRanges[index]
                 let y = buffer + trackInset + fraction * trackHeight
-                let isCurrent = index == activeIndex
+                let isHoveredRow = index == hoveredBookIndex
+                let isCurrent = index == currentBookIndex
                 let distance = currentBookIndex.map { abs(index - $0) } ?? 0
-                let opacity = isCurrent ? 1.0 : max(0.3, 1.0 - Double(distance) * 0.07)
+                let opacity = (isHoveredRow || isCurrent) ? 1.0 : max(0.3, 1.0 - Double(distance) * 0.07)
 
-                Text(range.name)
-                    .font(.system(size: 13))
-                    .fontWeight(isCurrent ? .semibold : .light)
-                    .foregroundStyle(.primary.opacity(opacity))
-                    .lineLimit(1)
-                    .fixedSize()
-                    .position(x: panelWidth / 2, y: y)
-                    .onHover { hovering in
-                        onHoverBook(hovering ? index : nil)
+                ZStack {
+                    if isHoveredRow {
+                        Capsule()
+                            .fill(.primary.opacity(0.08))
+                            .frame(width: panelWidth - 16, height: 22)
                     }
-                    .onTapGesture {
-                        onTapBook(range.name)
-                    }
+                    Text(range.name)
+                        .font(.system(size: 13))
+                        .fontWeight(isCurrent ? .semibold : (isHoveredRow ? .medium : .light))
+                        .foregroundStyle(.primary.opacity(opacity))
+                        .lineLimit(1)
+                        .fixedSize()
+                }
+                .frame(width: panelWidth, height: 22)
+                .position(x: panelWidth / 2, y: y)
+                .onTapGesture {
+                    onTapBook(range.name)
+                }
+            }
+        }
+        .contentShape(Rectangle())
+        .onContinuousHover { phase in
+            switch phase {
+            case .active(let location):
+                onHoverPanel(true)
+                // Find the book whose label is closest to the cursor's Y position
+                let closest = spacedFractions.enumerated().min {
+                    let aY = buffer + trackInset + $0.element * trackHeight
+                    let bY = buffer + trackInset + $1.element * trackHeight
+                    return abs(aY - location.y) < abs(bY - location.y)
+                }
+                hoveredBookIndex = closest?.offset
+            case .ended:
+                onHoverPanel(false)
+                hoveredBookIndex = nil
             }
         }
     }
@@ -152,9 +176,12 @@ struct BibleScrubber: View {
 
     @State private var isDragging = false
     @State private var isHovered = false
-    @State private var hoveredBookIndex: Int? = nil
+    @State private var isPanelHovered = false
     @State private var dragFraction: CGFloat = 0
     @State private var lastNavigatedIndex: Int = -1
+    @State private var hideTask: Task<Void, Never>?
+    @State private var scrollBookIndex: Int? = nil
+    @State private var scrollMonitor: Any?
     @StateObject private var panelState = LabelPanelState()
 
     private let trackInset: CGFloat = 20
@@ -184,7 +211,7 @@ struct BibleScrubber: View {
             let trackTop = trackInset
             let trackHeight = height - trackInset * 2
             let thumbY = trackTop + currentFraction * trackHeight
-            let showLabels = isHovered || isDragging
+            let showLabels = isHovered || isDragging || isPanelHovered
 
             ZStack {
                 Canvas { context, size in
@@ -269,7 +296,7 @@ struct BibleScrubber: View {
                             NSCursor.pointingHand.push()
                         } else {
                             NSCursor.pop()
-                            hoveredBookIndex = nil
+                            scrollBookIndex = nil
                         }
                     }
             }
@@ -280,9 +307,15 @@ struct BibleScrubber: View {
                     Color.clear
                         .onChange(of: showLabels) { _, visible in
                             if visible {
+                                hideTask?.cancel()
+                                hideTask = nil
                                 showPanel(proxy: proxy, height: height, trackHeight: trackHeight)
                             } else {
-                                panelState.hide()
+                                hideTask = Task {
+                                    try? await Task.sleep(for: .milliseconds(150))
+                                    guard !Task.isCancelled else { return }
+                                    panelState.hide()
+                                }
                             }
                         }
                         .onChange(of: currentFraction) { _, _ in
@@ -290,15 +323,32 @@ struct BibleScrubber: View {
                                 showPanel(proxy: proxy, height: height, trackHeight: trackHeight)
                             }
                         }
-                        .onChange(of: hoveredBookIndex) { _, _ in
+                        .onChange(of: scrollBookIndex) { _, _ in
                             if showLabels {
                                 showPanel(proxy: proxy, height: height, trackHeight: trackHeight)
                             }
                         }
                 }
             )
+            .onAppear {
+                scrollMonitor = NSEvent.addLocalMonitorForEvents(matching: .scrollWheel) { event in
+                    guard isHovered || isPanelHovered else { return event }
+                    let delta = event.hasPreciseScrollingDeltas
+                        ? event.scrollingDeltaY / 8
+                        : event.scrollingDeltaY
+                    guard abs(delta) >= 1 else { return nil }
+                    let step = delta > 0 ? -1 : 1
+                    let base = scrollBookIndex
+                        ?? bookRanges.firstIndex(where: { $0.name == currentPosition.bookName })
+                        ?? 0
+                    scrollBookIndex = max(0, min(bookRanges.count - 1, base + step))
+                    return nil
+                }
+            }
             .onDisappear {
+                hideTask?.cancel()
                 panelState.hide()
+                if let m = scrollMonitor { NSEvent.removeMonitor(m); scrollMonitor = nil }
             }
         }
         .animation(.easeInOut(duration: 0.15), value: isHovered)
@@ -314,11 +364,12 @@ struct BibleScrubber: View {
         let ranges = bookRanges
         let fractions = spacedLabelFractions(height: trackHeight)
         let fraction = currentFraction
-        let hovered = hoveredBookIndex
 
-        // Find the focused book and compute how far its label is from the thumb
+        // Find the focused book — scroll preview overrides the current position
         let focusedIdx: Int
-        if let idx = ranges.firstIndex(where: { fraction >= $0.startFraction && fraction < $0.endFraction }) {
+        if let override = scrollBookIndex {
+            focusedIdx = override
+        } else if let idx = ranges.firstIndex(where: { fraction >= $0.startFraction && fraction < $0.endFraction }) {
             focusedIdx = idx
         } else {
             focusedIdx = ranges.count - 1
@@ -357,8 +408,7 @@ struct BibleScrubber: View {
             buffer: buffer,
             panelWidth: panelWidth,
             currentBookIndex: focusedIdx,
-            hoveredBookIndex: hovered,
-            onHoverBook: { idx in hoveredBookIndex = idx },
+            onHoverPanel: { hovering in isPanelHovered = hovering },
             onTapBook: { name in
                 let pos = ChapterPosition(bookName: name, chapterNumber: 1)
                 onNavigate(pos)

@@ -636,7 +636,7 @@ struct ContentView: View {
 
     private var shortcutItems: [(action: String, keys: String)] {
         [
-            ("Search for Passage", "\u{2318}\(searchKey.uppercased())"),
+            ("Search for Passage", "\u{2318}F / \u{2318}\(searchKey.uppercased())"),
             ("Toggle History", "\u{2318}\(historyKey.uppercased())"),
             ("Toggle Notes", "\u{2318}\(notesKey.uppercased())"),
             ("Previous Chapter", "\u{2318}\(prevChapterKey.uppercased())"),
