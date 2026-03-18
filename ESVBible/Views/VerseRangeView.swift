@@ -10,7 +10,7 @@ struct VerseRangeView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
-                ForEach(Array(references.enumerated()), id: \.offset) { index, ref in
+                ForEach(Array(zip(references.indices, references)), id: \.1) { index, ref in
                     referenceSection(ref)
 
                     if index < references.count - 1 {
@@ -61,10 +61,13 @@ struct VerseRangeView: View {
 
     @ViewBuilder
     private func verseSectionView(_ section: VerseSection) -> some View {
-        if section.verses.isEmpty {
+        if !section.chapterFound {
             Text("Chapter not found")
                 .foregroundStyle(.secondary)
                 .font(.caption)
+        } else if section.verses.isEmpty {
+            // Verse filter produced no results (e.g. verse number out of range) — show nothing
+            EmptyView()
         } else {
             VStack(alignment: .leading, spacing: 6) {
                 ForEach(section.verses) { verse in
@@ -87,8 +90,9 @@ struct VerseRangeView: View {
     // MARK: - Verse collection
 
     private struct VerseSection: Identifiable {
-        let id: String   // "bookName-chapterNum"
+        let id: String
         let verses: [Verse]
+        let chapterFound: Bool  // false = chapter missing from data; true = chapter exists (verses may be empty due to filter)
     }
 
     private func collectSections(for ref: BibleReference) -> [VerseSection] {
@@ -110,7 +114,7 @@ struct VerseRangeView: View {
             verses = chapter.verses
         }
 
-        return [VerseSection(id: "\(book.name)-\(chapter.number)", verses: verses)]
+        return [VerseSection(id: "\(book.name)-\(chapter.number)", verses: verses, chapterFound: true)]
     }
 
     private func collectRangeSections(for ref: BibleReference) -> [VerseSection] {
@@ -136,7 +140,7 @@ struct VerseRangeView: View {
 
         for (bi, bookName) in booksInRange.enumerated() {
             guard let book = bibleStore.findBook(bookName) else {
-                result.append(VerseSection(id: "\(bookName)-missing", verses: []))
+                result.append(VerseSection(id: "\(bookName)-missing", verses: [], chapterFound: false))
                 continue
             }
 
@@ -148,7 +152,7 @@ struct VerseRangeView: View {
 
             for chNum in chapStart...chapEnd {
                 guard let chapter = book.chapters.first(where: { $0.number == chNum }) else {
-                    result.append(VerseSection(id: "\(bookName)-\(chNum)-missing", verses: []))
+                    result.append(VerseSection(id: "\(bookName)-\(chNum)-missing", verses: [], chapterFound: false))
                     continue
                 }
 
@@ -166,7 +170,7 @@ struct VerseRangeView: View {
                     verses = chapter.verses
                 }
 
-                result.append(VerseSection(id: "\(bookName)-\(chNum)", verses: verses))
+                result.append(VerseSection(id: "\(bookName)-\(chNum)", verses: verses, chapterFound: true))
             }
         }
 
