@@ -35,6 +35,8 @@ struct BibleReference: Equatable, Hashable {
     // Memberwise init with default nil values keeps all existing call sites unchanged.
     init(book: String, chapter: Int, verseStart: Int? = nil,
          endBook: String? = nil, endChapter: Int? = nil, verseEnd: Int? = nil) {
+        precondition(endBook == nil || endChapter != nil,
+                     "BibleReference: endBook requires endChapter to also be set")
         self.book = book
         self.chapter = chapter
         self.verseStart = verseStart
