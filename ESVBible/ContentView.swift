@@ -361,6 +361,7 @@ struct ContentView: View {
                         guard !trimmed.isEmpty else {
                             searchResults = []
                             parsedReference = nil
+                            parsedMultiReference = nil
                             isKeywordSearch = false
                             return
                         }
@@ -745,7 +746,7 @@ struct ContentView: View {
             return
         }
 
-        guard let ref = ReferenceParser.parse(searchText.trimmingCharacters(in: .whitespaces)) else {
+        guard let ref = parsedReference else {
             if !searchText.trimmingCharacters(in: .whitespaces).isEmpty {
                 isKeywordSearch = true
                 searchResults = searchService.search(query: searchText.trimmingCharacters(in: .whitespaces), bibleStore: bibleStore)
