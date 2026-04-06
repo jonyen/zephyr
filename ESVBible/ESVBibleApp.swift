@@ -210,4 +210,5 @@ extension Notification.Name {
     static let scrollPageUp = Notification.Name("scrollPageUp")
     static let scrollPageDown = Notification.Name("scrollPageDown")
     static let checkForUpdates = Notification.Name("checkForUpdates")
+    static let toggleReadingTimer = Notification.Name("toggleReadingTimer")
 }
