@@ -113,7 +113,7 @@ struct ReadingTimerView: View {
                 }
                 .buttonStyle(.borderedProminent)
                 .controlSize(.small)
-                .disabled(Int(customMinutes) == nil || Int(customMinutes)! <= 0)
+                .disabled((Int(customMinutes) ?? 0) <= 0)
             }
         }
     }
