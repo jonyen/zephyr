@@ -127,6 +127,13 @@ struct ESVBibleApp: App {
                     TabCoordinator.shared.route(.navigateNextHighlight, from: NSApp.keyWindow)
                 }
                 .keyboardShortcut(.rightArrow, modifiers: .command)
+
+                Divider()
+
+                Button("Reading Timer") {
+                    NotificationCenter.default.post(name: .toggleReadingTimer, object: nil)
+                }
+                .keyboardShortcut("r", modifiers: [.command, .shift])
             }
 
             CommandGroup(after: .windowArrangement) {

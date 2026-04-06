@@ -37,6 +37,7 @@ struct ContentView: View {
     @State private var parsedMultiReference: [BibleReference]? = nil
     @State private var navigationCounter: Int = 0
     @State private var updateService = UpdateService()
+    @State private var readingTimerService = ReadingTimerService()
     @State private var hostWindow: NSWindow? = nil
     @State private var hasAppeared = false
     @State private var windowCloseObserver: Any? = nil
@@ -143,6 +144,17 @@ struct ContentView: View {
             }
             WindowAccessor(window: $hostWindow)
                 .frame(width: 0, height: 0)
+
+            // Reading timer in title bar area
+            VStack {
+                HStack {
+                    Spacer()
+                    ReadingTimerView(timerService: readingTimerService)
+                        .padding(.trailing, 12)
+                        .padding(.top, 4)
+                }
+                Spacer()
+            }
         }
         .inspector(isPresented: Binding(
             get: { showHistory || showNotes },
