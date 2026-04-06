@@ -54,28 +54,8 @@ struct ReadingTimerView: View {
             .buttonStyle(.plain)
 
         case .finished:
-            Button {
+            FinishedTimerButton {
                 timerService.dismiss()
-            } label: {
-                HStack(spacing: 4) {
-                    Image(systemName: "clock")
-                        .font(.system(size: 12))
-                    Text("Done")
-                        .font(.system(size: 12, weight: .medium))
-                }
-                .foregroundStyle(.orange)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 3)
-                .background(Color.orange.opacity(0.12), in: RoundedRectangle(cornerRadius: 6))
-                .opacity(1.0)
-                .animation(
-                    .easeInOut(duration: 2.0).repeatForever(autoreverses: true),
-                    value: timerService.isFinished
-                )
-            }
-            .buttonStyle(.plain)
-            .onAppear {
-                // Trigger the pulse by the state already being .finished
             }
         }
     }
@@ -164,5 +144,34 @@ struct ReadingTimerView: View {
         timerService.start(minutes: minutes)
         customMinutes = ""
         showPopover = false
+    }
+}
+
+private struct FinishedTimerButton: View {
+    let onDismiss: () -> Void
+    @State private var isPulsing = false
+
+    var body: some View {
+        Button {
+            onDismiss()
+        } label: {
+            HStack(spacing: 4) {
+                Image(systemName: "clock")
+                    .font(.system(size: 12))
+                Text("Done")
+                    .font(.system(size: 12, weight: .medium))
+            }
+            .foregroundStyle(.orange)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 3)
+            .background(Color.orange.opacity(0.12), in: RoundedRectangle(cornerRadius: 6))
+            .opacity(isPulsing ? 0.6 : 1.0)
+        }
+        .buttonStyle(.plain)
+        .onAppear {
+            withAnimation(.easeInOut(duration: 2.0).repeatForever(autoreverses: true)) {
+                isPulsing = true
+            }
+        }
     }
 }
