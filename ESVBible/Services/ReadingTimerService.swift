@@ -23,6 +23,10 @@ class ReadingTimerService {
 
     private var timerCancellable: AnyCancellable?
 
+    deinit {
+        timerCancellable?.cancel()
+    }
+
     var isIdle: Bool {
         if case .idle = state { return true }
         return false
@@ -51,6 +55,8 @@ class ReadingTimerService {
 
     func start(minutes: Int) {
         guard minutes > 0 else { return }
+        timerCancellable?.cancel()
+        timerCancellable = nil
         let totalSeconds = minutes * 60
         state = .running(secondsRemaining: totalSeconds)
 
