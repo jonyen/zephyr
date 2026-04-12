@@ -21,9 +21,9 @@ Let the user flag a text-rendering issue from inside the reader with one click a
 
 ## User experience
 
-1. User selects text in `SelectableTextView`. The existing selection popover appears with color swatches.
-2. Palette now includes a new **flag** color (distinct reddish-pink). Picking it:
-   - Adds a `.flag`-colored highlight via `HighlightManager.addHighlight(…)` (persistent visual marker).
+1. User selects text in `SelectableTextView`. The existing right-click context menu (in `HighlightableTextView.menu(for:)`) appears with the existing `Highlight <Color>`, `Remove Highlight`, `Copy`, and `Add Note` items.
+2. The menu gains a new **`Flag Text Issue…`** item (ellipsis indicating it opens a dialog, matching the `Add Note` pattern). Picking it:
+   - Adds a `.flag`-colored highlight via `HighlightManager.addHighlight(…)` for each overlapped verse (persistent visual marker).
    - Presents `FlagIssueSheet` as a sheet over the reader.
 3. `FlagIssueSheet` shows:
    - The location (e.g., `John 3:16`) as a header.
@@ -33,7 +33,7 @@ Let the user flag a text-rendering issue from inside the reader with one click a
 4. On Submit:
    - **If a token is configured:** `IssueReporterService` POSTs to GitHub. Toast shows `Filed issue #123`. Sheet closes.
    - **If no token, or API call fails:** Open the prefilled GitHub new-issue URL in the default browser via `NSWorkspace.shared.open(_:)`. A toast explains the fallback when it's due to failure (offline / bad token / etc.). Sheet closes.
-5. Tapping the flag color on an already-flagged range **removes** the highlight (mirrors existing toggle semantics for other colors) and does **not** open the composer — prevents accidental duplicate issues.
+5. Re-flagging an already-flagged range is allowed — picking `Flag Text Issue…` again will create another flag highlight and open a fresh composer. To unflag, the user selects the range and picks the existing `Remove Highlight` menu item, which already removes highlights of any color. This matches how the other highlight colors work today (no toggle behavior built into color selection).
 
 ## Architecture
 
@@ -75,9 +75,15 @@ Three new units, each with one clear purpose:
 
 ### Integration with existing code
 
-- `HighlightColor` enum (in `BibleModels.swift` or wherever it currently lives) gains a new `.flag` case. Color assignment uses a distinct hue not currently used by existing colors.
-- `SelectableTextView`'s color-picker handler gains one branch: after calling `addHighlight` with `.flag`, it triggers presentation of `FlagIssueSheet` (via a binding or callback surfaced up to the view owning the sheet state).
-- `HighlightManager` itself is untouched. A flag-highlight is just a highlight with a different color; existing persistence, toggle, and filter logic apply unchanged.
+- `HighlightColor` enum in `BibleModels.swift` gains a new `.flag` case with distinct hue (reddish-orange) in all three color accessors: `nsColor`, `swiftUIColor`, and `scrubberColor`. The existing `CaseIterable` loop in `HighlightableTextView.menu(for:)` will NOT auto-include `.flag` — the flag goes in its own menu item, not the `Highlight <Color>` list.
+- `HighlightableTextView` (inner class in `SelectableTextView.swift`) gains:
+  - A new `onFlagIssue` callback on the `Coordinator` (alongside `onHighlight`, `onAddNote`, etc.).
+  - A new `@objc private func flagIssue(_:)` method that (a) iterates `verseBoundaries` exactly like `applyHighlight`, calling `onHighlight(verse, charStart, charEnd, .flag)` for each overlap (so the highlight writes through the existing path), AND (b) aggregates the overlap into a single `FlagSelection` struct (verse range + selected text) and calls `onFlagIssue` once.
+  - A new menu item `Flag Text Issue…` in `menu(for:)`, added near `Add Note`.
+  - The menu loop `for color in HighlightColor.allCases` must be updated to skip `.flag` (or filtered via `HighlightColor.allCases.filter { $0 != .flag }`) so it doesn't appear as a regular highlight color.
+- `SelectableTextView` (the outer struct) gains a new `onFlagIssue: (FlagSelection) -> Void` parameter, wired through to the `Coordinator` in `makeNSView` / `updateNSView`.
+- `ChapterView` in `ReadingPaneView.swift` provides that closure, setting SwiftUI `@State` for the pending flag and presenting `FlagIssueSheet` as a `.sheet`. It also calls `highlightManager.addHighlight` with `.flag` color via the existing `onHighlight` path — no new persistence code is needed.
+- `HighlightManager` itself is untouched. A flag-highlight is just a highlight with a different color; existing persistence and filter logic apply unchanged.
 
 ### New Settings pane
 
