@@ -6,25 +6,30 @@ const COLORS: HighlightColor[] = ['yellow', 'green', 'blue', 'pink', 'purple']
 
 interface Target { book: string; chapter: number; ranges: Array<{ verse: number; startChar: number; endChar: number }>; x: number; y: number }
 
-/** Char offset of `node`+`offset` within a verse span's text content, excluding the verse-number sup. */
+const toElement = (n: Node): Element | null => n.nodeType === Node.ELEMENT_NODE ? (n as Element) : n.parentElement
+
+/** Char offset of the boundary (node, offset) within verseEl's text, excluding verse-number sups. */
 function offsetInVerse(verseEl: Element, node: Node, offset: number): number {
-  const walker = document.createTreeWalker(verseEl, NodeFilter.SHOW_TEXT)
-  let total = 0
-  while (walker.nextNode()) {
-    const t = walker.currentNode as Text
-    if (t.parentElement?.closest('sup.verse-num')) continue
-    if (t === node) return total + offset
-    total += t.length
-  }
-  return total
+  const r = document.createRange()
+  r.selectNodeContents(verseEl)
+  try { r.setEnd(node, offset) } catch { return 0 }
+  const frag = r.cloneContents()
+  frag.querySelectorAll('sup.verse-num').forEach((s) => s.remove())
+  return frag.textContent?.length ?? 0
+}
+
+const verseTextLength = (v: Element): number => {
+  const clone = v.cloneNode(true) as Element
+  clone.querySelectorAll('sup.verse-num').forEach((s) => s.remove())
+  return clone.textContent?.length ?? 0
 }
 
 function computeTarget(): Target | null {
   const sel = window.getSelection()
   if (!sel || sel.isCollapsed || sel.rangeCount === 0) return null
   const range = sel.getRangeAt(0)
-  const startVerse = (range.startContainer.parentElement)?.closest('.verse')
-  const endVerse = (range.endContainer.parentElement)?.closest('.verse')
+  const startVerse = toElement(range.startContainer)?.closest('.verse')
+  const endVerse = toElement(range.endContainer)?.closest('.verse')
   if (!startVerse || !endVerse) return null
   const chapterEl = startVerse.closest<HTMLElement>('.chapter')
   if (!chapterEl || endVerse.closest('.chapter') !== chapterEl) return null
@@ -36,7 +41,7 @@ function computeTarget(): Target | null {
   for (let i = si; i <= ei; i++) {
     const v = verses[i]
     const verse = Number(v.dataset.verse)
-    const textLen = [...(function* () { const w = document.createTreeWalker(v, NodeFilter.SHOW_TEXT); while (w.nextNode()) { const t = w.currentNode as Text; if (!t.parentElement?.closest('sup.verse-num')) yield t.length } })()].reduce((a, b) => a + b, 0)
+    const textLen = verseTextLength(v)
     const startChar = i === si ? offsetInVerse(v, range.startContainer, range.startOffset) : 0
     const endChar = i === ei ? offsetInVerse(v, range.endContainer, range.endOffset) : textLen
     if (endChar > startChar) ranges.push({ verse, startChar, endChar })
@@ -70,7 +75,7 @@ export default function SelectionToolbar() {
     setTarget(null)
   }
   return (
-    <div className="selection-toolbar" style={{ left: target.x, top: Math.max(8, target.y - 44) }}>
+    <div className="selection-toolbar" style={{ left: Math.min(window.innerWidth - 110, Math.max(110, target.x)), top: Math.max(8, target.y - 44) }}>
       {COLORS.map((c) => <button key={c} className={`dot dot-${c}`} onClick={() => apply(c)} title={`Highlight ${c}`} />)}
       <button className="dot dot-remove" onClick={remove} title="Remove highlight">✕</button>
     </div>
