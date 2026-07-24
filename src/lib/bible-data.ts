@@ -39,7 +39,10 @@ export async function loadAllBooks(onProgress?: (loaded: number, total: number) 
 }
 
 export function loadRedLetter(): Promise<RedLetterMap> {
-  redLetterCache ??= fetchJSON<RedLetterMap>(dataUrl('red_letter_verses.json'))
+  if (!redLetterCache) {
+    redLetterCache = fetchJSON<RedLetterMap>(dataUrl('red_letter_verses.json'))
+    redLetterCache.catch(() => { redLetterCache = null })
+  }
   return redLetterCache
 }
 

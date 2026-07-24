@@ -39,4 +39,16 @@ describe('bible-data', () => {
     const rl = await loadRedLetter()
     expect(rl.Matthew['3']).toEqual([15])
   })
+  it('retries red letter map after failed load', async () => {
+    // First call fails
+    vi.stubGlobal('fetch', vi.fn(async () => ({ ok: false, status: 500 })))
+    await expect(loadRedLetter()).rejects.toThrow('500')
+    // Second call succeeds (stub replaced)
+    vi.stubGlobal('fetch', vi.fn(async (url: string) => ({
+      ok: true,
+      json: async () => (String(url).includes('red_letter') ? { Matthew: { '3': [15] } } : fakeBook),
+    })))
+    const rl = await loadRedLetter()
+    expect(rl.Matthew['3']).toEqual([15])
+  })
 })
