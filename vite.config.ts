@@ -7,5 +7,8 @@ export default defineConfig(({ command }) => ({
   plugins: [react()],
   test: {
     environment: 'jsdom',
+    // Node >=22 ships an experimental localStorage stub that shadows jsdom's
+    // real implementation; disable it so tests exercise jsdom's localStorage.
+    execArgv: ['--no-experimental-webstorage'],
   },
 }))
