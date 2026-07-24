@@ -1,0 +1,8 @@
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --bg: #ffffff; --text: #1d1d1f; --text-secondary: #6e6e73;
+  --accent: #0a84ff; --red-letter: #c0392b; --divider: rgba(0,0,0,0.12);
+  --overlay-bg: rgba(255,255,255,0.92);
+}
+html, body, #root { height: 100%; }
+body { background: var(--bg); color: var(--text); font-family: Georgia, serif; }
