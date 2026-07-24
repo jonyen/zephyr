@@ -42,6 +42,32 @@ export default function ReadingPane({ target, navId, targetVerseRange, onPositio
     Promise.all(missing.map((name) => loadBook(name)))
       .then((loaded) => {
         if (cancelled) return
+        // A newly-loaded book flips its chapters' `.chapter-placeholder` (60vh) renders to
+        // real content (often thousands of px) — a reflow just as disruptive to scroll
+        // position as a prepend/trim, and one this effect must anchor-compensate for exactly
+        // the same way. Capture the current topmost-visible element (mirrors reportPosition's
+        // rule) as the anchor *before* setBooks triggers that reflow. Only if no scroll-driven
+        // mutation already staked a pendingAnchor this tick — that one wins; both restore the
+        // same invariant (the anchor chapter stays visually put), so there's nothing to merge.
+        if (pendingAnchorRef.current == null) {
+          const el = scrollerRef.current
+          if (el) {
+            const secs = el.querySelectorAll<HTMLElement>('.chapter, .chapter-placeholder')
+            let current: HTMLElement | null = null
+            for (const s of secs) {
+              if (s.offsetTop <= el.scrollTop + 80) current = s
+              else break
+            }
+            const pick = current ?? secs[0]
+            if (pick?.dataset.book && pick.dataset.chapter) {
+              pendingAnchorRef.current = {
+                pos: { book: pick.dataset.book, chapter: Number(pick.dataset.chapter) },
+                offsetTop: pick.offsetTop,
+                scrollTop: el.scrollTop,
+              }
+            }
+          }
+        }
         setBooks((prev) => { const next = new Map(prev); loaded.forEach((b) => next.set(b.name, b)); return next })
         setLoadError(false)
       })
@@ -59,12 +85,16 @@ export default function ReadingPane({ target, navId, targetVerseRange, onPositio
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navId])
 
-  // Scroll-anchor compensation: runs synchronously after an add/trim renders.
-  // Re-locates the anchor chapter (one that survived the mutation) and restores scrollTop to
-  // an absolute value derived from its offsetTop delta — correct for any combination of
-  // prepend/append/trim, and immune to native scrolling that happens between capture (in
-  // ensureEdges) and this effect: an absolute assignment overrides whatever scrollTop wheel
-  // input produced in that window, rather than compounding a relative adjustment on top of it.
+  // Scroll-anchor compensation: runs synchronously after any render that can move content —
+  // an add/trim (`chapters` changes) or a book finishing load (`books` changes, which flips
+  // that book's chapters from `.chapter-placeholder` stand-ins to real, differently-sized
+  // content). Re-locates the anchor element (queried by data-book/data-chapter regardless of
+  // whether it's currently a placeholder or the real ChapterView) and restores scrollTop to an
+  // absolute value derived from its offsetTop delta — correct for any combination of
+  // prepend/append/trim/reflow, and immune to native scrolling that happens between capture
+  // (in ensureEdges or the book-load effect) and this effect: an absolute assignment overrides
+  // whatever scrollTop wheel input produced in that window, rather than compounding a relative
+  // adjustment on top of it.
   useLayoutEffect(() => {
     const el = scrollerRef.current
     const pending = pendingAnchorRef.current
@@ -73,7 +103,7 @@ export default function ReadingPane({ target, navId, targetVerseRange, onPositio
       if (a) el.scrollTop = pending.scrollTop + (a.offsetTop - pending.offsetTop)
     }
     pendingAnchorRef.current = null
-  }, [chapters])
+  }, [chapters, books])
 
   // Evaluate BOTH scroll edges in one pass (not else-if) and grow `chapters` as needed.
   // Both edges must be checked independently: `else if` made the append branch unreachable
