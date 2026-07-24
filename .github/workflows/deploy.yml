@@ -13,11 +13,15 @@ jobs:
       - run: npm ci
       - run: npm test
       - run: npm run build
-      - name: Publish to jonyen.github.io/zephyr
+      # jonyen.com is served by jonyen/jonyen-website — a CRA app whose own workflow
+      # (build_type: workflow) publishes on every push to its main. CRA copies public/
+      # verbatim into the build, so landing dist/ in public/zephyr/ makes the site's
+      # next deploy serve it at jonyen.com/zephyr/ with no changes to that workflow.
+      - name: Publish into jonyen-website/public/zephyr
         uses: peaceiris/actions-gh-pages@v4
         with:
           personal_token: ${{ secrets.DEPLOY_TOKEN }}
-          external_repository: jonyen/jonyen.github.io
+          external_repository: jonyen/jonyen-website
           publish_branch: main
           publish_dir: ./dist
-          destination_dir: zephyr
+          destination_dir: public/zephyr
