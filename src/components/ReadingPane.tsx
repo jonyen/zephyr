@@ -20,8 +20,10 @@ export default function ReadingPane({ target, navId, targetVerseRange, onPositio
   const [redMap, setRedMap] = useState<RedLetterMap>({})
   const [loadError, setLoadError] = useState(false)
   const scrollerRef = useRef<HTMLDivElement>(null)
-  const heightBeforeRef = useRef<number | null>(null)   // set before a prepend/trim-from-front
+  const chaptersRef = useRef<Position[]>([target])        // mirrors `chapters` for synchronous reads in the scroll handler
+  const pendingAnchorRef = useRef<{ pos: Position; top: number } | null>(null)   // anchor chapter + its viewport top, set before a chapters mutation
   const reportedRef = useRef<string>('')
+  const scrolledForNavRef = useRef<number>(-1)             // navId already handled by the verse-scroll effect
   const { highlights, bookmarks } = useAnnotations()
 
   // Load red letter map once.
@@ -44,20 +46,25 @@ export default function ReadingPane({ target, navId, targetVerseRange, onPositio
 
   // Reset on explicit navigation.
   useEffect(() => {
+    chaptersRef.current = [target]
     setChapters([target])
-    heightBeforeRef.current = null
+    pendingAnchorRef.current = null
     const el = scrollerRef.current
     if (el) el.scrollTop = 0
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navId])
 
-  // Scroll-anchor compensation: runs synchronously after prepend/front-trim renders.
+  // Scroll-anchor compensation: runs synchronously after an add/trim renders.
+  // Re-locates the anchor chapter (one that survived the mutation) and shifts scrollTop by
+  // exactly how far its top moved — correct for any combination of prepend/append/trim.
   useLayoutEffect(() => {
     const el = scrollerRef.current
-    if (el && heightBeforeRef.current != null) {
-      el.scrollTop += el.scrollHeight - heightBeforeRef.current
-      heightBeforeRef.current = null
+    const pending = pendingAnchorRef.current
+    if (el && pending) {
+      const a = el.querySelector<HTMLElement>(`[data-book="${pending.pos.book}"][data-chapter="${pending.pos.chapter}"]`)
+      if (a) el.scrollTop += a.getBoundingClientRect().top - pending.top
     }
+    pendingAnchorRef.current = null
   }, [chapters])
 
   // Scroll handling: sentinel-free edge detection + topmost-chapter tracking.
@@ -70,25 +77,33 @@ export default function ReadingPane({ target, navId, targetVerseRange, onPositio
       raf = requestAnimationFrame(() => {
         const nearTop = el.scrollTop < 600
         const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 600
+        const cur = chaptersRef.current
+        let next: Position[] | null = null
         if (nearTop) {
-          setChapters((cur) => {
-            const prev = chapterBefore(cur[0])
-            if (!prev || cur.some((c) => globalIndex(c) === globalIndex(prev))) return cur
-            heightBeforeRef.current = el.scrollHeight
-            const next = [prev, ...cur]
-            return next.length > MAX_CHAPTERS ? next.slice(0, MAX_CHAPTERS) : next
-          })
+          const prev = chapterBefore(cur[0])
+          if (prev && !cur.some((c) => globalIndex(c) === globalIndex(prev))) {
+            const merged = [prev, ...cur]
+            next = merged.length > MAX_CHAPTERS ? merged.slice(0, MAX_CHAPTERS) : merged
+          }
         } else if (nearBottom) {
-          setChapters((cur) => {
-            const nxt = chapterAfter(cur[cur.length - 1])
-            if (!nxt || cur.some((c) => globalIndex(c) === globalIndex(nxt))) return cur
-            let next = [...cur, nxt]
-            if (next.length > MAX_CHAPTERS) {
-              heightBeforeRef.current = el.scrollHeight   // trimming from the front shifts content up
-              next = next.slice(next.length - MAX_CHAPTERS)
-            }
-            return next
-          })
+          const nxt = chapterAfter(cur[cur.length - 1])
+          if (nxt && !cur.some((c) => globalIndex(c) === globalIndex(nxt))) {
+            const merged = [...cur, nxt]
+            next = merged.length > MAX_CHAPTERS ? merged.slice(merged.length - MAX_CHAPTERS) : merged
+          }
+        }
+        if (next) {
+          // Anchor on a chapter that survives the mutation (present in both `cur` and `next`);
+          // its pre-mutation viewport top lets the layout effect restore scroll position exactly.
+          const anchorPos = next.find((p) => cur.some((c) => c.book === p.book && c.chapter === p.chapter)) ?? null
+          if (anchorPos) {
+            const a = el.querySelector<HTMLElement>(`[data-book="${anchorPos.book}"][data-chapter="${anchorPos.chapter}"]`)
+            pendingAnchorRef.current = a ? { pos: anchorPos, top: a.getBoundingClientRect().top } : null
+          } else {
+            pendingAnchorRef.current = null
+          }
+          chaptersRef.current = next
+          setChapters(next)
         }
         // Topmost visible chapter → position report.
         const secs = el.querySelectorAll<HTMLElement>('.chapter')
@@ -112,16 +127,21 @@ export default function ReadingPane({ target, navId, targetVerseRange, onPositio
     return () => { el.removeEventListener('scroll', onScroll); cancelAnimationFrame(raf) }
   }, [onPositionChange, navId])
 
-  // Scroll the target verse into view after a search navigation.
+  // Scroll the target verse into view after a search navigation. Guarded so it fires at most
+  // once per navId (doesn't refight a user's own scroll), and re-fires as `books` loads so a
+  // cold-loaded target chapter is still caught once its verses exist in the DOM.
   useEffect(() => {
-    if (!targetVerseRange) return
-    const el = scrollerRef.current
-    const t = setTimeout(() => {
+    if (!targetVerseRange || scrolledForNavRef.current === navId) return
+    const raf = requestAnimationFrame(() => {
+      const el = scrollerRef.current
       const v = el?.querySelector(`[data-book="${target.book}"][data-chapter="${target.chapter}"] [data-verse="${targetVerseRange.start}"]`)
-      v?.scrollIntoView({ block: 'center' })
-    }, 60)
-    return () => clearTimeout(t)
-  }, [navId, targetVerseRange, target])
+      if (v) {
+        v.scrollIntoView({ block: 'center' })
+        scrolledForNavRef.current = navId
+      }
+    })
+    return () => cancelAnimationFrame(raf)
+  }, [navId, targetVerseRange, books, target])
 
   return (
     <div className="reading-pane" ref={scrollerRef}>

@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { Navigate, useLocation, useNavigate, useParams } from 'react-router-dom'
 import type { Position } from '../lib/types'
 import { bookBySlug, slugForPosition } from '../lib/bible-nav'
@@ -23,7 +23,12 @@ export default function Reader({ children }: { children?: React.ReactNode }) {
   const info = bookBySlug(slug ?? 'genesis')
   const chNum = Number(chapter ?? 1)
   const valid = info && Number.isInteger(chNum) && chNum >= 1 && chNum <= (info?.chapters ?? 0)
-  const target: Position = valid ? { book: info!.name, chapter: chNum } : { book: 'Genesis', chapter: 1 }
+  // Stable identity across re-renders (e.g. scroll-driven position updates) so ReadingPane's
+  // effects that depend on `target` don't refire when only unrelated state changes.
+  const target: Position = useMemo(
+    () => (valid ? { book: info!.name, chapter: chNum } : { book: 'Genesis', chapter: 1 }),
+    [valid, info?.name, chNum],
+  )
 
   // location.key changes on every push AND back/forward — perfect navId.
   const [navId, setNavId] = useState(0)
@@ -31,6 +36,8 @@ export default function Reader({ children }: { children?: React.ReactNode }) {
 
   const [position, setPosition] = useState<Position>(target)
   const historyTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => () => { if (historyTimer.current) clearTimeout(historyTimer.current) }, [])
 
   const onPositionChange = useCallback((pos: Position) => {
     setPosition(pos)
