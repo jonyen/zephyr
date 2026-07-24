@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { Book, Position } from '../lib/types'
 import { chapterAfter, chapterBefore, globalIndex } from '../lib/bible-nav'
 import { loadBook, loadRedLetter, type RedLetterMap } from '../lib/bible-data'
@@ -67,6 +67,84 @@ export default function ReadingPane({ target, navId, targetVerseRange, onPositio
     pendingAnchorRef.current = null
   }, [chapters])
 
+  // Evaluate BOTH scroll edges in one pass (not else-if) and grow `chapters` as needed.
+  // Both edges must be checked independently: `else if` made the append branch unreachable
+  // whenever nearTop was already true (e.g. short chapters where max scrollTop < 600), and
+  // content shorter than the viewport never produces a scroll event at all, so this must
+  // also be callable outside the scroll handler (see the fill effect below).
+  const ensureEdges = useCallback(() => {
+    const el = scrollerRef.current
+    if (!el) return
+    const cur = chaptersRef.current
+    const wantPrepend = el.scrollTop < 600
+    const wantAppend = el.scrollHeight - el.scrollTop - el.clientHeight < 600 || el.scrollHeight <= el.clientHeight
+    if (!wantPrepend && !wantAppend) return
+
+    const merged = [...cur]
+    let didPrepend = false
+    let didAppend = false
+    if (wantPrepend) {
+      const prev = chapterBefore(merged[0])
+      if (prev && !merged.some((c) => globalIndex(c) === globalIndex(prev))) {
+        merged.unshift(prev)
+        didPrepend = true
+      }
+    }
+    if (wantAppend) {
+      const nxt = chapterAfter(merged[merged.length - 1])
+      if (nxt && !merged.some((c) => globalIndex(c) === globalIndex(nxt))) {
+        merged.push(nxt)
+        didAppend = true
+      }
+    }
+    if (!didPrepend && !didAppend) return
+
+    let next = merged
+    if (next.length > MAX_CHAPTERS) {
+      if (didAppend && didPrepend) {
+        // Both edges grew this tick — skip trimming; the next tick (scroll or fill-effect
+        // rerun) rebalances once it's clear which side is actually away from the viewport.
+      } else if (didAppend) {
+        next = next.slice(next.length - MAX_CHAPTERS)   // trim the front, away from the viewport
+      } else {
+        next = next.slice(0, MAX_CHAPTERS)                // trim the end, away from the viewport
+      }
+    }
+
+    // Anchor on a chapter that survives the mutation (present in both `cur` and `next`);
+    // its pre-mutation viewport top lets the layout effect restore scroll position exactly.
+    const anchorPos = next.find((p) => cur.some((c) => c.book === p.book && c.chapter === p.chapter)) ?? null
+    if (anchorPos) {
+      const a = el.querySelector<HTMLElement>(`[data-book="${anchorPos.book}"][data-chapter="${anchorPos.chapter}"]`)
+      pendingAnchorRef.current = a ? { pos: anchorPos, top: a.getBoundingClientRect().top } : null
+    } else {
+      pendingAnchorRef.current = null
+    }
+    chaptersRef.current = next
+    setChapters(next)
+  }, [])
+
+  // Topmost visible chapter → position report. Shared by the scroll handler and the fill
+  // effect so the URL is correct even when chapters were auto-filled without a user scroll.
+  const reportPosition = useCallback(() => {
+    const el = scrollerRef.current
+    if (!el) return
+    const secs = el.querySelectorAll<HTMLElement>('.chapter')
+    let current: HTMLElement | null = null
+    for (const s of secs) {
+      if (s.offsetTop <= el.scrollTop + 80) current = s
+      else break
+    }
+    const pick = current ?? secs[0]
+    if (pick) {
+      const key = `${pick.dataset.book}|${pick.dataset.chapter}`
+      if (key !== reportedRef.current) {
+        reportedRef.current = key
+        onPositionChange({ book: pick.dataset.book!, chapter: Number(pick.dataset.chapter) })
+      }
+    }
+  }, [onPositionChange])
+
   // Scroll handling: sentinel-free edge detection + topmost-chapter tracking.
   useEffect(() => {
     const el = scrollerRef.current
@@ -75,57 +153,24 @@ export default function ReadingPane({ target, navId, targetVerseRange, onPositio
     const onScroll = () => {
       cancelAnimationFrame(raf)
       raf = requestAnimationFrame(() => {
-        const nearTop = el.scrollTop < 600
-        const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 600
-        const cur = chaptersRef.current
-        let next: Position[] | null = null
-        if (nearTop) {
-          const prev = chapterBefore(cur[0])
-          if (prev && !cur.some((c) => globalIndex(c) === globalIndex(prev))) {
-            const merged = [prev, ...cur]
-            next = merged.length > MAX_CHAPTERS ? merged.slice(0, MAX_CHAPTERS) : merged
-          }
-        } else if (nearBottom) {
-          const nxt = chapterAfter(cur[cur.length - 1])
-          if (nxt && !cur.some((c) => globalIndex(c) === globalIndex(nxt))) {
-            const merged = [...cur, nxt]
-            next = merged.length > MAX_CHAPTERS ? merged.slice(merged.length - MAX_CHAPTERS) : merged
-          }
-        }
-        if (next) {
-          // Anchor on a chapter that survives the mutation (present in both `cur` and `next`);
-          // its pre-mutation viewport top lets the layout effect restore scroll position exactly.
-          const anchorPos = next.find((p) => cur.some((c) => c.book === p.book && c.chapter === p.chapter)) ?? null
-          if (anchorPos) {
-            const a = el.querySelector<HTMLElement>(`[data-book="${anchorPos.book}"][data-chapter="${anchorPos.chapter}"]`)
-            pendingAnchorRef.current = a ? { pos: anchorPos, top: a.getBoundingClientRect().top } : null
-          } else {
-            pendingAnchorRef.current = null
-          }
-          chaptersRef.current = next
-          setChapters(next)
-        }
-        // Topmost visible chapter → position report.
-        const secs = el.querySelectorAll<HTMLElement>('.chapter')
-        let current: HTMLElement | null = null
-        for (const s of secs) {
-          if (s.offsetTop <= el.scrollTop + 80) current = s
-          else break
-        }
-        const pick = current ?? secs[0]
-        if (pick) {
-          const key = `${pick.dataset.book}|${pick.dataset.chapter}`
-          if (key !== reportedRef.current) {
-            reportedRef.current = key
-            onPositionChange({ book: pick.dataset.book!, chapter: Number(pick.dataset.chapter) })
-          }
-        }
+        ensureEdges()
+        reportPosition()
       })
     }
     el.addEventListener('scroll', onScroll, { passive: true })
     onScroll()
     return () => { el.removeEventListener('scroll', onScroll); cancelAnimationFrame(raf) }
-  }, [onPositionChange, navId])
+  }, [ensureEdges, reportPosition, navId])
+
+  // Auto-fill: re-evaluate both edges whenever the rendered content changes (a chapter
+  // finished loading, or the DOM grew/shrank). This is what makes short chapters — or a
+  // pane where the initial content doesn't even fill the viewport, so no scroll event ever
+  // fires — keep loading until there's enough content to scroll at all. `ensureEdges` is a
+  // no-op once both edges have enough buffer or MAX_CHAPTERS is reached, so this terminates.
+  useEffect(() => {
+    ensureEdges()
+    reportPosition()
+  }, [chapters, books, ensureEdges, reportPosition])
 
   // Scroll the target verse into view after a search navigation. Guarded so it fires at most
   // once per navId (doesn't refight a user's own scroll), and re-fires as `books` loads so a
