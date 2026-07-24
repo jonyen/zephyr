@@ -98,3 +98,11 @@ body { background: var(--bg); color: var(--text); font-family: var(--reading-fon
 .dot-yellow { background: #f5c518; } .dot-green { background: #30d158; } .dot-blue { background: #0a84ff; }
 .dot-pink { background: #ff375f; } .dot-purple { background: #bf5af2; }
 .dot-remove { background: var(--hover); }
+
+.history-list { list-style: none; }
+.history-list li { display: flex; justify-content: space-between; padding: 8px 10px; border-radius: 6px; cursor: pointer; font-size: 14px; }
+.history-list li:hover { background: var(--hover); }
+.history-date { color: var(--text-secondary); font-size: 12px; }
+.shortcuts-box table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.shortcuts-box td { padding: 7px 10px; }
+.shortcuts-box .key { font-family: ui-monospace, monospace; color: var(--accent); width: 110px; }
