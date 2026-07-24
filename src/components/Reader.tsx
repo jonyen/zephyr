@@ -31,9 +31,17 @@ export default function Reader({ children }: { children?: React.ReactNode }) {
     [valid, info?.name, chNum],
   )
 
-  // location.key changes on every push AND back/forward — perfect navId.
+  // location.key changes on every push AND back/forward — perfect navId. Skip the initial
+  // mount key though: incrementing navId there re-fires ReadingPane's reset effect AFTER its
+  // fill effects have already started growing the chapter list, and that mid-flight reset
+  // (scrollTop = 0, chaptersRef rewound) races the anchor-compensation captures against a
+  // DOM that hasn't committed yet — the cold-navigation position-drift bug.
   const [navId, setNavId] = useState(0)
-  useEffect(() => { setNavId((n) => n + 1) }, [location.key])
+  const firstKeyRef = useRef(true)
+  useEffect(() => {
+    if (firstKeyRef.current) { firstKeyRef.current = false; return }
+    setNavId((n) => n + 1)
+  }, [location.key])
 
   const [position, setPosition] = useState<Position>(target)
   const historyTimer = useRef<ReturnType<typeof setTimeout> | null>(null)

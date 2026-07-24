@@ -114,6 +114,10 @@ export default function ReadingPane({ target, navId, targetVerseRange, onPositio
     const el = scrollerRef.current
     if (!el) return
     const cur = chaptersRef.current
+    // Defer while the DOM hasn't committed the last chapters mutation — measuring edges or
+    // capturing an anchor against a stale tree corrupts scroll state. The fill effect
+    // re-invokes this once the pending commit lands, so deferring never strands us.
+    if (el.querySelectorAll('.chapter, .chapter-placeholder').length !== cur.length) return
     const wantPrepend = el.scrollTop < 600
     const wantAppend = el.scrollHeight - el.scrollTop - el.clientHeight < 600 || el.scrollHeight <= el.clientHeight
     if (!wantPrepend && !wantAppend) return
