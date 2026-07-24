@@ -33,3 +33,20 @@ body { background: var(--bg); color: var(--text); font-family: var(--reading-fon
 .chip { border: 1px solid var(--divider); background: transparent; color: var(--text); border-radius: 999px; padding: 3px 10px; cursor: pointer; font-size: 12px; text-transform: capitalize; }
 .chip.active { background: var(--accent); border-color: var(--accent); color: #fff; }
 .settings-toggle { display: block; margin-top: 6px; cursor: pointer; }
+
+.chapter { max-width: 700px; margin: 0 auto; padding: 24px 32px 0; }
+.book-title { font-family: -apple-system, system-ui, sans-serif; font-size: 28px; font-weight: 700; padding: 16px 0 12px; }
+.chapter-body { position: relative; }
+.drop-cap { float: left; font-size: 42px; line-height: 1; font-weight: 500; padding: 4px 10px 0 0; font-family: var(--reading-font); }
+.bookmark-flag { color: var(--accent); font-size: 14px; vertical-align: top; margin-left: 2px; }
+.verses { font-size: 17px; line-height: 1.65; white-space: pre-wrap; text-align: left; }
+.verses-lines .verse { display: block; }
+.verse-num { color: var(--text-secondary); font-size: 11px; margin-right: 3px; font-family: -apple-system, system-ui, sans-serif; }
+.red-letter { color: var(--red-letter); }
+.red-letter .verse-num { color: var(--text-secondary); }
+.hl-yellow { background: rgba(255, 214, 10, 0.35); } .hl-green { background: rgba(48, 209, 88, 0.3); }
+.hl-blue { background: rgba(10, 132, 255, 0.25); } .hl-pink { background: rgba(255, 55, 95, 0.25); }
+.hl-purple { background: rgba(191, 90, 242, 0.3); }
+.hl { color: inherit; }
+.verse-target { background: rgba(10, 132, 255, 0.15); transition: background 1.2s ease 1.5s; border-radius: 3px; }
+.chapter-divider { border: none; border-top: 1px solid var(--divider); margin: 24px 0; max-width: 700px; }
