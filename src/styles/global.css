@@ -42,7 +42,7 @@ body { background: var(--bg); color: var(--text); font-family: var(--reading-fon
 .chapter-body::after { content: ''; display: block; clear: both; }
 .drop-cap { float: left; font-size: 42px; line-height: 1; font-weight: 500; padding: 4px 10px 0 0; font-family: var(--reading-font); }
 .bookmark-flag { color: var(--accent); font-size: 14px; vertical-align: top; margin-left: 2px; }
-.verses { font-size: 17px; line-height: 1.65; white-space: pre-wrap; text-align: left; text-indent: -1.2em; padding-left: 1.2em; }
+.verses { font-size: 17px; line-height: 1.65; white-space: pre-wrap; text-align: left; }
 .verses-lines > span { display: block; }
 .verse-num { color: var(--text-secondary); font-size: 11px; margin-right: 3px; font-family: -apple-system, system-ui, sans-serif; }
 .red-letter { color: var(--red-letter); }
