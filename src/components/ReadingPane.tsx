@@ -21,7 +21,12 @@ export default function ReadingPane({ target, navId, targetVerseRange, onPositio
   const [loadError, setLoadError] = useState(false)
   const scrollerRef = useRef<HTMLDivElement>(null)
   const chaptersRef = useRef<Position[]>([target])        // mirrors `chapters` for synchronous reads in the scroll handler
-  const pendingAnchorRef = useRef<{ pos: Position; top: number } | null>(null)   // anchor chapter + its viewport top, set before a chapters mutation
+  // Anchor chapter + its scroll-invariant offsetTop and the scrollTop at capture time, set
+  // before a chapters mutation. offsetTop (distance to the offsetParent's border box) is a
+  // pure layout quantity unaffected by scrolling, so it can't be corrupted by wheel input
+  // landing between capture (in ensureEdges) and restore (in the layout effect below) —
+  // unlike a getBoundingClientRect().top snapshot, which is viewport-relative and would be.
+  const pendingAnchorRef = useRef<{ pos: Position; offsetTop: number; scrollTop: number } | null>(null)
   const reportedRef = useRef<string>('')
   const scrolledForNavRef = useRef<number>(-1)             // navId already handled by the verse-scroll effect
   const { highlights, bookmarks } = useAnnotations()
@@ -55,14 +60,17 @@ export default function ReadingPane({ target, navId, targetVerseRange, onPositio
   }, [navId])
 
   // Scroll-anchor compensation: runs synchronously after an add/trim renders.
-  // Re-locates the anchor chapter (one that survived the mutation) and shifts scrollTop by
-  // exactly how far its top moved — correct for any combination of prepend/append/trim.
+  // Re-locates the anchor chapter (one that survived the mutation) and restores scrollTop to
+  // an absolute value derived from its offsetTop delta — correct for any combination of
+  // prepend/append/trim, and immune to native scrolling that happens between capture (in
+  // ensureEdges) and this effect: an absolute assignment overrides whatever scrollTop wheel
+  // input produced in that window, rather than compounding a relative adjustment on top of it.
   useLayoutEffect(() => {
     const el = scrollerRef.current
     const pending = pendingAnchorRef.current
     if (el && pending) {
       const a = el.querySelector<HTMLElement>(`[data-book="${pending.pos.book}"][data-chapter="${pending.pos.chapter}"]`)
-      if (a) el.scrollTop += a.getBoundingClientRect().top - pending.top
+      if (a) el.scrollTop = pending.scrollTop + (a.offsetTop - pending.offsetTop)
     }
     pendingAnchorRef.current = null
   }, [chapters])
@@ -99,24 +107,21 @@ export default function ReadingPane({ target, navId, targetVerseRange, onPositio
     }
     if (!didPrepend && !didAppend) return
 
+    // Cap unconditionally — including when both edges grew this tick. In that scenario
+    // (short content, both thresholds tripped at once) the viewport sits near the top, so
+    // trimming from the end is the safe default; the anchor compensation above/below still
+    // keeps the visible chapter pinned regardless of which side gets trimmed.
     let next = merged
-    if (next.length > MAX_CHAPTERS) {
-      if (didAppend && didPrepend) {
-        // Both edges grew this tick — skip trimming; the next tick (scroll or fill-effect
-        // rerun) rebalances once it's clear which side is actually away from the viewport.
-      } else if (didAppend) {
-        next = next.slice(next.length - MAX_CHAPTERS)   // trim the front, away from the viewport
-      } else {
-        next = next.slice(0, MAX_CHAPTERS)                // trim the end, away from the viewport
-      }
+    if (merged.length > MAX_CHAPTERS) {
+      next = didAppend && !didPrepend ? merged.slice(merged.length - MAX_CHAPTERS) : merged.slice(0, MAX_CHAPTERS)
     }
 
-    // Anchor on a chapter that survives the mutation (present in both `cur` and `next`);
-    // its pre-mutation viewport top lets the layout effect restore scroll position exactly.
+    // Anchor on a chapter that survives the mutation (present in both `cur` and `next`); its
+    // pre-mutation offsetTop + scrollTop let the layout effect restore scroll position exactly.
     const anchorPos = next.find((p) => cur.some((c) => c.book === p.book && c.chapter === p.chapter)) ?? null
     if (anchorPos) {
       const a = el.querySelector<HTMLElement>(`[data-book="${anchorPos.book}"][data-chapter="${anchorPos.chapter}"]`)
-      pendingAnchorRef.current = a ? { pos: anchorPos, top: a.getBoundingClientRect().top } : null
+      pendingAnchorRef.current = a ? { pos: anchorPos, offsetTop: a.offsetTop, scrollTop: el.scrollTop } : null
     } else {
       pendingAnchorRef.current = null
     }
