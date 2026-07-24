@@ -1,3 +1,9 @@
+import { PrefsProvider } from './state/prefs'
+
 export default function App() {
-  return <div style={{ padding: 40 }}>Zephyr</div>
+  return (
+    <PrefsProvider>
+      <div style={{ padding: 40 }}>Zephyr</div>
+    </PrefsProvider>
+  )
 }

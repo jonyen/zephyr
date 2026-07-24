@@ -1,8 +1,35 @@
 * { margin: 0; padding: 0; box-sizing: border-box; }
-:root {
+:root, :root[data-theme='light'] {
   --bg: #ffffff; --text: #1d1d1f; --text-secondary: #6e6e73;
   --accent: #0a84ff; --red-letter: #c0392b; --divider: rgba(0,0,0,0.12);
-  --overlay-bg: rgba(255,255,255,0.92);
+  --overlay-bg: rgba(255,255,255,0.92); --hover: rgba(0,0,0,0.06);
 }
+:root[data-theme='dark'] {
+  --bg: #1e1e1e; --text: #e8e8ed; --text-secondary: #98989d;
+  --accent: #0a84ff; --red-letter: #e06055; --divider: rgba(255,255,255,0.14);
+  --overlay-bg: rgba(30,30,30,0.92); --hover: rgba(255,255,255,0.08);
+}
+:root[data-theme='sepia'] {
+  --bg: #f4ecd8; --text: #3d3428; --text-secondary: #7a6f5d;
+  --accent: #8a6d3b; --red-letter: #a53f2b; --divider: rgba(61,52,40,0.18);
+  --overlay-bg: rgba(244,236,216,0.94); --hover: rgba(61,52,40,0.08);
+}
+:root[data-theme='black'] {
+  --bg: #000000; --text: #d8d8dc; --text-secondary: #808085;
+  --accent: #0a84ff; --red-letter: #e06055; --divider: rgba(255,255,255,0.12);
+  --overlay-bg: rgba(0,0,0,0.92); --hover: rgba(255,255,255,0.1);
+}
+:root[data-font='georgia'] { --reading-font: Georgia, 'Times New Roman', serif; }
+:root[data-font='palatino'] { --reading-font: 'Palatino', 'Palatino Linotype', 'Book Antiqua', serif; }
+:root[data-font='helvetica'] { --reading-font: 'Helvetica Neue', Helvetica, Arial, sans-serif; }
 html, body, #root { height: 100%; }
-body { background: var(--bg); color: var(--text); font-family: Georgia, serif; }
+body { background: var(--bg); color: var(--text); font-family: var(--reading-font, Georgia, serif); transition: background 0.2s, color 0.2s; }
+
+.popover-backdrop { position: fixed; inset: 0; z-index: 40; }
+.settings-popover { position: absolute; top: 44px; right: 12px; width: 280px; background: var(--overlay-bg); backdrop-filter: blur(12px); border: 1px solid var(--divider); border-radius: 10px; padding: 14px; box-shadow: 0 8px 30px rgba(0,0,0,0.2); font-family: -apple-system, system-ui, sans-serif; font-size: 13px; }
+.settings-group { margin-bottom: 12px; }
+.settings-label { color: var(--text-secondary); font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; }
+.settings-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.chip { border: 1px solid var(--divider); background: transparent; color: var(--text); border-radius: 999px; padding: 3px 10px; cursor: pointer; font-size: 12px; text-transform: capitalize; }
+.chip.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+.settings-toggle { display: block; margin-top: 6px; cursor: pointer; }
