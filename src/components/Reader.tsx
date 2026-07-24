@@ -7,7 +7,7 @@ import Scrubber from './Scrubber'
 import { useAnnotations } from '../state/annotations'
 
 export interface VerseRange { start: number; end: number }
-interface NavCtx { position: Position; jump: (pos: Position, verseRange?: VerseRange) => void }
+interface NavCtx { position: Position; jump: (pos: Position, verseRange?: VerseRange, opts?: { replace?: boolean }) => void }
 const Ctx = createContext<NavCtx | null>(null)
 export function useNav(): NavCtx {
   const ctx = useContext(Ctx)
@@ -49,8 +49,8 @@ export default function Reader({ children }: { children?: React.ReactNode }) {
     historyTimer.current = setTimeout(() => logHistory(pos.book, pos.chapter), 2000)
   }, [logHistory])
 
-  const jump = useCallback((pos: Position, verseRange?: VerseRange) => {
-    navigate(`/${slugForPosition(pos)}/${pos.chapter}`, { state: verseRange ? { verseRange } : undefined })
+  const jump = useCallback((pos: Position, verseRange?: VerseRange, opts?: { replace?: boolean }) => {
+    navigate(`/${slugForPosition(pos)}/${pos.chapter}`, { state: verseRange ? { verseRange } : undefined, replace: opts?.replace ?? false })
   }, [navigate])
 
   if (!valid && slug) return <Navigate to="/genesis/1" replace />

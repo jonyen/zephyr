@@ -39,7 +39,7 @@ export default function Scrubber() {
     const idx = Math.round(fraction * (TOTAL_CHAPTERS - 1))
     if (idx !== lastNavigated.current) {
       lastNavigated.current = idx
-      jump(positionForGlobalIndex(idx))
+      jump(positionForGlobalIndex(idx), undefined, { replace: true })
     }
   }, [jump])
 
@@ -67,6 +67,7 @@ export default function Scrubber() {
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
+      onPointerCancel={onPointerUp}
       onPointerEnter={() => setHovered(true)}
       onPointerLeave={() => setHovered(false)}
     >
