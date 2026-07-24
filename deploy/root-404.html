@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>404</title>
+    <style>
+      body { font-family: -apple-system, system-ui, sans-serif; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; color: #1d1d1f; background: #fff; }
+      main { text-align: center; padding: 24px; }
+      h1 { font-size: 20px; margin: 0 0 8px; }
+      p { font-size: 14px; color: #6e6e73; margin: 0; }
+    </style>
+  </head>
+  <body>
+    <main id="notfound">
+      <h1>404</h1>
+      <p>Page not found.</p>
+    </main>
+    <script>
+      // GitHub Pages only serves a 404.html placed at the SITE ROOT — a 404.html inside a
+      // project subdirectory (e.g. /zephyr/404.html) is never honored for deep links within
+      // that subdirectory. This file is meant to be copied to the ROOT of jonyen.github.io as
+      // its 404.html. For any path under /zephyr/ it performs a spa-github-pages-style redirect
+      // that stashes the original path in a query param, then main.tsx restores it via
+      // history.replaceState before the router boots. Any other path (i.e. this file is also
+      // serving as the site's general 404) just shows the plain message above.
+      (function () {
+        var path = window.location.pathname
+        if (path === '/zephyr' || path.indexOf('/zephyr/') === 0) {
+          var original = path + window.location.search + window.location.hash
+          window.location.replace('/zephyr/?p=' + encodeURIComponent(original))
+        }
+      })()
+    </script>
+  </body>
+</html>

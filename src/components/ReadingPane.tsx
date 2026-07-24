@@ -252,9 +252,11 @@ export default function ReadingPane({ target, navId, targetVerseRange, onPositio
           />
         )
       })}
-      <footer className="esv-attribution">
-        Scripture quotations are from the ESV® Bible (The Holy Bible, English Standard Version®), © 2001 by Crossway. Used by permission. All rights reserved.
-      </footer>
+      {chapters.some((c) => chapterAfter(c) === null) && (
+        <footer className="esv-attribution">
+          Scripture quotations are from the ESV® Bible (The Holy Bible, English Standard Version®), © 2001 by Crossway. Used by permission. All rights reserved.
+        </footer>
+      )}
     </div>
   )
 }
