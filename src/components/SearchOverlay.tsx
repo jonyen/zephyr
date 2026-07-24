@@ -29,7 +29,7 @@ export default function SearchOverlay({ onClose }: { onClose: () => void }) {
           if (!cancelled) setLoading('Couldn’t load Scripture text — check your connection and try again.')
           return
         }
-        setLoading(null)
+        if (!cancelled) setLoading(null)
       }
       if (!cancelled) { setResults(searchVerses(query, booksRef.current)); setSelected(0) }
     }, 250)

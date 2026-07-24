@@ -25,14 +25,16 @@
 html, body, #root { height: 100%; }
 body { background: var(--bg); color: var(--text); font-family: var(--reading-font, Georgia, serif); transition: background 0.2s, color 0.2s; }
 
+.error-boundary { display: flex; align-items: center; justify-content: center; height: 100vh; font-family: -apple-system, system-ui, sans-serif; color: var(--text-secondary); }
 .popover-backdrop { position: fixed; inset: 0; z-index: 40; }
-.settings-popover { position: absolute; top: 44px; right: 12px; width: 280px; background: var(--overlay-bg); backdrop-filter: blur(12px); border: 1px solid var(--divider); border-radius: 10px; padding: 14px; box-shadow: 0 8px 30px rgba(0,0,0,0.2); font-family: -apple-system, system-ui, sans-serif; font-size: 13px; }
+.settings-popover { position: absolute; top: 44px; right: 12px; width: 280px; background: var(--overlay-bg); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); border: 1px solid var(--divider); border-radius: 10px; padding: 14px; box-shadow: 0 8px 30px rgba(0,0,0,0.2); font-family: -apple-system, system-ui, sans-serif; font-size: 13px; }
 .settings-group { margin-bottom: 12px; }
 .settings-label { color: var(--text-secondary); font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; }
 .settings-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
 .chip { border: 1px solid var(--divider); background: transparent; color: var(--text); border-radius: 999px; padding: 3px 10px; cursor: pointer; font-size: 12px; text-transform: capitalize; }
 .chip.active { background: var(--accent); border-color: var(--accent); color: #fff; }
 .settings-toggle { display: block; margin-top: 6px; cursor: pointer; }
+.esv-attribution-settings { max-width: none; margin: 12px 0 0; padding: 10px 0 0; border-top: 1px solid var(--divider); }
 
 .chapter { max-width: 700px; margin: 0 auto; padding: 24px 32px 0; }
 .book-title { font-family: -apple-system, system-ui, sans-serif; font-size: 28px; font-weight: 700; padding: 16px 0 12px; }
@@ -40,7 +42,7 @@ body { background: var(--bg); color: var(--text); font-family: var(--reading-fon
 .chapter-body::after { content: ''; display: block; clear: both; }
 .drop-cap { float: left; font-size: 42px; line-height: 1; font-weight: 500; padding: 4px 10px 0 0; font-family: var(--reading-font); }
 .bookmark-flag { color: var(--accent); font-size: 14px; vertical-align: top; margin-left: 2px; }
-.verses { font-size: 17px; line-height: 1.65; white-space: pre-wrap; text-align: left; }
+.verses { font-size: 17px; line-height: 1.65; white-space: pre-wrap; text-align: left; text-indent: -1.2em; padding-left: 1.2em; }
 .verses-lines > span { display: block; }
 .verse-num { color: var(--text-secondary); font-size: 11px; margin-right: 3px; font-family: -apple-system, system-ui, sans-serif; }
 .red-letter { color: var(--red-letter); }
@@ -49,7 +51,8 @@ body { background: var(--bg); color: var(--text); font-family: var(--reading-fon
 .hl-blue { background: rgba(10, 132, 255, 0.25); } .hl-pink { background: rgba(255, 55, 95, 0.25); }
 .hl-purple { background: rgba(191, 90, 242, 0.3); }
 .hl { color: inherit; }
-.verse-target { background: rgba(10, 132, 255, 0.15); transition: background 1.2s ease 1.5s; border-radius: 3px; }
+.verse-target { border-radius: 3px; animation: verse-flash 3s ease forwards; }
+@keyframes verse-flash { 0%, 50% { background: rgba(10, 132, 255, 0.15); } 100% { background: transparent; } }
 .chapter-divider { border: none; border-top: 1px solid var(--divider); margin: 24px 0; max-width: 700px; }
 
 .reading-pane { height: 100vh; overflow-y: auto; overflow-anchor: none; scrollbar-width: none; }
@@ -67,13 +70,13 @@ body { background: var(--bg); color: var(--text); font-family: var(--reading-fon
 .tick-pink { fill: #ff375f; } .tick-purple { fill: #bf5af2; }
 
 .scrubber-panel { position: fixed; top: 0; bottom: 0; overflow: hidden; z-index: 19; font-family: -apple-system, system-ui, sans-serif; pointer-events: auto; }
-.scrubber-panel-bg { position: absolute; left: 0; right: 0; background: var(--overlay-bg); backdrop-filter: blur(14px); border-radius: 8px; box-shadow: -2px 0 8px rgba(0,0,0,0.15); border: 1px solid var(--divider); }
+.scrubber-panel-bg { position: absolute; left: 0; right: 0; background: var(--overlay-bg); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); border-radius: 8px; box-shadow: -2px 0 8px rgba(0,0,0,0.15); border: 1px solid var(--divider); }
 .scrubber-label { position: absolute; left: 0; right: 0; height: 22px; border: none; background: transparent; color: var(--text); font-size: 13px; font-weight: 300; cursor: pointer; white-space: nowrap; text-align: center; border-radius: 11px; transition: opacity 0.1s; }
 .scrubber-label.current { font-weight: 600; }
 .scrubber-label.hovered { background: var(--hover); font-weight: 500; }
 
 .overlay-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.25); z-index: 50; display: flex; justify-content: center; align-items: flex-start; padding-top: 12vh; }
-.search-box { width: min(600px, 90vw); background: var(--overlay-bg); backdrop-filter: blur(16px); border-radius: 12px; border: 1px solid var(--divider); box-shadow: 0 16px 50px rgba(0,0,0,0.3); overflow: hidden; font-family: -apple-system, system-ui, sans-serif; }
+.search-box { width: min(600px, 90vw); background: var(--overlay-bg); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); border-radius: 12px; border: 1px solid var(--divider); box-shadow: 0 16px 50px rgba(0,0,0,0.3); overflow: hidden; font-family: -apple-system, system-ui, sans-serif; }
 .search-box input { width: 100%; border: none; outline: none; background: transparent; color: var(--text); font-size: 18px; padding: 16px 18px; }
 .search-ref-hint, .search-status { padding: 10px 18px 14px; color: var(--text-secondary); font-size: 13px; }
 .search-results { list-style: none; max-height: 50vh; overflow-y: auto; border-top: 1px solid var(--divider); }
@@ -85,7 +88,7 @@ body { background: var(--bg); color: var(--text); font-family: var(--reading-fon
 .corner-btn { position: fixed; top: 10px; z-index: 30; border: none; background: transparent; color: var(--text-secondary); font-size: 16px; cursor: pointer; padding: 6px; border-radius: 6px; }
 .corner-btn:hover { background: var(--hover); color: var(--text); }
 
-.toc-box { width: min(680px, 92vw); max-height: 70vh; overflow-y: auto; background: var(--overlay-bg); backdrop-filter: blur(16px); border-radius: 12px; border: 1px solid var(--divider); box-shadow: 0 16px 50px rgba(0,0,0,0.3); padding: 16px; font-family: -apple-system, system-ui, sans-serif; }
+.toc-box { width: min(680px, 92vw); max-height: 70vh; overflow-y: auto; background: var(--overlay-bg); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); border-radius: 12px; border: 1px solid var(--divider); box-shadow: 0 16px 50px rgba(0,0,0,0.3); padding: 16px; font-family: -apple-system, system-ui, sans-serif; }
 .toc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 4px; }
 .toc-chapters { grid-template-columns: repeat(auto-fill, minmax(48px, 1fr)); }
 .toc-item { border: none; background: transparent; color: var(--text); font-size: 13px; padding: 7px 8px; border-radius: 6px; cursor: pointer; text-align: left; }
@@ -94,7 +97,7 @@ body { background: var(--bg); color: var(--text); font-family: var(--reading-fon
 .toc-item.current { font-weight: 700; color: var(--accent); }
 .toc-back { border: none; background: transparent; color: var(--accent); font-size: 14px; font-weight: 600; cursor: pointer; padding: 4px 8px 12px; }
 
-.selection-toolbar { position: fixed; transform: translateX(-50%); display: flex; gap: 6px; background: var(--overlay-bg); backdrop-filter: blur(12px); border: 1px solid var(--divider); border-radius: 999px; padding: 6px 10px; z-index: 60; box-shadow: 0 6px 20px rgba(0,0,0,0.25); }
+.selection-toolbar { position: fixed; transform: translateX(-50%); display: flex; gap: 6px; background: var(--overlay-bg); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); border: 1px solid var(--divider); border-radius: 999px; padding: 6px 10px; z-index: 60; box-shadow: 0 6px 20px rgba(0,0,0,0.25); }
 .dot { width: 20px; height: 20px; border-radius: 50%; border: none; cursor: pointer; font-size: 11px; color: var(--text); }
 .dot-yellow { background: #f5c518; } .dot-green { background: #30d158; } .dot-blue { background: #0a84ff; }
 .dot-pink { background: #ff375f; } .dot-purple { background: #bf5af2; }

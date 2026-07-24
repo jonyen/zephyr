@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { BOOKS, TOTAL_CHAPTERS } from '../lib/bible-index'
-import { globalIndex, positionForGlobalIndex } from '../lib/bible-nav'
+import { bookByName, globalIndex, positionForGlobalIndex } from '../lib/bible-nav'
 import { useNav } from './Reader'
 import { useAnnotations } from '../state/annotations'
 import ScrubberPanel from './ScrubberPanel'
@@ -21,6 +21,7 @@ export default function Scrubber() {
   const [wheelBookIndex, setWheelBookIndex] = useState<number | null>(null)
   const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const lastNavigated = useRef(-1)
+  const wheelAccum = useRef(0)
 
   useEffect(() => {
     const el = stripRef.current
@@ -28,6 +29,18 @@ export default function Scrubber() {
     const ro = new ResizeObserver(() => setHeight(el.clientHeight))
     ro.observe(el)
     return () => ro.disconnect()
+  }, [])
+
+  // Belt-and-suspenders: annotations are sanitized on load, but guard marker rendering too so a
+  // stray unknown-book entry (e.g. from a future schema change) can't throw during paint —
+  // globalIndex() throws for books it doesn't recognize.
+  const fractionForPosition = useCallback((pos: { book: string; chapter: number }): number | null => {
+    if (!bookByName(pos.book)) return null
+    try {
+      return globalIndex(pos) / (TOTAL_CHAPTERS - 1)
+    } catch {
+      return null
+    }
   }, [])
 
   const trackHeight = Math.max(0, height - TRACK_INSET * 2)
@@ -69,7 +82,7 @@ export default function Scrubber() {
       if (hideTimer.current) clearTimeout(hideTimer.current)
       setVisible(true)
     } else {
-      hideTimer.current = setTimeout(() => { setVisible(false); setWheelBookIndex(null) }, 150)
+      hideTimer.current = setTimeout(() => { setVisible(false); setWheelBookIndex(null); wheelAccum.current = 0 }, 150)
     }
     return () => { if (hideTimer.current) clearTimeout(hideTimer.current) }
   }, [showLabels])
@@ -79,7 +92,10 @@ export default function Scrubber() {
 
   const onWheel = (e: React.WheelEvent) => {
     if (!showLabels) return
-    const step = e.deltaY > 0 ? 1 : -1
+    wheelAccum.current += e.deltaY
+    if (Math.abs(wheelAccum.current) < 40) return
+    const step = wheelAccum.current > 0 ? 1 : -1
+    wheelAccum.current -= 40 * step
     setWheelBookIndex((cur) => Math.max(0, Math.min(BOOKS.length - 1, (cur ?? Math.max(0, currentBookIndex)) + step)))
   }
 
@@ -101,11 +117,15 @@ export default function Scrubber() {
         <svg width={STRIP_WIDTH} height={height || 1}>
           <rect x={cx - 1} y={TRACK_INSET} width={2} height={trackHeight} rx={1} className="scrubber-track" />
           {highlights.map((h, i) => {
-            const y = TRACK_INSET + (globalIndex({ book: h.book, chapter: h.chapter }) / (TOTAL_CHAPTERS - 1)) * trackHeight
+            const f = fractionForPosition({ book: h.book, chapter: h.chapter })
+            if (f == null) return null
+            const y = TRACK_INSET + f * trackHeight
             return <rect key={`h${i}`} x={cx - 8} y={y - 1.5} width={6} height={3} rx={1} className={`tick-${h.color}`} />
           })}
           {bookmarks.map((b, i) => {
-            const y = TRACK_INSET + (globalIndex(b) / (TOTAL_CHAPTERS - 1)) * trackHeight
+            const f = fractionForPosition(b)
+            if (f == null) return null
+            const y = TRACK_INSET + f * trackHeight
             return <path key={`b${i}`} d={`M ${cx + 3} ${y - 3} L ${cx + 6} ${y} L ${cx + 3} ${y + 3} L ${cx} ${y} Z`} className="scrubber-bookmark" />
           })}
           <rect x={cx - 3} y={thumbY - 15} width={6} height={30} rx={3} className="scrubber-thumb" />
