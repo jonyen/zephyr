@@ -37,10 +37,11 @@ body { background: var(--bg); color: var(--text); font-family: var(--reading-fon
 .chapter { max-width: 700px; margin: 0 auto; padding: 24px 32px 0; }
 .book-title { font-family: -apple-system, system-ui, sans-serif; font-size: 28px; font-weight: 700; padding: 16px 0 12px; }
 .chapter-body { position: relative; }
+.chapter-body::after { content: ''; display: block; clear: both; }
 .drop-cap { float: left; font-size: 42px; line-height: 1; font-weight: 500; padding: 4px 10px 0 0; font-family: var(--reading-font); }
 .bookmark-flag { color: var(--accent); font-size: 14px; vertical-align: top; margin-left: 2px; }
 .verses { font-size: 17px; line-height: 1.65; white-space: pre-wrap; text-align: left; }
-.verses-lines .verse { display: block; }
+.verses-lines > span { display: block; }
 .verse-num { color: var(--text-secondary); font-size: 11px; margin-right: 3px; font-family: -apple-system, system-ui, sans-serif; }
 .red-letter { color: var(--red-letter); }
 .red-letter .verse-num { color: var(--text-secondary); }

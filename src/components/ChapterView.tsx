@@ -31,7 +31,7 @@ export default function ChapterView({ bookName, chapter, showBookTitle, redVerse
           {chapter.verses.map((v) => (
             <span key={v.number} className={inTarget(v.number) ? 'verse-target' : undefined}>
               <VerseText verse={v} isRed={redSet.has(v.number)} highlights={highlights.filter((h) => h.verse === v.number)} bionic={prefs.bionic} />
-              {oneVersePerLine ? '\n' : ' '}
+              {oneVersePerLine ? null : ' '}
             </span>
           ))}
         </p>
