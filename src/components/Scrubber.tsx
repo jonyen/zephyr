@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { TOTAL_CHAPTERS } from '../lib/bible-index'
+import { BOOKS, TOTAL_CHAPTERS } from '../lib/bible-index'
 import { globalIndex, positionForGlobalIndex } from '../lib/bible-nav'
 import { useNav } from './Reader'
 import { useAnnotations } from '../state/annotations'
+import ScrubberPanel from './ScrubberPanel'
 
 export const TRACK_INSET = 20
 export const STRIP_WIDTH = 30
@@ -13,8 +14,12 @@ export default function Scrubber() {
   const stripRef = useRef<HTMLDivElement>(null)
   const [height, setHeight] = useState(0)
   const [hovered, setHovered] = useState(false)
+  const [panelHovered, setPanelHovered] = useState(false)
   const [dragging, setDragging] = useState(false)
   const [dragFraction, setDragFraction] = useState(0)
+  const [visible, setVisible] = useState(false)
+  const [wheelBookIndex, setWheelBookIndex] = useState<number | null>(null)
+  const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const lastNavigated = useRef(-1)
 
   useEffect(() => {
@@ -58,31 +63,64 @@ export default function Scrubber() {
   }
   const onPointerUp = () => { setDragging(false); lastNavigated.current = -1 }
 
+  const showLabels = hovered || dragging || panelHovered
+  useEffect(() => {
+    if (showLabels) {
+      if (hideTimer.current) clearTimeout(hideTimer.current)
+      setVisible(true)
+    } else {
+      hideTimer.current = setTimeout(() => { setVisible(false); setWheelBookIndex(null) }, 150)
+    }
+    return () => { if (hideTimer.current) clearTimeout(hideTimer.current) }
+  }, [showLabels])
+
+  const currentBookIndex = BOOKS.findIndex((b) => b.name === position.book)
+  const focusedBookIndex = wheelBookIndex ?? Math.max(0, currentBookIndex)
+
+  const onWheel = (e: React.WheelEvent) => {
+    if (!showLabels) return
+    const step = e.deltaY > 0 ? 1 : -1
+    setWheelBookIndex((cur) => Math.max(0, Math.min(BOOKS.length - 1, (cur ?? Math.max(0, currentBookIndex)) + step)))
+  }
+
   const cx = STRIP_WIDTH / 2
   return (
-    <div
-      ref={stripRef}
-      className="scrubber-strip"
-      data-hovered={hovered}
-      onPointerDown={onPointerDown}
-      onPointerMove={onPointerMove}
-      onPointerUp={onPointerUp}
-      onPointerCancel={onPointerUp}
-      onPointerEnter={() => setHovered(true)}
-      onPointerLeave={() => setHovered(false)}
-    >
-      <svg width={STRIP_WIDTH} height={height || 1}>
-        <rect x={cx - 1} y={TRACK_INSET} width={2} height={trackHeight} rx={1} className="scrubber-track" />
-        {highlights.map((h, i) => {
-          const y = TRACK_INSET + (globalIndex({ book: h.book, chapter: h.chapter }) / (TOTAL_CHAPTERS - 1)) * trackHeight
-          return <rect key={`h${i}`} x={cx - 8} y={y - 1.5} width={6} height={3} rx={1} className={`tick-${h.color}`} />
-        })}
-        {bookmarks.map((b, i) => {
-          const y = TRACK_INSET + (globalIndex(b) / (TOTAL_CHAPTERS - 1)) * trackHeight
-          return <path key={`b${i}`} d={`M ${cx + 3} ${y - 3} L ${cx + 6} ${y} L ${cx + 3} ${y + 3} L ${cx} ${y} Z`} className="scrubber-bookmark" />
-        })}
-        <rect x={cx - 3} y={thumbY - 15} width={6} height={30} rx={3} className="scrubber-thumb" />
-      </svg>
+    <div className="scrubber-zone">
+      <div
+        ref={stripRef}
+        className="scrubber-strip"
+        data-hovered={hovered}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerCancel={onPointerUp}
+        onPointerEnter={() => setHovered(true)}
+        onPointerLeave={() => setHovered(false)}
+        onWheel={onWheel}
+      >
+        <svg width={STRIP_WIDTH} height={height || 1}>
+          <rect x={cx - 1} y={TRACK_INSET} width={2} height={trackHeight} rx={1} className="scrubber-track" />
+          {highlights.map((h, i) => {
+            const y = TRACK_INSET + (globalIndex({ book: h.book, chapter: h.chapter }) / (TOTAL_CHAPTERS - 1)) * trackHeight
+            return <rect key={`h${i}`} x={cx - 8} y={y - 1.5} width={6} height={3} rx={1} className={`tick-${h.color}`} />
+          })}
+          {bookmarks.map((b, i) => {
+            const y = TRACK_INSET + (globalIndex(b) / (TOTAL_CHAPTERS - 1)) * trackHeight
+            return <path key={`b${i}`} d={`M ${cx + 3} ${y - 3} L ${cx + 6} ${y} L ${cx + 3} ${y + 3} L ${cx} ${y} Z`} className="scrubber-bookmark" />
+          })}
+          <rect x={cx - 3} y={thumbY - 15} width={6} height={30} rx={3} className="scrubber-thumb" />
+        </svg>
+      </div>
+      {visible && (
+        <ScrubberPanel
+          trackHeight={trackHeight}
+          currentFraction={currentFraction}
+          focusedBookIndex={focusedBookIndex}
+          onHoverChange={setPanelHovered}
+          onSelectBook={(name) => { jump({ book: name, chapter: 1 }); setWheelBookIndex(null) }}
+          onWheel={onWheel}
+        />
+      )}
     </div>
   )
 }
