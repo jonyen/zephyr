@@ -37,9 +37,13 @@ export default function Reader({ children }: { children?: React.ReactNode }) {
   // (scrollTop = 0, chaptersRef rewound) races the anchor-compensation captures against a
   // DOM that hasn't committed yet — the cold-navigation position-drift bug.
   const [navId, setNavId] = useState(0)
-  const firstKeyRef = useRef(true)
+  // Compare against the remembered initial key rather than a boolean latch: a latch flips on
+  // the first invocation and misfires on StrictMode's mount replay (same key, second call),
+  // which re-introduces the exact reset-after-fill race this guard exists to prevent. A key
+  // comparison is idempotent no matter how many times React replays the effect.
+  const initialKeyRef = useRef(location.key)
   useEffect(() => {
-    if (firstKeyRef.current) { firstKeyRef.current = false; return }
+    if (location.key === initialKeyRef.current) return
     setNavId((n) => n + 1)
   }, [location.key])
 
