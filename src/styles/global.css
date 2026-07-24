@@ -56,6 +56,7 @@ body { background: var(--bg); color: var(--text); font-family: var(--reading-fon
 .reading-pane::-webkit-scrollbar { display: none; }
 .chapter-placeholder { min-height: 60vh; }
 .load-error { max-width: 700px; margin: 12px auto; padding: 10px 16px; border: 1px solid var(--divider); border-radius: 8px; font-family: system-ui, sans-serif; font-size: 13px; }
+.esv-attribution { max-width: 700px; margin: 0 auto; padding: 24px 32px 40px; color: var(--text-secondary); font-size: 11px; font-family: -apple-system, system-ui, sans-serif; }
 
 .scrubber-zone { position: fixed; top: 0; right: 0; bottom: 0; width: 240px; z-index: 20; pointer-events: none; }
 .scrubber-strip { position: absolute; top: 0; right: 0; bottom: 0; width: 30px; z-index: 20; cursor: pointer; touch-action: none; pointer-events: auto; }

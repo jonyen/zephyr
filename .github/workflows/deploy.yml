@@ -1,0 +1,23 @@
+name: Deploy to jonyen.com/zephyr
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20, cache: npm }
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+      - name: Publish to jonyen.github.io/zephyr
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          personal_token: ${{ secrets.DEPLOY_TOKEN }}
+          external_repository: jonyen/jonyen.github.io
+          publish_branch: main
+          publish_dir: ./dist
+          destination_dir: zephyr
