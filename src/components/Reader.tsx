@@ -3,6 +3,7 @@ import { Navigate, useLocation, useNavigate, useParams } from 'react-router-dom'
 import type { Position } from '../lib/types'
 import { bookBySlug, slugForPosition } from '../lib/bible-nav'
 import ReadingPane from './ReadingPane'
+import Scrubber from './Scrubber'
 import { useAnnotations } from '../state/annotations'
 
 export interface VerseRange { start: number; end: number }
@@ -58,6 +59,7 @@ export default function Reader({ children }: { children?: React.ReactNode }) {
   return (
     <Ctx.Provider value={{ position, jump }}>
       <ReadingPane target={target} navId={navId} targetVerseRange={verseRange} onPositionChange={onPositionChange} />
+      <Scrubber />
       {children}
     </Ctx.Provider>
   )

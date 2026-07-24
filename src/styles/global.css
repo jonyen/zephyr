@@ -56,3 +56,10 @@ body { background: var(--bg); color: var(--text); font-family: var(--reading-fon
 .reading-pane::-webkit-scrollbar { display: none; }
 .chapter-placeholder { min-height: 60vh; }
 .load-error { max-width: 700px; margin: 12px auto; padding: 10px 16px; border: 1px solid var(--divider); border-radius: 8px; font-family: system-ui, sans-serif; font-size: 13px; }
+
+.scrubber-strip { position: fixed; top: 0; right: 0; bottom: 0; width: 30px; z-index: 20; cursor: pointer; touch-action: none; }
+.scrubber-track { fill: color-mix(in srgb, var(--text-secondary) 30%, transparent); }
+.scrubber-thumb { fill: var(--accent); }
+.scrubber-bookmark { fill: var(--accent); }
+.tick-yellow { fill: #f5c518; } .tick-green { fill: #30d158; } .tick-blue { fill: #0a84ff; }
+.tick-pink { fill: #ff375f; } .tick-purple { fill: #bf5af2; }
