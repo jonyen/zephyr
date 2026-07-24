@@ -15,6 +15,10 @@ describe('parseReference', () => {
   })
   it('parses roman-numeral ordinals and periods', () => {
     expect(parseReference('II Tim. 2:15')).toEqual({ book: '2 Timothy', chapter: 2, verse: 15 })
+    expect(parseReference('  II Tim. 2:15 ')).toEqual({ book: '2 Timothy', chapter: 2, verse: 15 })
+  })
+  it('handles books starting with i (isaiah)', () => {
+    expect(parseReference('isaiah 40')).toEqual({ book: 'Isaiah', chapter: 40 })
   })
   it('book-only goes to chapter 1', () => {
     expect(parseReference('jude')).toEqual({ book: 'Jude', chapter: 1 })

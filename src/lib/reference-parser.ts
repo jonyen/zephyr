@@ -37,9 +37,9 @@ function normalize(input: string): string {
   return input
     .toLowerCase()
     .replace(/\./g, '')
-    .replace(/^iii\s+/, '3 ').replace(/^ii\s+/, '2 ').replace(/^i\s+/, '1 ')
     .replace(/\s+/g, ' ')
     .trim()
+    .replace(/^iii\s+/, '3 ').replace(/^ii\s+/, '2 ').replace(/^i\s+/, '1 ')
 }
 
 export function parseReference(input: string): ParsedReference | null {
