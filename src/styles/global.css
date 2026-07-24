@@ -51,3 +51,8 @@ body { background: var(--bg); color: var(--text); font-family: var(--reading-fon
 .hl { color: inherit; }
 .verse-target { background: rgba(10, 132, 255, 0.15); transition: background 1.2s ease 1.5s; border-radius: 3px; }
 .chapter-divider { border: none; border-top: 1px solid var(--divider); margin: 24px 0; max-width: 700px; }
+
+.reading-pane { height: 100vh; overflow-y: auto; overflow-anchor: none; scrollbar-width: none; }
+.reading-pane::-webkit-scrollbar { display: none; }
+.chapter-placeholder { min-height: 60vh; }
+.load-error { max-width: 700px; margin: 12px auto; padding: 10px 16px; border: 1px solid var(--divider); border-radius: 8px; font-family: system-ui, sans-serif; font-size: 13px; }

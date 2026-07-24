@@ -1,0 +1,57 @@
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react'
+import { Navigate, useLocation, useNavigate, useParams } from 'react-router-dom'
+import type { Position } from '../lib/types'
+import { bookBySlug, slugForPosition } from '../lib/bible-nav'
+import ReadingPane from './ReadingPane'
+import { useAnnotations } from '../state/annotations'
+
+export interface VerseRange { start: number; end: number }
+interface NavCtx { position: Position; jump: (pos: Position, verseRange?: VerseRange) => void }
+const Ctx = createContext<NavCtx | null>(null)
+export function useNav(): NavCtx {
+  const ctx = useContext(Ctx)
+  if (!ctx) throw new Error('useNav outside Reader')
+  return ctx
+}
+
+export default function Reader({ children }: { children?: React.ReactNode }) {
+  const { slug, chapter } = useParams()
+  const location = useLocation()
+  const navigate = useNavigate()
+  const { logHistory } = useAnnotations()
+
+  const info = bookBySlug(slug ?? 'genesis')
+  const chNum = Number(chapter ?? 1)
+  const valid = info && Number.isInteger(chNum) && chNum >= 1 && chNum <= (info?.chapters ?? 0)
+  const target: Position = valid ? { book: info!.name, chapter: chNum } : { book: 'Genesis', chapter: 1 }
+
+  // location.key changes on every push AND back/forward — perfect navId.
+  const [navId, setNavId] = useState(0)
+  useEffect(() => { setNavId((n) => n + 1) }, [location.key])
+
+  const [position, setPosition] = useState<Position>(target)
+  const historyTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const onPositionChange = useCallback((pos: Position) => {
+    setPosition(pos)
+    // Silent URL update — bypasses the router so ReadingPane doesn't remount.
+    const url = `${import.meta.env.BASE_URL}${slugForPosition(pos)}/${pos.chapter}`
+    window.history.replaceState(window.history.state, '', url)
+    if (historyTimer.current) clearTimeout(historyTimer.current)
+    historyTimer.current = setTimeout(() => logHistory(pos.book, pos.chapter), 2000)
+  }, [logHistory])
+
+  const jump = useCallback((pos: Position, verseRange?: VerseRange) => {
+    navigate(`/${slugForPosition(pos)}/${pos.chapter}`, { state: verseRange ? { verseRange } : undefined })
+  }, [navigate])
+
+  if (!valid && slug) return <Navigate to="/genesis/1" replace />
+  const verseRange = (location.state as { verseRange?: VerseRange } | null)?.verseRange ?? null
+
+  return (
+    <Ctx.Provider value={{ position, jump }}>
+      <ReadingPane target={target} navId={navId} targetVerseRange={verseRange} onPositionChange={onPositionChange} />
+      {children}
+    </Ctx.Provider>
+  )
+}
