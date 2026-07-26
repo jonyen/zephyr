@@ -35,7 +35,11 @@ struct SpotlightIndexer {
                 let chapterID = "zephyr-bible:\(bookName):\(chapter.number)"
                 let chapterTitle = "\(bookName) \(chapter.number)"
 
-                let preview = chapter.verses
+                // The ESV omits a handful of verses (Mark 9:44, Acts 8:37, …) as later
+                // manuscript additions; they carry no text and are not worth indexing.
+                let presentVerses = chapter.verses.filter { !$0.text.isEmpty }
+
+                let preview = presentVerses
                     .prefix(3)
                     .map { "\($0.number) \($0.text)" }
                     .joined(separator: " ")
@@ -58,7 +62,7 @@ struct SpotlightIndexer {
                 ))
 
                 // Index each verse
-                for verse in chapter.verses {
+                for verse in presentVerses {
                     let verseID = "zephyr-bible:\(bookName):\(chapter.number):\(verse.number)"
                     let verseTitle = "\(bookName) \(chapter.number):\(verse.number)"
                     let verseRef = "\(chapter.number):\(verse.number)"

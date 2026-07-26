@@ -139,6 +139,11 @@ struct SelectableTextView: NSViewRepresentable {
         var boundaries: [(verse: Int, start: Int, end: Int)] = []
 
         for verse in chapter.verses {
+            // The ESV omits a handful of verses (Mark 9:44, Acts 8:37, …) as later
+            // manuscript additions. They carry no text, so printing the number would
+            // leave a dangling numeral mid-paragraph.
+            if verse.text.isEmpty { continue }
+
             // Skip verse 1 number — it's replaced by the drop-cap chapter number
             if verse.number > 1 {
                 let numAttrs: [NSAttributedString.Key: Any] = [

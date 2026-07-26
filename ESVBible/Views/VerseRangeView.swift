@@ -93,6 +93,15 @@ struct VerseRangeView: View {
         let id: String
         let verses: [Verse]
         let chapterFound: Bool  // false = chapter missing from data; true = chapter exists (verses may be empty due to filter)
+
+        init(id: String, verses: [Verse], chapterFound: Bool) {
+            self.id = id
+            // The ESV omits a handful of verses (Mark 9:44, Acts 8:37, …) as later
+            // manuscript additions. They carry no text, so showing their number would
+            // leave a bare numeral with a blank line beside it.
+            self.verses = verses.filter { !$0.text.isEmpty }
+            self.chapterFound = chapterFound
+        }
     }
 
     private func collectSections(for ref: BibleReference) -> [VerseSection] {
