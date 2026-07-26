@@ -1,10 +1,14 @@
 # Zephyr Web
 
-A web version of [Zephyr](https://github.com/jonyen/zephyr), the minimalist ESV Bible reader for macOS. No accounts, no tracking — highlights, bookmarks, and history live in your browser's localStorage.
+A web version of [Zephyr](../README.md), the minimalist ESV Bible reader for macOS. No accounts, no tracking — highlights, bookmarks, and history live in your browser's localStorage.
 
 Live at [jonyen.com/zephyr](https://jonyen.com/zephyr).
 
+This app lives in the `web/` directory of the [jonyen/zephyr](https://github.com/jonyen/zephyr) monorepo, alongside the macOS app at the repo root. It was developed in a separate `jonyen/zephyr-web` repo through July 2026 and merged in with its history intact.
+
 ## Develop
+
+All npm commands run from this `web/` directory, not the repo root.
 
     npm install
     npm run dev        # http://localhost:5173
@@ -13,7 +17,19 @@ Live at [jonyen.com/zephyr](https://jonyen.com/zephyr).
 
 ## Deploy
 
-Pushes to `main` build and publish `dist/` into `jonyen/jonyen-website` under `public/zephyr/` via GitHub Actions (requires the `DEPLOY_TOKEN` repo secret — a fine-grained PAT with `contents: write` access to `jonyen/jonyen-website`). That repo is a Create React App site whose own workflow deploys on every push to its `main`; CRA copies `public/` verbatim into the build, so the pushed files go live at [jonyen.com/zephyr](https://jonyen.com/zephyr/) on its next deploy with no changes to that workflow.
+The workflow is [`.github/workflows/deploy-web.yml`](../.github/workflows/deploy-web.yml) at the **repo root** — GitHub Actions only reads workflows from the root `.github/workflows/`, so it cannot live in this directory. It is filtered on `paths: web/**`, so commits that only touch the macOS app don't trigger a web deploy.
+
+Pushes to `main` that touch `web/` build and publish `web/dist/` into `jonyen/jonyen-website` under `public/zephyr/`. That repo is a Create React App site whose own workflow deploys on every push to its `main`; CRA copies `public/` verbatim into the build, so the pushed files go live at [jonyen.com/zephyr](https://jonyen.com/zephyr/) on its next deploy with no changes to that workflow.
+
+### Required secret
+
+The deploy needs a `DEPLOY_TOKEN` secret — a fine-grained PAT with `contents: write` access to `jonyen/jonyen-website`.
+
+**This secret must be created on `jonyen/zephyr`.** Repository secrets do not follow code across repos, so the one that existed on `jonyen/zephyr-web` does not carry over from the merge. Until it's added, the deploy step will fail on an empty token:
+
+    gh secret set DEPLOY_TOKEN --repo jonyen/zephyr
+
+The old `jonyen/zephyr-web` repo should be archived with a pointer here; leaving it active means two workflows racing to publish the same `public/zephyr` directory.
 
 ### Deep links
 

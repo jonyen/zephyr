@@ -1,0 +1,45 @@
+name: Deploy web to jonyen.com/zephyr
+on:
+  push:
+    branches: [main]
+    # This repo is a monorepo: the macOS app lives at the root, the web app in web/.
+    # Without this filter every Swift-only commit would rebuild and republish the web
+    # app to jonyen-website. Keep this workflow's own path listed so changes to it
+    # still trigger a run.
+    paths:
+      - 'web/**'
+      - '.github/workflows/deploy-web.yml'
+  workflow_dispatch:
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          # There is no lockfile at the repo root, so the npm cache has to be
+          # pointed at the web app's.
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+      # jonyen.com is served by jonyen/jonyen-website — a CRA app whose own workflow
+      # (build_type: workflow) publishes on every push to its main. CRA copies public/
+      # verbatim into the build, so landing dist/ in public/zephyr/ makes the site's
+      # next deploy serve it at jonyen.com/zephyr/ with no changes to that workflow.
+      #
+      # Requires the DEPLOY_TOKEN secret on THIS repo (jonyen/zephyr) — see web/README.md.
+      # publish_dir is relative to the workspace root, not the job working-directory.
+      - name: Publish into jonyen-website/public/zephyr
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          personal_token: ${{ secrets.DEPLOY_TOKEN }}
+          external_repository: jonyen/jonyen-website
+          publish_branch: main
+          publish_dir: ./web/dist
+          destination_dir: public/zephyr

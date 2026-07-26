@@ -57,6 +57,25 @@ Open the DMG and drag Zephyr to your Applications folder.
 - **Auto-Update** — Get notified when a new version is available
 - **Completely Free** — No ads, no in-app purchases, no accounts, no tracking
 
+## Zephyr on the web
+
+There's a browser version at **[jonyen.com/zephyr](https://jonyen.com/zephyr)** — same reader, same offline-first, localStorage-only approach. It lives in [`web/`](./web) in this repository; see [`web/README.md`](./web/README.md) for development and deploy details.
+
+## Repository layout
+
+This is a monorepo holding both versions of Zephyr.
+
+| Path | What it is |
+|---|---|
+| `ESVBible/`, `Zephyr.xcodeproj/` | The macOS app (SwiftUI) |
+| `ESVBible/Resources/` | Bible text consumed by the macOS app |
+| `web/` | The web app (React + Vite), deployed to jonyen.com/zephyr |
+| `web/public/data/` | Bible text consumed by the web app |
+| `Scripts/` | Data generation (`bible_gateway.py`, `generate_red_letter_ranges.py`, `build_search_index.py`), version bumping, DMG builds |
+| `.github/workflows/` | CI — the web deploy is path-filtered to `web/**` |
+
+The two `Bible text` directories currently hold **byte-identical copies** of the 66 book JSONs and `red_letter_verses.json`. They are not yet deduplicated, so a correction to the corpus has to be applied to both, and `Scripts/` only writes to the macOS copy. Consolidating onto a single canonical `data/` directory is a planned follow-up.
+
 ## Building from Source
 
 Requires Xcode 16+ and macOS 14+.
@@ -71,6 +90,8 @@ cd zephyr
 ```
 
 The DMG will be created in the `dist/` directory.
+
+To build the web app instead, see [`web/README.md`](./web/README.md).
 
 ## License
 
