@@ -1,0 +1,27 @@
+name: Deploy to jonyen.com/zephyr
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 24, cache: npm }
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+      # jonyen.com is served by jonyen/jonyen-website — a CRA app whose own workflow
+      # (build_type: workflow) publishes on every push to its main. CRA copies public/
+      # verbatim into the build, so landing dist/ in public/zephyr/ makes the site's
+      # next deploy serve it at jonyen.com/zephyr/ with no changes to that workflow.
+      - name: Publish into jonyen-website/public/zephyr
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          personal_token: ${{ secrets.DEPLOY_TOKEN }}
+          external_repository: jonyen/jonyen-website
+          publish_branch: main
+          publish_dir: ./dist
+          destination_dir: public/zephyr

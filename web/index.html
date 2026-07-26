@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%95%8A%EF%B8%8F%3C/text%3E%3C/svg%3E" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Zephyr</title>
+    <script>
+      try {
+        var p = JSON.parse(localStorage.getItem('zephyr.v1.prefs'))
+        var t = p && p.theme
+        document.documentElement.dataset.theme = t === 'system' || !t
+          ? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : t
+        if (p && p.font) document.documentElement.dataset.font = p.font
+      } catch (e) {}
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
