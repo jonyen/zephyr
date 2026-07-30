@@ -581,10 +581,12 @@ struct ContentView: View {
                 }
             }
         }
-        // ScrollView is greedy, so without fixedSize a single result still paints a full 300pt
-        // box. Sizing to content first lets the frame act as a ceiling rather than a floor.
-        .fixedSize(horizontal: false, vertical: true)
+        // ScrollView is greedy and `maxHeight` is a flexible cap, so on its own the box always
+        // paints a full 300pt. Wrapping the capped frame in fixedSize asks for its ideal height
+        // instead — the content height, clamped to 300 — so the box hugs one result and still
+        // scrolls once there are many. The order matters: fixedSize has to be the outer one.
         .frame(maxHeight: 300)
+        .fixedSize(horizontal: false, vertical: true)
         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 8))
         .overlay {
             RoundedRectangle(cornerRadius: 8)
