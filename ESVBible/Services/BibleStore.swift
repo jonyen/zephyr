@@ -96,7 +96,22 @@ class BibleStore {
         guard let ch = getChapter(bookName: bookName, chapter: chapter) else { return [] }
         return ch.verses.filter { $0.number >= start && $0.number <= end }
     }
-    
+
+    /// The text a search result should show under a reference: the first verse it points at.
+    ///
+    /// Skips forward past empty verses — the ESV omits a handful (Mark 9:44, Acts 8:37) as later
+    /// manuscript additions, and those carry no text to preview.
+    func previewText(for reference: BibleReference) -> String? {
+        guard let chapter = getChapter(bookName: reference.book, chapter: reference.chapter) else {
+            return nil
+        }
+        let start = reference.verseStart ?? 1
+        return chapter.verses
+            .first { $0.number >= start && !$0.text.isEmpty }?
+            .text
+    }
+
+
     /// Returns all abbreviations that map to the given canonical book name.
     static func abbreviations(for bookName: String) -> [String] {
         return buildAbbreviations()

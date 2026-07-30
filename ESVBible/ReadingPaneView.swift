@@ -20,6 +20,8 @@ struct ReadingPaneView: View {
     let highlightVerseEnd: Int?
     let bibleStore: BibleStore
     let highlightManager: HighlightManager
+    /// The window this pane lives in, so page-scroll events only move the frontmost tab.
+    var hostWindow: NSWindow?
     /// Called whenever the topmost visible chapter changes.
     var onPositionChanged: ((ChapterPosition) -> Void)?
     /// Called when the scrubber requests navigation to a chapter.
@@ -87,10 +89,12 @@ struct ReadingPaneView: View {
                 visiblePosition = position
                 onPositionChanged?(position)
             }
-            .onReceive(NotificationCenter.default.publisher(for: .scrollPageUp)) { _ in
+            .onReceive(NotificationCenter.default.publisher(for: .scrollPageUp)) { notification in
+                guard (notification.object as? NSWindow) == hostWindow else { return }
                 pageScroll(up: true)
             }
-            .onReceive(NotificationCenter.default.publisher(for: .scrollPageDown)) { _ in
+            .onReceive(NotificationCenter.default.publisher(for: .scrollPageDown)) { notification in
+                guard (notification.object as? NSWindow) == hostWindow else { return }
                 pageScroll(up: false)
             }
         }

@@ -13,11 +13,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         ]
         // Post now and also store as pending in case the view isn't listening yet.
         Self.pendingNavigation = (book, chapter, verse)
-        NotificationCenter.default.post(
-            name: .navigateToReference,
-            object: nil,
-            userInfo: userInfo
-        )
+        MainActor.assumeIsolated {
+            TabCoordinator.shared.route(.navigateToReference, from: NSApp.keyWindow, userInfo: userInfo)
+        }
     }
 
     func application(_ application: NSApplication, continue userActivity: NSUserActivity, restorationHandler: @escaping ([any NSUserActivityRestoring]) -> Void) -> Bool {
@@ -66,79 +64,79 @@ struct ESVBibleApp: App {
         .commands {
             CommandGroup(after: .textEditing) {
                 Button("Search for Passage") {
-                    NotificationCenter.default.post(name: .showSearch, object: nil)
+                    TabCoordinator.shared.route(.showSearch, from: NSApp.keyWindow)
                 }
                 .keyboardShortcut(KeyEquivalent(searchKey.first ?? "k"), modifiers: .command)
 
                 Button("Search for Passage") {
-                    NotificationCenter.default.post(name: .showSearch, object: nil)
+                    TabCoordinator.shared.route(.showSearch, from: NSApp.keyWindow)
                 }
                 .keyboardShortcut("f", modifiers: .command)
 
                 Divider()
 
                 Button("Go to Previous Chapter") {
-                    NotificationCenter.default.post(name: .navigatePreviousChapter, object: NSApp.keyWindow)
+                    TabCoordinator.shared.route(.navigatePreviousChapter, from: NSApp.keyWindow)
                 }
                 .keyboardShortcut(KeyEquivalent(prevChapterKey.first ?? "["), modifiers: .command)
 
                 Button("Go to Next Chapter") {
-                    NotificationCenter.default.post(name: .navigateNextChapter, object: NSApp.keyWindow)
+                    TabCoordinator.shared.route(.navigateNextChapter, from: NSApp.keyWindow)
                 }
                 .keyboardShortcut(KeyEquivalent(nextChapterKey.first ?? "]"), modifiers: .command)
 
                 Divider()
 
                 Button("Table of Contents") {
-                    NotificationCenter.default.post(name: .showTableOfContents, object: nil)
+                    TabCoordinator.shared.route(.showTableOfContents, from: NSApp.keyWindow)
                 }
 
                 Button("Toggle History") {
-                    NotificationCenter.default.post(name: .toggleHistory, object: nil)
+                    TabCoordinator.shared.route(.toggleHistory, from: NSApp.keyWindow)
                 }
                 .keyboardShortcut(KeyEquivalent(historyKey.first ?? "y"), modifiers: .command)
 
                 Button("Toggle Notes") {
-                    NotificationCenter.default.post(name: .toggleNotes, object: nil)
+                    TabCoordinator.shared.route(.toggleNotes, from: NSApp.keyWindow)
                 }
                 .keyboardShortcut(KeyEquivalent(notesKey.first ?? "n"), modifiers: .command)
 
                 Divider()
 
                 Button("Toggle Bookmark") {
-                    NotificationCenter.default.post(name: .toggleBookmark, object: nil)
+                    TabCoordinator.shared.route(.toggleBookmark, from: NSApp.keyWindow)
                 }
                 .keyboardShortcut(KeyEquivalent(bookmarkKey.first ?? "b"), modifiers: .command)
 
                 Button("Previous Bookmark") {
-                    NotificationCenter.default.post(name: .navigatePreviousBookmark, object: nil)
+                    TabCoordinator.shared.route(.navigatePreviousBookmark, from: NSApp.keyWindow)
                 }
                 .keyboardShortcut(.leftArrow, modifiers: [.command, .shift])
 
                 Button("Next Bookmark") {
-                    NotificationCenter.default.post(name: .navigateNextBookmark, object: nil)
+                    TabCoordinator.shared.route(.navigateNextBookmark, from: NSApp.keyWindow)
                 }
                 .keyboardShortcut(.rightArrow, modifiers: [.command, .shift])
 
                 Button("Previous Highlight") {
-                    NotificationCenter.default.post(name: .navigatePreviousHighlight, object: NSApp.keyWindow)
+                    TabCoordinator.shared.route(.navigatePreviousHighlight, from: NSApp.keyWindow)
                 }
                 .keyboardShortcut(.leftArrow, modifiers: .command)
 
                 Button("Next Highlight") {
-                    NotificationCenter.default.post(name: .navigateNextHighlight, object: NSApp.keyWindow)
+                    TabCoordinator.shared.route(.navigateNextHighlight, from: NSApp.keyWindow)
                 }
                 .keyboardShortcut(.rightArrow, modifiers: .command)
             }
 
             CommandGroup(after: .windowArrangement) {
                 Button("New Tab") {
-                    NotificationCenter.default.post(name: .newTab, object: NSApp.keyWindow)
+                    TabCoordinator.shared.openChapterTab(from: NSApp.keyWindow)
                 }
                 .keyboardShortcut("t", modifiers: .command)
 
                 Button("Reopen Closed Tab") {
-                    NotificationCenter.default.post(name: .reopenClosedTab, object: NSApp.keyWindow)
+                    TabCoordinator.shared.reopenClosedTab(from: NSApp.keyWindow)
                 }
                 .keyboardShortcut("t", modifiers: [.command, .shift])
 
@@ -152,15 +150,20 @@ struct ESVBibleApp: App {
                 }
                 .keyboardShortcut("]", modifiers: [.command, .shift])
 
+                // Purely an NSWindow property, so it needs no view behind it and works from a
+                // verse card as well as a reader.
                 Button("Keep Window on Top") {
-                    NotificationCenter.default.post(name: .toggleWindowOnTop, object: nil)
+                    guard let window = NSApp.keyWindow else { return }
+                    window.level = window.level == .floating ? .normal : .floating
                 }
                 .keyboardShortcut("p", modifiers: [.command, .shift])
             }
 
             CommandGroup(replacing: .help) {
+                // Targets the key window rather than routing, so it stays a no-op in a verse
+                // card — spawning a tab just to show a help overlay would be absurd.
                 Button("Keyboard Shortcuts") {
-                    NotificationCenter.default.post(name: .showKeyboardShortcuts, object: nil)
+                    NotificationCenter.default.post(name: .showKeyboardShortcuts, object: NSApp.keyWindow)
                 }
                 .keyboardShortcut("/", modifiers: .command)
 
@@ -207,7 +210,4 @@ extension Notification.Name {
     static let scrollPageUp = Notification.Name("scrollPageUp")
     static let scrollPageDown = Notification.Name("scrollPageDown")
     static let checkForUpdates = Notification.Name("checkForUpdates")
-    static let toggleWindowOnTop = Notification.Name("toggleWindowOnTop")
-    static let newTab = Notification.Name("newTab")
-    static let reopenClosedTab = Notification.Name("reopenClosedTab")
 }

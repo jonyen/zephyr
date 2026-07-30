@@ -37,7 +37,6 @@ struct ContentView: View {
     @State private var parsedMultiReference: [BibleReference]? = nil
     @State private var navigationCounter: Int = 0
     @State private var updateService = UpdateService()
-    @State private var isWindowOnTop = false
     @State private var hostWindow: NSWindow? = nil
     @State private var hasAppeared = false
     @State private var windowCloseObserver: Any? = nil
@@ -45,41 +44,41 @@ struct ContentView: View {
         mainContent
         .preferredColorScheme(readingTheme.colorScheme)
         .background(readingTheme.backgroundColor.ignoresSafeArea())
-        .onReceive(NotificationCenter.default.publisher(for: .navigatePreviousBookmark)) { _ in
+        .onReceive(NotificationCenter.default.publisher(for: .navigatePreviousBookmark)) { (notification: Notification) in
+            guard isForThisWindow(notification) else { return }
             navigateToBookmark(direction: -1)
         }
-        .onReceive(NotificationCenter.default.publisher(for: .navigateNextBookmark)) { _ in
+        .onReceive(NotificationCenter.default.publisher(for: .navigateNextBookmark)) { (notification: Notification) in
+            guard isForThisWindow(notification) else { return }
             navigateToBookmark(direction: 1)
         }
         .onReceive(NotificationCenter.default.publisher(for: .navigatePreviousHighlight)) { (notification: Notification) in
-            guard (notification.object as? NSWindow) == hostWindow else { return }
+            guard isForThisWindow(notification) else { return }
             navigateToHighlight(direction: -1)
         }
         .onReceive(NotificationCenter.default.publisher(for: .navigateNextHighlight)) { (notification: Notification) in
-            guard (notification.object as? NSWindow) == hostWindow else { return }
+            guard isForThisWindow(notification) else { return }
             navigateToHighlight(direction: 1)
         }
-        .onReceive(NotificationCenter.default.publisher(for: .showKeyboardShortcuts)) { _ in
+        .onReceive(NotificationCenter.default.publisher(for: .showKeyboardShortcuts)) { (notification: Notification) in
+            guard isForThisWindow(notification) else { return }
             showKeyboardShortcuts.toggle()
         }
         .onReceive(NotificationCenter.default.publisher(for: .navigateToReference)) { notification in
+            guard isForThisWindow(notification) else { return }
             if let book = notification.userInfo?["book"] as? String,
                let chapter = notification.userInfo?["chapter"] as? Int {
                 let verse = notification.userInfo?["verse"] as? Int
                 navigateTo(book: book, chapter: chapter, verseStart: verse, verseEnd: verse, addToHistory: true)
             }
         }
-        .onReceive(NotificationCenter.default.publisher(for: .newTab)) { notification in
-            guard (notification.object as? NSWindow) == hostWindow else { return }
-            let position = visiblePosition ?? currentPosition ?? ChapterPosition(bookName: "Genesis", chapterNumber: 1)
-            openTab(at: position)
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .reopenClosedTab)) { notification in
-            guard (notification.object as? NSWindow) == hostWindow else { return }
-            if let position = ClosedTabsStack.shared.pop() {
-                openTab(at: position)
-            }
-        }
+    }
+
+    /// Window-scoped commands carry their target window. A nil target means the sender had no
+    /// particular window in mind (app launch, Spotlight before any tab exists), so take it.
+    private func isForThisWindow(_ notification: Notification) -> Bool {
+        guard let target = notification.object as? NSWindow else { return true }
+        return target == hostWindow
     }
 
     private var mainContent: some View {
@@ -94,6 +93,7 @@ struct ContentView: View {
                         highlightVerseEnd: highlightEnd,
                         bibleStore: bibleStore,
                         highlightManager: highlightManager,
+                        hostWindow: hostWindow,
                         onPositionChanged: { visiblePosition = $0 },
                         onNavigateRequested: { pos in
                             navigateTo(book: pos.bookName, chapter: pos.chapterNumber, verseStart: nil, verseEnd: nil, addToHistory: false)
@@ -185,7 +185,11 @@ struct ContentView: View {
             guard !hasAppeared else { return }
             hasAppeared = true
 
+            // Every tab installs a monitor and they all see every key press, so each one must
+            // stand down unless its own window is frontmost.
             keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
+                guard hostWindow != nil, NSApp.keyWindow == hostWindow else { return event }
+
                 if event.charactersIgnoringModifiers == "?" && !isSearchVisible {
                     showKeyboardShortcuts.toggle()
                     return nil
@@ -196,11 +200,11 @@ struct ContentView: View {
                 }
                 // Page Up (fn+up) / Page Down (fn+down)
                 if event.specialKey == .pageUp {
-                    NotificationCenter.default.post(name: .scrollPageUp, object: nil)
+                    NotificationCenter.default.post(name: .scrollPageUp, object: hostWindow)
                     return nil
                 }
                 if event.specialKey == .pageDown {
-                    NotificationCenter.default.post(name: .scrollPageDown, object: nil)
+                    NotificationCenter.default.post(name: .scrollPageDown, object: hostWindow)
                     return nil
                 }
                 return event
@@ -249,6 +253,9 @@ struct ContentView: View {
         }
         .onChange(of: hostWindow) { _, newWindow in
             guard let window = newWindow else { return }
+            registerPosition()
+            // This tab may have been opened to service a command from a verse card.
+            TabCoordinator.shared.drainPendingCommands(for: window)
             guard windowCloseObserver == nil else { return }
             windowCloseObserver = NotificationCenter.default.addObserver(
                 forName: NSWindow.willCloseNotification,
@@ -258,19 +265,26 @@ struct ContentView: View {
                 if let position = self.visiblePosition ?? self.currentPosition {
                     ClosedTabsStack.shared.push(position)
                 }
+                MainActor.assumeIsolated { TabCoordinator.shared.unregister(window: window) }
             }
         }
-        .onReceive(NotificationCenter.default.publisher(for: .showSearch)) { _ in
+        .onChange(of: currentPosition) { _, _ in registerPosition() }
+        .onChange(of: visiblePosition) { _, _ in registerPosition() }
+        .onReceive(NotificationCenter.default.publisher(for: .showSearch)) { (notification: Notification) in
+            guard isForThisWindow(notification) else { return }
             showSearch()
         }
-        .onReceive(NotificationCenter.default.publisher(for: .showTableOfContents)) { _ in
+        .onReceive(NotificationCenter.default.publisher(for: .showTableOfContents)) { (notification: Notification) in
+            guard isForThisWindow(notification) else { return }
             toggleTOC()
         }
-        .onReceive(NotificationCenter.default.publisher(for: .toggleHistory)) { _ in
+        .onReceive(NotificationCenter.default.publisher(for: .toggleHistory)) { (notification: Notification) in
+            guard isForThisWindow(notification) else { return }
             if showNotes { showNotes = false }
             showHistory.toggle()
         }
-        .onReceive(NotificationCenter.default.publisher(for: .toggleNotes)) { _ in
+        .onReceive(NotificationCenter.default.publisher(for: .toggleNotes)) { (notification: Notification) in
+            guard isForThisWindow(notification) else { return }
             if showHistory { showHistory = false }
             showNotes.toggle()
         }
@@ -279,17 +293,20 @@ struct ContentView: View {
                 await updateService.checkForUpdate(manual: true)
             }
         }
-        .onReceive(NotificationCenter.default.publisher(for: .toggleWindowOnTop)) { _ in
-            isWindowOnTop.toggle()
-            if let window = NSApp.keyWindow {
-                window.level = isWindowOnTop ? .floating : .normal
-            }
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .toggleBookmark)) { _ in
+        .onReceive(NotificationCenter.default.publisher(for: .toggleBookmark)) { (notification: Notification) in
+            guard isForThisWindow(notification) else { return }
             let position = visiblePosition ?? currentPosition
             guard let position else { return }
             highlightManager.toggleBookmark(book: position.bookName, chapter: position.chapterNumber)
         }
+    }
+
+    /// Tells the tab coordinator where this window is parked, so a tab spawned from it
+    /// (or from a verse-range tab that has no reading position of its own) lands sensibly.
+    private func registerPosition() {
+        guard let window = hostWindow,
+              let position = visiblePosition ?? currentPosition else { return }
+        TabCoordinator.shared.register(window: window, position: position)
     }
 
     private var currentTitle: String {
@@ -464,6 +481,35 @@ struct ContentView: View {
         .padding(.horizontal, 48)
     }
 
+    /// A parsed-reference row: the reference, and the opening words of the verse it points at so
+    /// you can confirm you typed the one you meant without opening it.
+    private func referenceRow(title: String, preview: String?) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            HStack(spacing: 8) {
+                Image(systemName: "book.closed")
+                    .foregroundStyle(Color.accentColor)
+                    .imageScale(.small)
+                Text(title)
+                    .font(.subheadline.bold())
+                Spacer()
+                Image(systemName: "return")
+                    .foregroundStyle(.tertiary)
+                    .imageScale(.small)
+            }
+
+            if let preview {
+                Text(preview)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(2)
+                    .multilineTextAlignment(.leading)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
+    }
+
     @ViewBuilder
     private var searchResultsList: some View {
         ScrollView {
@@ -473,20 +519,10 @@ struct ContentView: View {
                     Button {
                         openVerseRangeTab(references: refs)
                     } label: {
-                        HStack(spacing: 8) {
-                            Image(systemName: "book.closed")
-                                .foregroundStyle(Color.accentColor)
-                                .imageScale(.small)
-                            Text(refs.map { $0.displayString }.joined(separator: " \u{00B7} "))
-                                .font(.subheadline.bold())
-                            Spacer()
-                            Image(systemName: "return")
-                                .foregroundStyle(.tertiary)
-                                .imageScale(.small)
-                        }
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 10)
+                        referenceRow(
+                            title: refs.map { $0.displayString }.joined(separator: " \u{00B7} "),
+                            preview: refs.first.flatMap { bibleStore.previewText(for: $0) }
+                        )
                     }
                     .buttonStyle(.plain)
 
@@ -502,20 +538,8 @@ struct ContentView: View {
                             navigateTo(book: ref.book, chapter: ref.chapter, verseStart: ref.verseStart, verseEnd: ref.verseEnd, addToHistory: true)
                         }
                     } label: {
-                        HStack(spacing: 8) {
-                            Image(systemName: "book.closed")
-                                .foregroundStyle(Color.accentColor)
-                                .imageScale(.small)
-                            Text(ref.displayString)
-                                .font(.subheadline.bold())
-                            Spacer()
-                            Image(systemName: "return")
-                                .foregroundStyle(.tertiary)
-                                .imageScale(.small)
-                        }
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 10)
+                        referenceRow(title: ref.displayString,
+                                     preview: bibleStore.previewText(for: ref))
                     }
                     .buttonStyle(.plain)
 
@@ -557,6 +581,9 @@ struct ContentView: View {
                 }
             }
         }
+        // ScrollView is greedy, so without fixedSize a single result still paints a full 300pt
+        // box. Sizing to content first lets the frame act as a ceiling rather than a floor.
+        .fixedSize(horizontal: false, vertical: true)
         .frame(maxHeight: 300)
         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 8))
         .overlay {
@@ -857,31 +884,8 @@ struct ContentView: View {
             errorMessage = "No host window available."
             return
         }
-        let controller = NSHostingController(rootView: VerseRangeView(references: references, bibleStore: bibleStore))
-        let newWindow = NSWindow(contentViewController: controller)
-        newWindow.setContentSize(NSSize(width: max(host.frame.width, 400), height: max(host.frame.height, 500)))
-        newWindow.styleMask = host.styleMask
-        newWindow.tabbingMode = .preferred
-        newWindow.tabbingIdentifier = host.tabbingIdentifier
-        host.addTabbedWindow(newWindow, ordered: .above)
-        newWindow.makeKeyAndOrderFront(nil)
+        TabCoordinator.shared.openVerseRangeTab(from: host, references: references, bibleStore: bibleStore)
         dismissSearch()
-    }
-
-    private func openTab(at position: ChapterPosition) {
-        guard let host = hostWindow else { return }
-        // Create the new window directly instead of going through SwiftUI's openWindow(value:).
-        // openWindow deduplicates by ChapterPosition value — if the same chapter is already open
-        // it focuses the existing window rather than creating a new one, so addTabbedWindow is
-        // never called. NSHostingController gives us a fresh NSWindow every time with no race.
-        let controller = NSHostingController(rootView: ContentView(initialPosition: position))
-        let newWindow = NSWindow(contentViewController: controller)
-        newWindow.setContentSize(NSSize(width: max(host.frame.width, 400), height: max(host.frame.height, 500)))
-        newWindow.styleMask = host.styleMask
-        newWindow.tabbingMode = .preferred
-        newWindow.tabbingIdentifier = host.tabbingIdentifier
-        host.addTabbedWindow(newWindow, ordered: .above)
-        newWindow.makeKeyAndOrderFront(nil)
     }
 
     private func navigateChapter(delta: Int) {

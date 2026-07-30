@@ -54,4 +54,67 @@ final class BibleStoreTests: XCTestCase {
         let book = store.findBook("Nonexistent")
         XCTAssertNil(book)
     }
+
+    // MARK: - previewText
+
+    /// A store whose Mark 9 mirrors the ESV's omitted verses: 44 and 46 carry no text.
+    private func storeWithOmittedVerses() -> BibleStore {
+        BibleStore(bible: Bible(books: [
+            Book(name: "Mark", chapters: [
+                Chapter(number: 9, verses: [
+                    Verse(number: 43, text: "And if your hand causes you to sin, cut it off."),
+                    Verse(number: 44, text: ""),
+                    Verse(number: 45, text: "And if your foot causes you to sin, cut it off."),
+                    Verse(number: 46, text: "")
+                ])
+            ])
+        ]))
+    }
+
+    func testPreviewTextForSingleVerse() {
+        let ref = BibleReference(book: "John", chapter: 3, verseStart: 16)
+        XCTAssertEqual(store.previewText(for: ref), "For God so loved the world")
+    }
+
+    func testPreviewTextForBareChapterUsesFirstVerse() {
+        let ref = BibleReference(book: "Genesis", chapter: 1)
+        XCTAssertEqual(store.previewText(for: ref),
+                       "In the beginning, God created the heavens and the earth.")
+    }
+
+    func testPreviewTextForRangeUsesStartVerse() {
+        let ref = BibleReference(book: "John", chapter: 3, verseStart: 16, verseEnd: 18)
+        XCTAssertEqual(store.previewText(for: ref), "For God so loved the world")
+    }
+
+    func testPreviewTextResolvesAbbreviatedBookName() {
+        let ref = BibleReference(book: "Gen", chapter: 1)
+        XCTAssertEqual(store.previewText(for: ref),
+                       "In the beginning, God created the heavens and the earth.")
+    }
+
+    func testPreviewTextSkipsOmittedVerses() {
+        // Mark 9:44 is empty in the ESV — preview the next verse that actually has text.
+        let ref = BibleReference(book: "Mark", chapter: 9, verseStart: 44)
+        XCTAssertEqual(storeWithOmittedVerses().previewText(for: ref),
+                       "And if your foot causes you to sin, cut it off.")
+    }
+
+    func testPreviewTextIsNilWhenNoVerseWithTextFollows() {
+        // 46 is the last verse and is empty — nothing left to preview.
+        let ref = BibleReference(book: "Mark", chapter: 9, verseStart: 46)
+        XCTAssertNil(storeWithOmittedVerses().previewText(for: ref))
+    }
+
+    func testPreviewTextIsNilForMissingChapter() {
+        XCTAssertNil(store.previewText(for: BibleReference(book: "John", chapter: 99)))
+    }
+
+    func testPreviewTextIsNilForMissingBook() {
+        XCTAssertNil(store.previewText(for: BibleReference(book: "Nonexistent", chapter: 1)))
+    }
+
+    func testPreviewTextIsNilWhenVerseNumberIsPastEndOfChapter() {
+        XCTAssertNil(store.previewText(for: BibleReference(book: "John", chapter: 3, verseStart: 99)))
+    }
 }
