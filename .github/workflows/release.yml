@@ -48,13 +48,24 @@ jobs:
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "Releasing v$VERSION"
 
+      # search_index.json is a 25MB generated artifact and is gitignored, so a fresh
+      # checkout doesn't have it. The app target lists it as a resource, so without this
+      # every build fails in CpResource. Pure stdlib — no pip install needed.
+      - name: Generate search index
+        run: python3 Scripts/build_search_index.py
+
       # A release that ships a failing build is worse than no release.
+      #
+      # pipefail matters here: GitHub runs steps under `bash -e`, which does NOT fail a
+      # pipeline when an earlier stage dies. Without it, piping xcodebuild into tail takes
+      # tail's exit status, and a failing suite reports success.
       - name: Run tests
         run: |
+          set -o pipefail
           xcodebuild -project Zephyr.xcodeproj \
             -scheme Zephyr \
             -configuration Debug \
-            test 2>&1 | tail -20
+            test 2>&1 | tail -40
 
       - name: Generate release notes
         id: notes
