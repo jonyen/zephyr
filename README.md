@@ -35,7 +35,7 @@ Zephyr will always be free. If you find it useful, consider [sponsoring the proj
 
 ## Download
 
-**[Download Zephyr v0.9.6](https://github.com/jonyen/zephyr/releases/download/v0.9.6/Zephyr-0.9.6.dmg)** (macOS 14+)
+**[Download Zephyr v0.9.7](https://github.com/jonyen/zephyr/releases/download/v0.9.7/Zephyr-0.9.7.dmg)** (macOS 14+)
 
 Open the DMG and drag Zephyr to your Applications folder.
 
