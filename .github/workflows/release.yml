@@ -1,0 +1,97 @@
+name: Release macOS app
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (MAJOR.MINOR.PATCH). Defaults to a patch bump of VERSION.'
+        required: false
+        type: string
+
+# The repo default is read-only, so the version-bump push and the release both need this
+# stated explicitly or they fail at the end of an otherwise successful build.
+permissions:
+  contents: write
+
+# Two releases racing would fight over the version bump and the tag.
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Release notes diff against the last tag, which shallow clones don't have.
+          fetch-depth: 0
+
+      - name: Resolve version
+        id: version
+        run: |
+          set -euo pipefail
+          if [ -n "${{ inputs.version }}" ]; then
+            VERSION="${{ inputs.version }}"
+          else
+            IFS='.' read -r MAJOR MINOR PATCH < VERSION
+            VERSION="$MAJOR.$MINOR.$((PATCH + 1))"
+          fi
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Expected MAJOR.MINOR.PATCH, got '$VERSION'"
+            exit 1
+          fi
+          if git rev-parse "v$VERSION" >/dev/null 2>&1; then
+            echo "::error::Tag v$VERSION already exists"
+            exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Releasing v$VERSION"
+
+      # A release that ships a failing build is worse than no release.
+      - name: Run tests
+        run: |
+          xcodebuild -project Zephyr.xcodeproj \
+            -scheme Zephyr \
+            -configuration Debug \
+            test 2>&1 | tail -20
+
+      - name: Generate release notes
+        id: notes
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          set -euo pipefail
+          Scripts/release-notes.sh "${{ steps.version.outputs.version }}" > /tmp/notes.md
+          echo "Release notes:"
+          cat /tmp/notes.md
+
+      - name: Build DMG
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: Scripts/build-dmg.sh
+
+      - name: Apply version to tracked files
+        run: Scripts/apply-version.sh "${{ steps.version.outputs.version }}"
+
+      - name: Commit version bump
+        run: |
+          set -euo pipefail
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add VERSION README.md Zephyr.xcodeproj/project.pbxproj
+          git commit -m "chore: release v${{ steps.version.outputs.version }}"
+          git push origin HEAD:main
+
+      # Tags the version-bump commit, so the tag and the shipped VERSION agree.
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          VERSION="${{ steps.version.outputs.version }}"
+          gh release create "v$VERSION" \
+            "dist/Zephyr-$VERSION.dmg" \
+            "dist/Zephyr.app.zip" \
+            --title "v$VERSION" \
+            --notes-file /tmp/notes.md
