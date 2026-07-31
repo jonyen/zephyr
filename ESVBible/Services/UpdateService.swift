@@ -42,13 +42,21 @@ class UpdateService {
 
     private let manifestURL = "https://jonyen.com/zephyr-updates/manifest.json"
 
-    /// Verifies the downloaded zip actually came from our release workflow.
+    /// Public keys this build accepts for update payloads.
     ///
     /// `installAndRelaunch` replaces the running app bundle with whatever was downloaded, so
     /// HTTPS alone isn't enough — anything able to write to the update host could otherwise
-    /// hand the app arbitrary code to run. The matching private key exists only as the
-    /// UPDATE_SIGNING_KEY secret in CI. Public keys are not secrets; this one is meant to ship.
-    private let updatePublicKey = "OZVuZglmktdVMpL0cqRrBjBdyO0AWvsaK/QGXkrYP2A="
+    /// hand the app arbitrary code to run. The matching private keys exist only as the
+    /// UPDATE_SIGNING_KEY secret in CI. Public keys are not secrets; these are meant to ship.
+    ///
+    /// A list rather than one key so the signing key can be rotated without stranding
+    /// installs. To rotate: ship a release that trusts [old, new] but is still *signed* with
+    /// old — existing copies accept it and learn the new key — then sign the next release
+    /// with new. A build trusting a single key can never deliver its own replacement after a
+    /// key change, because the copies that need it are exactly the ones that would reject it.
+    private let updatePublicKeys = [
+        "OZVuZglmktdVMpL0cqRrBjBdyO0AWvsaK/QGXkrYP2A=",  // 2026-07, active
+    ]
 
     /// Signature for the update currently on offer, carried from the manifest to the download.
     private var pendingSignature: String?
@@ -156,7 +164,7 @@ class UpdateService {
 
             // Verify before the zip can reach installAndRelaunch, which would otherwise
             // extract it over the running app. A payload that fails here is deleted, not kept.
-            guard Self.verify(fileAt: destURL, signature: signature, publicKey: updatePublicKey) else {
+            guard Self.verify(fileAt: destURL, signature: signature, publicKeys: updatePublicKeys) else {
                 try? FileManager.default.removeItem(at: destURL)
                 state = .error("Update failed signature check — not installing")
                 return
@@ -168,15 +176,21 @@ class UpdateService {
         }
     }
 
-    /// Checks an Ed25519 signature over a file's bytes. Any malformed input fails closed.
-    static func verify(fileAt url: URL, signature: String, publicKey: String) -> Bool {
+    /// Checks an Ed25519 signature over a file's bytes against every trusted key, accepting
+    /// if any one of them validates. Malformed input — bad base64, unreadable file, a key
+    /// that isn't a key, an empty trust list — fails closed.
+    static func verify(fileAt url: URL, signature: String, publicKeys: [String]) -> Bool {
         guard let signatureData = Data(base64Encoded: signature),
-              let publicKeyData = Data(base64Encoded: publicKey),
-              let payload = try? Data(contentsOf: url),
-              let key = try? Curve25519.Signing.PublicKey(rawRepresentation: publicKeyData) else {
+              let payload = try? Data(contentsOf: url) else {
             return false
         }
-        return key.isValidSignature(signatureData, for: payload)
+        return publicKeys.contains { candidate in
+            guard let keyData = Data(base64Encoded: candidate),
+                  let key = try? Curve25519.Signing.PublicKey(rawRepresentation: keyData) else {
+                return false
+            }
+            return key.isValidSignature(signatureData, for: payload)
+        }
     }
 
     // MARK: - Install and relaunch

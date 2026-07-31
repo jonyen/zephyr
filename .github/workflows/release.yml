@@ -108,14 +108,32 @@ jobs:
             echo "::error::UPDATE_SIGNING_KEY secret is not set — cannot publish a signed update"
             exit 1
           fi
-          PUBKEY=$(grep -o 'updatePublicKey = "[^"]*"' ESVBible/Services/UpdateService.swift \
-                   | sed 's/.*"\(.*\)"/\1/')
-          if [ -z "$PUBKEY" ]; then
-            echo "::error::Could not read updatePublicKey from UpdateService.swift"
+          # Every base64 Ed25519 key (32 bytes -> 43 chars + '=') in the trust list.
+          PUBKEYS=$(sed -n '/updatePublicKeys = \[/,/^    \]/p' ESVBible/Services/UpdateService.swift \
+                    | grep -oE '"[A-Za-z0-9+/]{43}="' | tr -d '"')
+          if [ -z "$PUBKEYS" ]; then
+            echo "::error::Could not read updatePublicKeys from UpdateService.swift"
             exit 1
           fi
           SIG=$(swift Scripts/sign-update.swift sign dist/Zephyr.app.zip)
-          swift Scripts/sign-update.swift verify dist/Zephyr.app.zip "$SIG" "$PUBKEY"
+
+          # The signature has to satisfy at least one key the shipped app trusts, or this
+          # release would be rejected by every install that receives it.
+          VERIFIED=""
+          while read -r KEY; do
+            [ -n "$KEY" ] || continue
+            if swift Scripts/sign-update.swift verify dist/Zephyr.app.zip "$SIG" "$KEY" >/dev/null 2>&1; then
+              VERIFIED="$KEY"
+              break
+            fi
+          done <<< "$PUBKEYS"
+
+          if [ -z "$VERIFIED" ]; then
+            echo "::error::Signature verifies against none of the keys this build trusts."
+            echo "::error::UPDATE_SIGNING_KEY and updatePublicKeys have diverged."
+            exit 1
+          fi
+          echo "Signature verified against a trusted key ($(wc -l <<< "$PUBKEYS" | tr -d ' ') trusted)"
           echo "signature=$SIG" >> "$GITHUB_OUTPUT"
 
       - name: Build update feed
