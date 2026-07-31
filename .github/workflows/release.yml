@@ -82,6 +82,49 @@ jobs:
           VERSION: ${{ steps.version.outputs.version }}
         run: Scripts/build-dmg.sh
 
+      # The app replaces its own bundle with this zip, so it has to be provably ours.
+      # Verifying against the key parsed out of UpdateService.swift — rather than a copy
+      # pasted here — means CI cannot publish an update the shipped app would reject.
+      - name: Sign update payload
+        id: sign
+        env:
+          UPDATE_SIGNING_KEY: ${{ secrets.UPDATE_SIGNING_KEY }}
+        run: |
+          set -euo pipefail
+          if [ -z "${UPDATE_SIGNING_KEY:-}" ]; then
+            echo "::error::UPDATE_SIGNING_KEY secret is not set — cannot publish a signed update"
+            exit 1
+          fi
+          PUBKEY=$(grep -o 'updatePublicKey = "[^"]*"' ESVBible/Services/UpdateService.swift \
+                   | sed 's/.*"\(.*\)"/\1/')
+          if [ -z "$PUBKEY" ]; then
+            echo "::error::Could not read updatePublicKey from UpdateService.swift"
+            exit 1
+          fi
+          SIG=$(swift Scripts/sign-update.swift sign dist/Zephyr.app.zip)
+          swift Scripts/sign-update.swift verify dist/Zephyr.app.zip "$SIG" "$PUBKEY"
+          echo "signature=$SIG" >> "$GITHUB_OUTPUT"
+
+      - name: Build update feed
+        run: |
+          set -euo pipefail
+          VERSION="${{ steps.version.outputs.version }}"
+          BASE="https://jonyen.com/zephyr-updates"
+          mkdir -p publish
+          # Versioned filenames so keep_files leaves earlier releases downloadable.
+          cp "dist/Zephyr.app.zip"      "publish/Zephyr-$VERSION.app.zip"
+          cp "dist/Zephyr-$VERSION.dmg" "publish/Zephyr-$VERSION.dmg"
+          jq -n \
+            --arg version "$VERSION" \
+            --arg notes "$(cat /tmp/notes.md)" \
+            --arg zipURL "$BASE/Zephyr-$VERSION.app.zip" \
+            --arg dmgURL "$BASE/Zephyr-$VERSION.dmg" \
+            --arg signature "${{ steps.sign.outputs.signature }}" \
+            --arg publishedAt "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            '{version: $version, notes: $notes, zipURL: $zipURL, dmgURL: $dmgURL,
+              signature: $signature, publishedAt: $publishedAt}' > publish/manifest.json
+          cat publish/manifest.json
+
       - name: Apply version to tracked files
         run: Scripts/apply-version.sh "${{ steps.version.outputs.version }}"
 
@@ -106,3 +149,17 @@ jobs:
             "dist/Zephyr.app.zip" \
             --title "v$VERSION" \
             --notes-file /tmp/notes.md
+
+      # Last, deliberately: this is what announces the new version to every installed copy.
+      # If anything above failed, no update is offered. keep_files retains older releases,
+      # and this directory is a sibling of public/zephyr because the web deploy publishes
+      # that one with keep_files: false and would otherwise wipe the feed on its next run.
+      - name: Publish update feed to jonyen.com
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          personal_token: ${{ secrets.DEPLOY_TOKEN }}
+          external_repository: jonyen/jonyen-website
+          publish_branch: main
+          publish_dir: ./publish
+          destination_dir: public/zephyr-updates
+          keep_files: true

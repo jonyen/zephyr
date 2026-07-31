@@ -1,4 +1,5 @@
 import XCTest
+import CryptoKit
 @testable import ESVBible
 
 final class UpdateServiceTests: XCTestCase {
@@ -23,31 +24,100 @@ final class UpdateServiceTests: XCTestCase {
         XCTAssertTrue(UpdateService.isNewer("v2.0.0", than: "v1.0.0"))
     }
 
-    func testParseGitHubRelease() throws {
+    func testParseUpdateManifest() throws {
         let json = """
         {
-            "tag_name": "v1.1.0",
-            "body": "Bug fixes and improvements",
-            "assets": [
-                {
-                    "name": "Zephyr.app.zip",
-                    "browser_download_url": "https://github.com/jonyen/zephyr/releases/download/v1.1.0/Zephyr.app.zip"
-                },
-                {
-                    "name": "Zephyr-1.1.0.dmg",
-                    "browser_download_url": "https://github.com/jonyen/zephyr/releases/download/v1.1.0/Zephyr-1.1.0.dmg"
-                }
-            ]
+            "version": "1.1.0",
+            "notes": "Bug fixes and improvements",
+            "zipURL": "https://jonyen.com/zephyr-updates/Zephyr-1.1.0.app.zip",
+            "signature": "c2lnbmF0dXJl"
         }
         """.data(using: .utf8)!
 
-        let release = try JSONDecoder().decode(UpdateService.GitHubRelease.self, from: json)
-        XCTAssertEqual(release.tagName, "v1.1.0")
-        XCTAssertEqual(release.body, "Bug fixes and improvements")
-        XCTAssertEqual(release.assets.count, 2)
+        let manifest = try JSONDecoder().decode(UpdateService.UpdateManifest.self, from: json)
+        XCTAssertEqual(manifest.version, "1.1.0")
+        XCTAssertEqual(manifest.notes, "Bug fixes and improvements")
+        XCTAssertEqual(manifest.zipURL, "https://jonyen.com/zephyr-updates/Zephyr-1.1.0.app.zip")
+        XCTAssertEqual(manifest.signature, "c2lnbmF0dXJl")
+    }
 
-        let zipAsset = release.assets.first { $0.name.hasSuffix(".zip") }
-        XCTAssertNotNil(zipAsset)
-        XCTAssertEqual(zipAsset?.browserDownloadURL, "https://github.com/jonyen/zephyr/releases/download/v1.1.0/Zephyr.app.zip")
+    /// A manifest missing the signature must fail to decode rather than yield an unsigned
+    /// update — the download path refuses to install without one.
+    func testManifestWithoutSignatureFailsToDecode() {
+        let json = """
+        {"version": "1.1.0", "notes": "x", "zipURL": "https://example.com/a.zip"}
+        """.data(using: .utf8)!
+        XCTAssertThrowsError(try JSONDecoder().decode(UpdateService.UpdateManifest.self, from: json))
+    }
+
+    // MARK: - Signature verification
+
+    private static let testPublicKey = "OZVuZglmktdVMpL0cqRrBjBdyO0AWvsaK/QGXkrYP2A="
+
+    private func writeTemp(_ contents: String) throws -> URL {
+        let url = FileManager.default.temporaryDirectory
+            .appendingPathComponent("update-test-\(UUID().uuidString).bin")
+        try contents.write(to: url, atomically: true, encoding: .utf8)
+        return url
+    }
+
+    func testVerifyRejectsGarbageSignature() throws {
+        let url = try writeTemp("payload")
+        defer { try? FileManager.default.removeItem(at: url) }
+        XCTAssertFalse(UpdateService.verify(fileAt: url,
+                                            signature: "bm90LWEtc2lnbmF0dXJl",
+                                            publicKey: Self.testPublicKey))
+    }
+
+    func testVerifyRejectsNonBase64Signature() throws {
+        let url = try writeTemp("payload")
+        defer { try? FileManager.default.removeItem(at: url) }
+        XCTAssertFalse(UpdateService.verify(fileAt: url,
+                                            signature: "!!! not base64 !!!",
+                                            publicKey: Self.testPublicKey))
+    }
+
+    func testVerifyRejectsMalformedPublicKey() throws {
+        let url = try writeTemp("payload")
+        defer { try? FileManager.default.removeItem(at: url) }
+        XCTAssertFalse(UpdateService.verify(fileAt: url,
+                                            signature: "bm90LWEtc2lnbmF0dXJl",
+                                            publicKey: "dG9vLXNob3J0"))
+    }
+
+    func testVerifyRejectsMissingFile() {
+        let missing = FileManager.default.temporaryDirectory
+            .appendingPathComponent("definitely-not-here-\(UUID().uuidString).bin")
+        XCTAssertFalse(UpdateService.verify(fileAt: missing,
+                                            signature: "bm90LWEtc2lnbmF0dXJl",
+                                            publicKey: Self.testPublicKey))
+    }
+
+    /// Round-trips a real signature so the app's verifier is proven against the same
+    /// CryptoKit primitives Scripts/sign-update.swift uses to produce one.
+    func testVerifyAcceptsGenuineSignatureAndRejectsTamperedPayload() throws {
+        let key = Curve25519.Signing.PrivateKey()
+        let publicKey = key.publicKey.rawRepresentation.base64EncodedString()
+
+        let url = try writeTemp("the real payload")
+        defer { try? FileManager.default.removeItem(at: url) }
+        let signature = try key.signature(for: Data(contentsOf: url)).base64EncodedString()
+
+        XCTAssertTrue(UpdateService.verify(fileAt: url, signature: signature, publicKey: publicKey))
+
+        try "tampered payload".write(to: url, atomically: true, encoding: .utf8)
+        XCTAssertFalse(UpdateService.verify(fileAt: url, signature: signature, publicKey: publicKey))
+    }
+
+    /// A signature from a different key must not pass, or the embedded key would be pointless.
+    func testVerifyRejectsSignatureFromWrongKey() throws {
+        let url = try writeTemp("payload")
+        defer { try? FileManager.default.removeItem(at: url) }
+        let attacker = Curve25519.Signing.PrivateKey()
+        let signature = try attacker.signature(for: Data(contentsOf: url)).base64EncodedString()
+
+        XCTAssertFalse(UpdateService.verify(fileAt: url,
+                                            signature: signature,
+                                            publicKey: Self.testPublicKey))
     }
 }

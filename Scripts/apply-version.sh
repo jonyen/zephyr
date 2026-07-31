@@ -28,8 +28,11 @@ echo "$VERSION" > "$ROOT_DIR/VERSION"
 sed_inplace "s/MARKETING_VERSION = [0-9.]*;/MARKETING_VERSION = $VERSION;/g" \
     "$ROOT_DIR/Zephyr.xcodeproj/project.pbxproj"
 
+# Points at jonyen.com rather than the GitHub release: this repo is private, so the
+# releases URL 404s for everyone. Matches any previous target so the link is rewritten
+# even on the release that moves it.
 sed_inplace \
-    "s|\[Download Zephyr v[0-9.]*\](https://github.com/jonyen/zephyr/releases/download/v[0-9.]*/Zephyr-[0-9.]*.dmg)|[Download Zephyr v$VERSION](https://github.com/jonyen/zephyr/releases/download/v$VERSION/Zephyr-$VERSION.dmg)|g" \
+    "s|\[Download Zephyr v[0-9.]*\]([^)]*)|[Download Zephyr v$VERSION](https://jonyen.com/zephyr-updates/Zephyr-$VERSION.dmg)|g" \
     "$ROOT_DIR/README.md"
 
 echo "Version set to $VERSION in VERSION, project.pbxproj, README.md"

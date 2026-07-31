@@ -1,5 +1,6 @@
 import Foundation
 import AppKit
+import CryptoKit
 
 @Observable
 class UpdateService {
@@ -25,31 +26,32 @@ class UpdateService {
         }
     }
 
-    struct GitHubRelease: Codable {
-        let tagName: String
-        let body: String?
-        let assets: [Asset]
-
-        struct Asset: Codable {
-            let name: String
-            let browserDownloadURL: String
-
-            enum CodingKeys: String, CodingKey {
-                case name
-                case browserDownloadURL = "browser_download_url"
-            }
-        }
-
-        enum CodingKeys: String, CodingKey {
-            case tagName = "tag_name"
-            case body
-            case assets
-        }
+    /// What the release workflow publishes to the update host.
+    ///
+    /// The GitHub releases API can't be used: this repo is private, so unauthenticated
+    /// requests get a 404 and the app has no way to see its own releases.
+    struct UpdateManifest: Codable {
+        let version: String
+        let notes: String
+        let zipURL: String
+        /// Base64 Ed25519 signature over the zip's bytes.
+        let signature: String
     }
 
     private(set) var state: State = .idle
-    private let repoOwner = "jonyen"
-    private let repoName = "zephyr"
+
+    private let manifestURL = "https://jonyen.com/zephyr-updates/manifest.json"
+
+    /// Verifies the downloaded zip actually came from our release workflow.
+    ///
+    /// `installAndRelaunch` replaces the running app bundle with whatever was downloaded, so
+    /// HTTPS alone isn't enough — anything able to write to the update host could otherwise
+    /// hand the app arbitrary code to run. The matching private key exists only as the
+    /// UPDATE_SIGNING_KEY secret in CI. Public keys are not secrets; this one is meant to ship.
+    private let updatePublicKey = "OZVuZglmktdVMpL0cqRrBjBdyO0AWvsaK/QGXkrYP2A="
+
+    /// Signature for the update currently on offer, carried from the manifest to the download.
+    private var pendingSignature: String?
 
     var currentAppVersion: String {
         Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "0.0.0"
@@ -79,55 +81,59 @@ class UpdateService {
 
     func checkForUpdate(manual: Bool = false) async {
         state = .checking
-        let urlString = "https://api.github.com/repos/\(repoOwner)/\(repoName)/releases/latest"
-        guard let url = URL(string: urlString) else {
-            state = .error("Invalid API URL")
+        pendingSignature = nil
+
+        guard let url = URL(string: manifestURL) else {
+            state = .error("Invalid update manifest URL")
             return
         }
 
         do {
             var request = URLRequest(url: url)
-            request.setValue("application/vnd.github+json", forHTTPHeaderField: "Accept")
+            request.setValue("application/json", forHTTPHeaderField: "Accept")
+            // The manifest changes on release and is small; a cached copy would hide new versions.
+            request.cachePolicy = .reloadIgnoringLocalCacheData
 
             let (data, response) = try await URLSession.shared.data(for: request)
 
             guard let httpResponse = response as? HTTPURLResponse else {
-                state = .idle
+                state = manual ? .error("Update check got no response") : .idle
                 return
             }
 
-            // 404 means no releases exist yet — not an error
+            // Any non-200 means the manifest couldn't be read. A previous version treated 404
+            // as "no releases yet" and silently reported success, which is exactly how a
+            // completely unreachable update feed went unnoticed. Say so instead.
             guard httpResponse.statusCode == 200 else {
-                if httpResponse.statusCode == 404 {
-                    state = .idle
-                } else {
-                    state = .error("Failed to check for updates (HTTP \(httpResponse.statusCode))")
-                }
+                state = manual
+                    ? .error("Couldn't reach updates (HTTP \(httpResponse.statusCode))")
+                    : .idle
                 return
             }
 
-            let release = try JSONDecoder().decode(GitHubRelease.self, from: data)
-            let remoteVersion = release.tagName
+            let manifest = try JSONDecoder().decode(UpdateManifest.self, from: data)
 
-            guard Self.isNewer(remoteVersion, than: currentAppVersion) else {
+            guard Self.isNewer(manifest.version, than: currentAppVersion) else {
                 state = manual ? .upToDate : .idle
                 return
             }
 
-            guard let zipAsset = release.assets.first(where: { $0.name.hasSuffix(".zip") }),
-                  let downloadURL = URL(string: zipAsset.browserDownloadURL) else {
-                state = .error("No downloadable update found")
+            guard let downloadURL = URL(string: manifest.zipURL) else {
+                state = .error("Update manifest has an invalid download URL")
                 return
             }
 
-            let cleanVersion = remoteVersion.hasPrefix("v") ? String(remoteVersion.dropFirst()) : remoteVersion
+            pendingSignature = manifest.signature
+            let cleanVersion = manifest.version.hasPrefix("v")
+                ? String(manifest.version.dropFirst())
+                : manifest.version
             state = .updateAvailable(
                 version: cleanVersion,
-                notes: release.body ?? "No release notes.",
+                notes: manifest.notes.isEmpty ? "No release notes." : manifest.notes,
                 downloadURL: downloadURL
             )
         } catch {
-            state = .error("Update check failed: \(error.localizedDescription)")
+            state = manual ? .error("Update check failed: \(error.localizedDescription)") : .idle
         }
     }
 
@@ -136,6 +142,11 @@ class UpdateService {
     func downloadUpdate(from url: URL) async {
         state = .downloading(progress: 0)
 
+        guard let signature = pendingSignature else {
+            state = .error("Update is unsigned — refusing to install")
+            return
+        }
+
         do {
             let (tempURL, _) = try await URLSession.shared.download(from: url, delegate: nil)
 
@@ -143,10 +154,29 @@ class UpdateService {
                 .appendingPathComponent("ZephyrUpdate-\(UUID().uuidString).zip")
             try FileManager.default.moveItem(at: tempURL, to: destURL)
 
+            // Verify before the zip can reach installAndRelaunch, which would otherwise
+            // extract it over the running app. A payload that fails here is deleted, not kept.
+            guard Self.verify(fileAt: destURL, signature: signature, publicKey: updatePublicKey) else {
+                try? FileManager.default.removeItem(at: destURL)
+                state = .error("Update failed signature check — not installing")
+                return
+            }
+
             state = .readyToInstall(localURL: destURL)
         } catch {
             state = .error("Download failed: \(error.localizedDescription)")
         }
+    }
+
+    /// Checks an Ed25519 signature over a file's bytes. Any malformed input fails closed.
+    static func verify(fileAt url: URL, signature: String, publicKey: String) -> Bool {
+        guard let signatureData = Data(base64Encoded: signature),
+              let publicKeyData = Data(base64Encoded: publicKey),
+              let payload = try? Data(contentsOf: url),
+              let key = try? Curve25519.Signing.PublicKey(rawRepresentation: publicKeyData) else {
+            return false
+        }
+        return key.isValidSignature(signatureData, for: payload)
     }
 
     // MARK: - Install and relaunch
