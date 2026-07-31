@@ -4,6 +4,13 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 ROOT_DIR="$(dirname "$SCRIPT_DIR")"
 
+# Where release-note generation gets its Gemini key when GEMINI_API_KEY isn't exported.
+# The Doppler project is named tech-digest rather than automata: the name predates that
+# repo's rename, and its CI service token is scoped to it. See jonyen/automata's README.
+DOPPLER_GEMINI_PROJECT="${DOPPLER_GEMINI_PROJECT:-tech-digest}"
+DOPPLER_GEMINI_CONFIG="${DOPPLER_GEMINI_CONFIG:-prd}"
+GEMINI_MODEL="${GEMINI_MODEL:-gemini-3.6-flash}"
+
 # ── colors ────────────────────────────────────────────────────────────────────
 BOLD=$(tput bold 2>/dev/null || printf "")
 RESET=$(tput sgr0 2>/dev/null || printf "")
@@ -59,34 +66,58 @@ VERSION="${VERSION_INPUT:-$PROPOSED_VERSION}"
 echo ""
 
 # ── generate release notes with AI ────────────────────────────────────────────
+
+# Prefers an exported GEMINI_API_KEY, else pulls it from Doppler so a release can
+# be cut without exporting anything by hand.
+resolve_gemini_key() {
+    if [ -n "${GEMINI_API_KEY:-}" ]; then
+        printf "%s" "$GEMINI_API_KEY"
+        return 0
+    fi
+    command -v doppler >/dev/null 2>&1 || return 1
+    doppler secrets get GEMINI_API_KEY --plain \
+        --project "$DOPPLER_GEMINI_PROJECT" \
+        --config "$DOPPLER_GEMINI_CONFIG" 2>/dev/null
+}
+
 generate_ai_notes() {
     local version="$1"
     local commits="$2"
 
-    if [ -z "${ANTHROPIC_API_KEY:-}" ]; then
-        return 1
-    fi
+    local api_key
+    api_key=$(resolve_gemini_key) || return 1
+    [ -n "$api_key" ] || return 1
 
     local payload
     payload=$(jq -n \
-        --arg model "claude-haiku-4-5-20251001" \
+        --arg model "$GEMINI_MODEL" \
         --arg commits "$commits" \
         --arg version "$version" \
         '{
             model: $model,
-            max_tokens: 512,
-            messages: [{
-                role: "user",
-                content: ("Generate release notes for v" + $version + " of Zephyr, a native macOS ESV Bible reader app.\n\nGit commits since last release:\n" + $commits + "\n\nWrite 2–5 concise bullet points under a \"## What'\''s New\" heading. Focus on what users will notice — not implementation details or commit hashes. Plain markdown only.")
-            }]
+            input: ("Generate release notes for v" + $version + " of Zephyr, a native macOS ESV Bible reader app.\n\nGit commits since last release:\n" + $commits + "\n\nWrite 2–5 concise bullet points under a \"## What'\''s New\" heading. Focus on what users will notice — not implementation details or commit hashes. Plain markdown only.")
         }')
 
-    curl -sf https://api.anthropic.com/v1/messages \
-        -H "x-api-key: $ANTHROPIC_API_KEY" \
-        -H "anthropic-version: 2023-06-01" \
+    # The Interactions API returns the reply as text blocks inside model_output steps;
+    # output_text is an SDK convenience that doesn't exist over REST, so join them here.
+    curl -sf "https://generativelanguage.googleapis.com/v1beta/interactions" \
+        -H "x-goog-api-key: $api_key" \
         -H "content-type: application/json" \
         -d "$payload" \
-        | python3 -c "import json,sys; print(json.load(sys.stdin)['content'][0]['text'])"
+        | python3 -c "
+import json, sys
+data = json.load(sys.stdin)
+blocks = [
+    block['text']
+    for step in data.get('steps', [])
+    if step.get('type') == 'model_output'
+    for block in step.get('content', [])
+    if block.get('type') == 'text' and block.get('text')
+]
+if not blocks:
+    sys.exit(1)
+print(''.join(blocks).strip())
+"
 }
 
 fallback_notes() {
@@ -100,7 +131,7 @@ if GENERATED_NOTES=$(generate_ai_notes "$VERSION" "$COMMITS" 2>/dev/null) && [ -
     echo "${DIM}(AI-generated)${RESET}"
 else
     GENERATED_NOTES=$(fallback_notes "$COMMITS")
-    echo "${DIM}(from git log — set ANTHROPIC_API_KEY to enable AI generation)${RESET}"
+    echo "${DIM}(from git log — set GEMINI_API_KEY, or add it to Doppler ${DOPPLER_GEMINI_PROJECT}/${DOPPLER_GEMINI_CONFIG}, to enable AI generation)${RESET}"
 fi
 
 # ── show notes and offer to edit ──────────────────────────────────────────────
