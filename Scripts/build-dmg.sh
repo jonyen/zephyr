@@ -12,6 +12,10 @@ STAGING_DIR="$BUILD_DIR/dmg-staging"
 
 echo "Building ${APP_NAME} v${VERSION}..."
 
+# Scripture text is not committed to this repository; pull it in first.
+"$SCRIPT_DIR/fetch-text.sh"
+
+
 # Build the app.
 #
 # Output goes to a log rather than through `tail`, which used to discard the compiler

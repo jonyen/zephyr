@@ -85,13 +85,39 @@ Requires Xcode 16+ and macOS 14+.
 git clone https://github.com/jonyen/zephyr.git
 cd zephyr
 
+# Fetch the scripture text (see "Scripture text" below)
+./Scripts/fetch-text.sh
+
 # Build and create DMG
 ./Scripts/build-dmg.sh
 ```
 
+`build-dmg.sh` runs `fetch-text.sh` for you; the explicit call above is only
+useful when building through Xcode directly.
+
 The DMG will be created in the `dist/` directory.
 
 To build the web app instead, see [`web/README.md`](./web/README.md).
+
+## Scripture text
+
+The ESV text is copyrighted by Crossway and licensed for API access rather than
+redistribution, so it is **not committed to this repository**. The 66 book JSON
+files are pulled in at build time by `Scripts/fetch-text.sh` from a separate
+private repository.
+
+Everything else needed to read and index the text is here: the red-letter data
+(`red_letter_ranges.json`, `red_letter_verses.json`) holds only book, chapter,
+and verse indices with character offsets, and the corpus scripts live in
+`Scripts/`.
+
+If you have your own licensed copy of the text, point the script at it:
+
+```bash
+ZEPHYR_TEXT_CACHE=/path/to/your/text ./Scripts/fetch-text.sh
+```
+
+laid out as `macos/<Book>.json` and `web/<Book>.json`, 66 files each.
 
 ## License
 
