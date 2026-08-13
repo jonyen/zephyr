@@ -22,7 +22,7 @@ jobs:
   release:
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           # Release notes diff against the last tag, which shallow clones don't have.
           fetch-depth: 0
