@@ -35,6 +35,8 @@ body { background: var(--bg); color: var(--text); font-family: var(--reading-fon
 .chip.active { background: var(--accent); border-color: var(--accent); color: #fff; }
 .settings-toggle { display: block; margin-top: 6px; cursor: pointer; }
 .esv-attribution-settings { max-width: none; margin: 12px 0 0; padding: 10px 0 0; border-top: 1px solid var(--divider); }
+.mac-download { display: block; margin: 12px 0 0; padding: 10px 0 0; border-top: 1px solid var(--divider); color: var(--accent); font-family: -apple-system, system-ui, sans-serif; font-size: 11px; text-decoration: none; }
+.mac-download:hover { text-decoration: underline; }
 
 .chapter { max-width: 700px; margin: 0 auto; padding: 24px 32px 0; }
 .book-title { font-family: -apple-system, system-ui, sans-serif; font-size: 28px; font-weight: 700; padding: 16px 0 12px; }

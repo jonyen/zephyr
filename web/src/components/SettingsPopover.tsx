@@ -1,4 +1,5 @@
 import { usePrefs } from '../state/prefs'
+import MacDownloadLink from './MacDownloadLink'
 import type { Prefs } from '../lib/types'
 
 const THEMES: Prefs['theme'][] = ['system', 'light', 'dark', 'sepia', 'black']
@@ -31,6 +32,7 @@ export default function SettingsPopover({ onClose }: { onClose: () => void }) {
           <label className="settings-toggle"><input type="checkbox" checked={prefs.redLetter} onChange={(e) => setPref('redLetter', e.target.checked)} /> Red letter</label>
           <label className="settings-toggle"><input type="checkbox" checked={prefs.bionic} onChange={(e) => setPref('bionic', e.target.checked)} /> Bionic reading</label>
         </div>
+        <MacDownloadLink />
         <p className="esv-attribution esv-attribution-settings">
           Scripture quotations are from the ESV® Bible (The Holy Bible, English Standard Version®), © 2001 by Crossway. Used by permission. All rights reserved.
         </p>
