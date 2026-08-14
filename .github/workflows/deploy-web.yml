@@ -27,7 +27,32 @@ jobs:
           cache-dependency-path: web/package-lock.json
       - run: npm ci
       - run: npm test
+      # The 66 book JSONs are not committed here — the ESV text is licensed for API
+      # access rather than redistribution, so Scripts/fetch-text.sh pulls it in at
+      # build time (see the repo root README). Vite copies web/public/data/ into dist
+      # verbatim, so without this step the build succeeds with an empty data/ and
+      # every chapter fetch on the deployed site 404s.
+      #
+      # It reads jonyen/zephyr-esv-text over SSH using a read-only deploy key kept in
+      # the TEXT_REPO_SSH_KEY secret; DEPLOY_TOKEN is scoped to jonyen-website and
+      # cannot read that repo. See web/README.md.
+      - uses: webfactory/ssh-agent@v0.10.0
+        with:
+          ssh-private-key: ${{ secrets.TEXT_REPO_SSH_KEY }}
+      - name: Fetch scripture text
+        working-directory: .
+        run: ./Scripts/fetch-text.sh
       - run: npm run build
+      # A textless build still succeeds and still publishes, which is how the site
+      # went dark once already. Fail here instead of deploying an empty reader.
+      - name: Verify the build contains the scripture text
+        run: |
+          count=$(ls dist/data/*.json | wc -l | tr -d ' ')
+          if [ "$count" -ne 67 ]; then
+            echo "::error::dist/data has $count JSON files, expected 67 (66 books + red_letter_verses.json)"
+            exit 1
+          fi
+          echo "dist/data: $count JSON files"
       # jonyen.com is served by jonyen/jonyen-website — a CRA app whose own workflow
       # (build_type: workflow) publishes on every push to its main. CRA copies public/
       # verbatim into the build, so landing dist/ in public/zephyr/ makes the site's
