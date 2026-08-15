@@ -75,10 +75,13 @@ struct ContentView: View {
         }
     }
 
-    /// Window-scoped commands carry their target window. A nil target means the sender had no
-    /// particular window in mind (app launch, Spotlight before any tab exists), so take it.
+    /// Window-scoped commands carry their target window. An unaddressed command is taken by
+    /// the frontmost tab alone — treating it as "for everyone" is how a single Spotlight
+    /// result used to rewrite every open tab at once.
     private func isForThisWindow(_ notification: Notification) -> Bool {
-        guard let target = notification.object as? NSWindow else { return true }
+        guard let target = notification.object as? NSWindow else {
+            return hostWindow?.isKeyWindow == true
+        }
         return target == hostWindow
     }
 
@@ -224,9 +227,6 @@ struct ContentView: View {
 
             if let initial = initialPosition {
                 navigateTo(book: initial.bookName, chapter: initial.chapterNumber, verseStart: nil, verseEnd: nil, addToHistory: false)
-            } else if let pending = AppDelegate.pendingNavigation {
-                AppDelegate.pendingNavigation = nil
-                navigateTo(book: pending.book, chapter: pending.chapter, verseStart: pending.verse, verseEnd: pending.verse, addToHistory: true)
             } else {
                 navigateTo(book: lastBook, chapter: lastChapter, verseStart: nil, verseEnd: nil, addToHistory: false)
             }
@@ -751,7 +751,7 @@ struct ContentView: View {
         [
             ("Search for Passage", "\u{2318}F / \u{2318}\(searchKey.uppercased())"),
             ("Toggle History", "\u{2318}\(historyKey.uppercased())"),
-            ("Toggle Notes", "\u{2318}\(notesKey.uppercased())"),
+            ("Toggle Notes", "\u{21E7}\u{2318}\(notesKey.uppercased())"),
             ("Previous Chapter", "\u{2318}\(prevChapterKey.uppercased())"),
             ("Next Chapter", "\u{2318}\(nextChapterKey.uppercased())"),
             ("Toggle Bookmark", "\u{2318}\(bookmarkKey.uppercased())"),

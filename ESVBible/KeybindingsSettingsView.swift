@@ -21,7 +21,7 @@ struct KeybindingsSettingsView: View {
 
             Section("Panels") {
                 KeybindingRow(action: "Toggle History", modifierLabel: "⌘", key: $historyKey, defaultKey: "y")
-                KeybindingRow(action: "Toggle Notes", modifierLabel: "⌘", key: $notesKey, defaultKey: "n")
+                KeybindingRow(action: "Toggle Notes", modifierLabel: "⇧⌘", key: $notesKey, defaultKey: "n")
                 KeybindingRow(action: "Toggle Bookmark", modifierLabel: "⌘", key: $bookmarkKey, defaultKey: "b")
             }
         }

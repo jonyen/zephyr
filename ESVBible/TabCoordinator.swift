@@ -31,8 +31,9 @@ final class TabCoordinator {
     private var entries: [Entry] = []
     private var lastKnownPosition: ChapterPosition?
 
-    /// Commands waiting for a reader tab that is still being built, keyed by its window.
-    private var pendingCommands: [(window: NSWindow, command: Notification.Name, userInfo: [AnyHashable: Any]?)] = []
+    /// Commands waiting for a reader tab that is still being built. A nil window means the
+    /// command has no target yet — it goes to whichever reader reports in first.
+    private var pendingCommands: [(window: NSWindow?, command: Notification.Name, userInfo: [AnyHashable: Any]?)] = []
 
     // MARK: - Position tracking
 
@@ -49,6 +50,19 @@ final class TabCoordinator {
         guard let window else { return false }
         guard let entry = entries.first(where: { $0.window === window }) else { return true }
         return entry.kind == .reader
+    }
+
+    /// Whether `window`'s reader has reported in. A window exists as an `NSWindow` well before
+    /// its `ContentView` knows which window it lives in, and until then it can receive nothing.
+    private func hasReported(_ window: NSWindow) -> Bool {
+        entries.contains { $0.window === window }
+    }
+
+    /// The frontmost window that already has a reader behind it.
+    private func frontmostReader() -> NSWindow? {
+        NSApp.orderedWindows.first { window in
+            entries.contains { $0.window === window && $0.kind == .reader }
+        }
     }
 
     func unregister(window: NSWindow) {
@@ -68,9 +82,30 @@ final class TabCoordinator {
 
     /// Sends a reader command to the frontmost tab, or to a new reader tab when the frontmost
     /// one is a verse card and has no reading pane to act on.
+    ///
+    /// A command is always addressed to exactly one window. It is never broadcast: an
+    /// unaddressed notification is taken by every open tab, which is how a Spotlight result
+    /// used to rewrite the whole app at once.
     func route(_ command: Notification.Name, from host: NSWindow?, userInfo: [AnyHashable: Any]? = nil) {
-        if isReader(host) {
-            NotificationCenter.default.post(name: command, object: host, userInfo: userInfo)
+        if let host, isReader(host) {
+            // Spotlight and the URL scheme arrive with the app in the background, and macOS
+            // hands them a window whose reader has not laid out yet. Posting now would reach
+            // nobody, so the command waits for that window rather than being dropped.
+            if hasReported(host) {
+                NotificationCenter.default.post(name: command, object: host, userInfo: userInfo)
+            } else {
+                enqueuePendingCommand(command, for: host, userInfo: userInfo)
+            }
+            return
+        }
+        if host == nil {
+            // No key window: the app was launched or woken straight into this command. Give it
+            // to the frontmost reader, or to the first one to appear if there is none yet.
+            if let target = frontmostReader() {
+                NotificationCenter.default.post(name: command, object: target, userInfo: userInfo)
+            } else {
+                pendingCommands.append((nil, command, userInfo))
+            }
             return
         }
         guard let window = openChapterTab(from: host, at: position(for: host)) else { return }
@@ -82,11 +117,12 @@ final class TabCoordinator {
         pendingCommands.append((window, command, userInfo))
     }
 
-    /// Runs anything that was waiting on this window, now that its reader is on screen.
+    /// Runs anything that was waiting on this window, now that its reader is on screen —
+    /// including commands that were still looking for any reader at all.
     /// Called by `ContentView` once it knows which window it lives in.
     func drainPendingCommands(for window: NSWindow) {
-        let pending = pendingCommands.filter { $0.window === window }
-        pendingCommands.removeAll { $0.window === window }
+        let pending = pendingCommands.filter { $0.window === window || $0.window == nil }
+        pendingCommands.removeAll { $0.window === window || $0.window == nil }
         for item in pending {
             NotificationCenter.default.post(name: item.command, object: window, userInfo: item.userInfo)
         }

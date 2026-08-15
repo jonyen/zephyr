@@ -2,17 +2,15 @@ import SwiftUI
 import CoreSpotlight
 
 class AppDelegate: NSObject, NSApplicationDelegate {
-    /// Stores a pending navigation from Spotlight or URL scheme that arrived before the UI was ready.
-    static var pendingNavigation: (book: String, chapter: Int, verse: Int?)?
-
     private func navigate(book: String, chapter: Int, verse: Int?) {
         let userInfo: [String: Any] = [
             "book": book,
             "chapter": chapter,
             "verse": verse as Any
         ]
-        // Post now and also store as pending in case the view isn't listening yet.
-        Self.pendingNavigation = (book, chapter, verse)
+        // The coordinator addresses exactly one window, and holds the reference until that
+        // window's reader is on screen — Spotlight hands these over while the app is still in
+        // the background, before any reader can answer.
         MainActor.assumeIsolated {
             TabCoordinator.shared.route(.navigateToReference, from: NSApp.keyWindow, userInfo: userInfo)
         }
@@ -96,10 +94,12 @@ struct ESVBibleApp: App {
                 }
                 .keyboardShortcut(KeyEquivalent(historyKey.first ?? "y"), modifiers: .command)
 
+                // Shift-Command rather than plain Command: SwiftUI's own New Window command
+                // already owns ⌘N, and the two fought over every press.
                 Button("Toggle Notes") {
                     TabCoordinator.shared.route(.toggleNotes, from: NSApp.keyWindow)
                 }
-                .keyboardShortcut(KeyEquivalent(notesKey.first ?? "n"), modifiers: .command)
+                .keyboardShortcut(KeyEquivalent(notesKey.first ?? "n"), modifiers: [.command, .shift])
 
                 Divider()
 
