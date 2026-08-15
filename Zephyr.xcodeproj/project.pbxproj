@@ -32,6 +32,8 @@
 		AA00003E /* NoteEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00003D /* NoteEditorView.swift */; };
 		AA000042 /* NotePopoverView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000043 /* NotePopoverView.swift */; };
 		AA000045 /* NotesSidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000044 /* NotesSidebarView.swift */; };
+		AAF00001 /* ReadingTimerService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAF00011 /* ReadingTimerService.swift */; };
+		AAF00002 /* ReadingTimerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAF00012 /* ReadingTimerView.swift */; };
 		AA000046 /* UpdateService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000047 /* UpdateService.swift */; };
 		AA000048 /* UpdateServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000049 /* UpdateServiceTests.swift */; };
 		AA00004B /* UpdateBannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA00004A /* UpdateBannerView.swift */; };
@@ -155,6 +157,8 @@
 		AA000041 /* ZephyrTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ZephyrTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA000043 /* NotePopoverView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotePopoverView.swift; sourceTree = "<group>"; };
 		AA000044 /* NotesSidebarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotesSidebarView.swift; sourceTree = "<group>"; };
+		AAF00011 /* ReadingTimerService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadingTimerService.swift; sourceTree = "<group>"; };
+		AAF00012 /* ReadingTimerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadingTimerView.swift; sourceTree = "<group>"; };
 		AA000047 /* UpdateService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateService.swift; sourceTree = "<group>"; };
 		AA000049 /* UpdateServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateServiceTests.swift; sourceTree = "<group>"; };
 		AA00004A /* UpdateBannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateBannerView.swift; sourceTree = "<group>"; };
@@ -312,6 +316,7 @@
 				AA00003A /* SelectableTextView.swift */,
 				AA00004A /* UpdateBannerView.swift */,
 				AA000085 /* VerseRangeView.swift */,
+				AAF00012 /* ReadingTimerView.swift */,
 				AA00004D /* AppearanceSettingsView.swift */,
 			);
 			path = Views;
@@ -327,6 +332,7 @@
 				AA00002D /* SearchService.swift */,
 				AA000034 /* RedLetterService.swift */,
 				AA000038 /* HighlightManager.swift */,
+				AAF00011 /* ReadingTimerService.swift */,
 				AA000047 /* UpdateService.swift */,
 			);
 			path = Services;
@@ -588,6 +594,8 @@
 				AA00003E /* NoteEditorView.swift in Sources */,
 				AA000042 /* NotePopoverView.swift in Sources */,
 				AA000045 /* NotesSidebarView.swift in Sources */,
+				AAF00001 /* ReadingTimerService.swift in Sources */,
+				AAF00002 /* ReadingTimerView.swift in Sources */,
 				AA000046 /* UpdateService.swift in Sources */,
 				AA00004B /* UpdateBannerView.swift in Sources */,
 				AA000084 /* VerseRangeView.swift in Sources */,
