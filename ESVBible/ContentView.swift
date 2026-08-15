@@ -751,7 +751,7 @@ struct ContentView: View {
         [
             ("Search for Passage", "\u{2318}F / \u{2318}\(searchKey.uppercased())"),
             ("Toggle History", "\u{2318}\(historyKey.uppercased())"),
-            ("Toggle Notes", "\u{2318}\(notesKey.uppercased())"),
+            ("Toggle Notes", "\u{21E7}\u{2318}\(notesKey.uppercased())"),
             ("Previous Chapter", "\u{2318}\(prevChapterKey.uppercased())"),
             ("Next Chapter", "\u{2318}\(nextChapterKey.uppercased())"),
             ("Toggle Bookmark", "\u{2318}\(bookmarkKey.uppercased())"),

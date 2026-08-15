@@ -96,10 +96,12 @@ struct ESVBibleApp: App {
                 }
                 .keyboardShortcut(KeyEquivalent(historyKey.first ?? "y"), modifiers: .command)
 
+                // Shift-Command rather than plain Command: SwiftUI's own New Window command
+                // already owns ⌘N, and the two fought over every press.
                 Button("Toggle Notes") {
                     TabCoordinator.shared.route(.toggleNotes, from: NSApp.keyWindow)
                 }
-                .keyboardShortcut(KeyEquivalent(notesKey.first ?? "n"), modifiers: .command)
+                .keyboardShortcut(KeyEquivalent(notesKey.first ?? "n"), modifiers: [.command, .shift])
 
                 Divider()
 
