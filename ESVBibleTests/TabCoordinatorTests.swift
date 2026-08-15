@@ -98,6 +98,69 @@ final class TabCoordinatorTests: XCTestCase {
 
     // MARK: - Command routing
 
+    /// The Spotlight bug: a hit that arrives while the app is in the background lands on a
+    /// window whose ContentView has not laid out yet, so it has no idea which window it is in.
+    /// Posting straight away reached nobody and the passage was dropped on the floor.
+    func testCommandForAWindowWhoseReaderIsNotUpYetWaitsForIt() {
+        let window = makeWindow()
+
+        var received: [NSWindow?] = []
+        let token = NotificationCenter.default.addObserver(forName: .navigateToReference, object: nil, queue: nil) { note in
+            received.append(note.object as? NSWindow)
+        }
+        defer { NotificationCenter.default.removeObserver(token) }
+
+        coordinator.route(.navigateToReference, from: window, userInfo: ["book": "Romans", "chapter": 8])
+        XCTAssertTrue(received.isEmpty, "nothing can receive this yet")
+
+        coordinator.register(window: window, position: ChapterPosition(bookName: "Genesis", chapterNumber: 1))
+        coordinator.drainPendingCommands(for: window)
+
+        XCTAssertEqual(received.count, 1)
+        XCTAssertTrue(received.first ?? nil === window)
+    }
+
+    /// Spotlight can also hand over a reference before the app has any window at all. The
+    /// first reader to appear takes it, rather than the reference being lost.
+    func testCommandWithNoHostWaitsForTheFirstReader() {
+        var received: [NSWindow?] = []
+        let token = NotificationCenter.default.addObserver(forName: .navigateToReference, object: nil, queue: nil) { note in
+            received.append(note.object as? NSWindow)
+        }
+        defer { NotificationCenter.default.removeObserver(token) }
+
+        coordinator.route(.navigateToReference, from: nil, userInfo: ["book": "Romans", "chapter": 8])
+        XCTAssertTrue(received.isEmpty, "there is no reader to take it yet")
+
+        let window = makeWindow()
+        coordinator.register(window: window, position: ChapterPosition(bookName: "Genesis", chapterNumber: 1))
+        coordinator.drainPendingCommands(for: window)
+
+        XCTAssertEqual(received.count, 1)
+        XCTAssertTrue(received.first ?? nil === window)
+    }
+
+    /// The original report: a Spotlight result rewrote every open window. A navigation must
+    /// name exactly one target window so the other tabs keep their place.
+    func testNavigationNamesASingleTargetWindow() {
+        let a = makeWindow()
+        let b = makeWindow()
+        coordinator.register(window: a, position: ChapterPosition(bookName: "John", chapterNumber: 3))
+        coordinator.register(window: b, position: ChapterPosition(bookName: "Acts", chapterNumber: 2))
+
+        var received: [NSWindow?] = []
+        let token = NotificationCenter.default.addObserver(forName: .navigateToReference, object: nil, queue: nil) { note in
+            received.append(note.object as? NSWindow)
+        }
+        defer { NotificationCenter.default.removeObserver(token) }
+
+        coordinator.route(.navigateToReference, from: b, userInfo: ["book": "Romans", "chapter": 8])
+
+        XCTAssertEqual(received.count, 1)
+        XCTAssertTrue(received.first ?? nil === b)
+        XCTAssertNotNil(received.first ?? nil, "a nil target would be taken by every window")
+    }
+
     func testRoutingToAReaderPostsImmediatelyToThatWindow() {
         let window = makeWindow()
         coordinator.register(window: window, position: ChapterPosition(bookName: "John", chapterNumber: 3), kind: .reader)
