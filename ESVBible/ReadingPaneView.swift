@@ -246,14 +246,14 @@ private struct ChapterView: View {
 
             if let leadHeading {
                 Text(leadHeading)
-                    .font(.system(size: 14, weight: .bold))
+                    .font(.custom(selectedFont, size: 15).weight(.bold))
                     .foregroundStyle(Color(readingTheme.nsTextColor))
                     .padding(.bottom, 4)
             }
 
             if let psalmTitle {
                 Text(psalmTitle)
-                    .font(.system(size: 14).italic())
+                    .font(.custom(selectedFont, size: 15).italic())
                     .foregroundStyle(Color(readingTheme.nsSecondaryColor))
                     .padding(.bottom, 4)
             }

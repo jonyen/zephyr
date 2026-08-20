@@ -49,7 +49,7 @@ body { background: var(--bg); color: var(--text); font-family: var(--reading-fon
 .drop-cap-poem { padding-right: calc(10px + var(--poem-hang)); }
 .bookmark-flag { color: var(--accent); font-size: 14px; vertical-align: top; margin-left: 2px; }
 /* The ESV's own section headings, above the paragraph they open. */
-.section-heading { font-family: -apple-system, system-ui, sans-serif; font-size: 15px; font-weight: 700; margin: 1.4em 0 0.5em; }
+.section-heading { font-family: var(--reading-font); font-size: 16px; font-weight: 700; margin: 1.4em 0 0.5em; }
 .verses + .section-heading { margin-top: 1.4em; }
 .section-heading-lead { margin-top: 0; }
 /* A psalm's superscription, printed above the first verse. */

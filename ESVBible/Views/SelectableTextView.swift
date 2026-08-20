@@ -161,7 +161,7 @@ struct SelectableTextView: NSViewRepresentable {
                 headingStyle.paragraphSpacingBefore = entryIndex > 0 ? headingGap : 0
                 headingStyle.paragraphSpacing = 2
                 result.append(NSAttributedString(string: heading + "\n", attributes: [
-                    .font: NSFont.systemFont(ofSize: 14, weight: .bold),
+                    .font: headingFont,
                     .foregroundColor: theme.nsTextColor,
                     .paragraphStyle: headingStyle
                 ]))
@@ -243,11 +243,9 @@ struct SelectableTextView: NSViewRepresentable {
 
             chunk.append(textStr)
 
-            // Give each poetic line its own paragraph style so a wrapped line
-            // hangs under the line it continues instead of resetting to the
-            // margin. The indent spaces stay in the text — removing them would
-            // shift every offset highlights are keyed on — so they set the first
-            // line's position and headIndent only has to match it.
+            // Give each poetic line its own paragraph style, so it indents to its
+            // level and a wrapped line hangs under the line it continues rather
+            // than resetting to the margin.
             if entry.isPoetry {
                 for (index, line) in entry.lines.enumerated() {
                     // The first line owns the prefix; the last owns the separator.
@@ -260,6 +258,12 @@ struct SelectableTextView: NSViewRepresentable {
                                                      spacingBefore: index == 0 ? spacingBefore : 0)
                     chunk.addAttribute(.paragraphStyle, value: style,
                                        range: NSRange(location: start, length: end - start))
+
+                    // The line's own indent spaces would otherwise indent it a
+                    // second time, by a different amount, after the verse number.
+                    let spaces = line.range.length - (line.text as NSString).length
+                    collapseIndentSpaces(in: chunk, font: bodyFont, range: NSRange(
+                        location: prefixLength + line.range.location, length: spaces))
                 }
             } else if spacingBefore > 0 {
                 let style = NSMutableParagraphStyle()
@@ -278,20 +282,49 @@ struct SelectableTextView: NSViewRepresentable {
         return result
     }
 
-    /// Indent spaces already set where a poetic line starts; headIndent repeats
-    /// that position for its wrapped continuations, plus a hang so they read as
-    /// continuations rather than as new lines.
+    /// Headings read as part of the text, so they take the reading font rather
+    /// than the interface one.
+    private var headingFont: NSFont {
+        let base = NSFont(name: selectedFont, size: 15) ?? NSFont.systemFont(ofSize: 15)
+        return NSFontManager.shared.convert(base, toHaveTrait: .boldFontMask)
+    }
+
     private var paragraphGap: CGFloat { 10 }
     private var headingGap: CGFloat { 18 }
 
+    /// One poetic indent level, matching the web reader's 2em.
+    private func indentWidth(_ font: NSFont) -> CGFloat { font.pointSize * 2 }
+
+    /// How far a wrapped poetic line hangs back under the line it continues.
+    private func hangWidth(_ font: NSFont) -> CGFloat { font.pointSize * 1.5 }
+
+    /// Indent a poetic line by its level, and hang its wrapped continuations
+    /// under it. The indent is measured rather than spelled with the spaces the
+    /// text carries — those are collapsed to nothing by `collapseIndentSpaces`,
+    /// which keeps them in the string so no offset moves.
     private func poeticParagraphStyle(indent: Int, font: NSFont, spacingBefore: CGFloat = 0) -> NSParagraphStyle {
         let style = NSMutableParagraphStyle()
         style.lineSpacing = 6
         style.paragraphSpacingBefore = spacingBefore
-        let spaceWidth = (" " as NSString).size(withAttributes: [.font: font]).width
-        let hang = spaceWidth * 3
-        style.headIndent = CGFloat(indent) * spaceWidth * 4 + hang
+        let position = CGFloat(indent) * indentWidth(font)
+        style.firstLineHeadIndent = position
+        style.headIndent = position + hangWidth(font)
         return style
+    }
+
+    /// Give the leading indent spaces zero width.
+    ///
+    /// The spaces are how the scripture data spells a poetic indent, but their
+    /// width depends on the font and they sit after the verse number, so on
+    /// their own they indent by the wrong amount and in the wrong place.
+    /// Deleting them would shift every character offset that red-letter ranges
+    /// and highlights are keyed on, so squeeze them to nothing instead and let
+    /// the paragraph style do the indenting.
+    private func collapseIndentSpaces(in attrStr: NSMutableAttributedString,
+                                      font: NSFont, range: NSRange) {
+        guard range.length > 0 else { return }
+        let spaceWidth = (" " as NSString).size(withAttributes: [.font: font]).width
+        attrStr.addAttribute(.kern, value: -spaceWidth, range: range)
     }
 
     private func isSearchHighlight(_ verseNumber: Int) -> Bool {
