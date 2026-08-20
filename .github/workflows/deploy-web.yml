@@ -33,7 +33,7 @@ jobs:
       # verbatim, so without this step the build succeeds with an empty data/ and
       # every chapter fetch on the deployed site 404s.
       #
-      # It reads jonyen/zephyr-esv-text over SSH using a read-only deploy key kept in
+      # It reads jonyen/esv-text over SSH using a read-only deploy key kept in
       # the TEXT_REPO_SSH_KEY secret; DEPLOY_TOKEN is scoped to jonyen-website and
       # cannot read that repo. See web/README.md.
       - uses: webfactory/ssh-agent@v0.10.0

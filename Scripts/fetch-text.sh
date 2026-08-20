@@ -14,7 +14,7 @@
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-TEXT_REPO="${ZEPHYR_TEXT_REPO:-git@github.com:jonyen/zephyr-esv-text.git}"
+TEXT_REPO="${ZEPHYR_TEXT_REPO:-git@github.com:jonyen/esv-text.git}"
 CACHE_DIR="${ZEPHYR_TEXT_CACHE:-$REPO_ROOT/.text-cache}"
 
 MACOS_DEST="$REPO_ROOT/ESVBible/Resources"
