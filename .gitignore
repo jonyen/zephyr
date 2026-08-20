@@ -12,3 +12,7 @@ ESVBible/Resources/*.json
 !ESVBible/Resources/red_letter_verses.json
 web/public/data/*.json
 !web/public/data/red_letter_verses.json
+
+# Agent tool state — local to a checkout, not project configuration
+.serena/
+.superpowers/
