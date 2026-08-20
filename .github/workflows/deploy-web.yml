@@ -33,7 +33,7 @@ jobs:
       # verbatim, so without this step the build succeeds with an empty data/ and
       # every chapter fetch on the deployed site 404s.
       #
-      # It reads jonyen/zephyr-esv-text over SSH using a read-only deploy key kept in
+      # It reads jonyen/esv-text over SSH using a read-only deploy key kept in
       # the TEXT_REPO_SSH_KEY secret; DEPLOY_TOKEN is scoped to jonyen-website and
       # cannot read that repo. See web/README.md.
       - uses: webfactory/ssh-agent@v0.10.0
@@ -48,8 +48,8 @@ jobs:
       - name: Verify the build contains the scripture text
         run: |
           count=$(ls dist/data/*.json | wc -l | tr -d ' ')
-          if [ "$count" -ne 67 ]; then
-            echo "::error::dist/data has $count JSON files, expected 67 (66 books + red_letter_verses.json)"
+          if [ "$count" -ne 69 ]; then
+            echo "::error::dist/data has $count JSON files, expected 69 (66 books + red_letter_verses.json + paragraph_starts.json + headings.json)"
             exit 1
           fi
           echo "dist/data: $count JSON files"

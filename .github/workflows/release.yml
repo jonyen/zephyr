@@ -48,6 +48,19 @@ jobs:
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "Releasing v$VERSION"
 
+      # The 66 book JSONs are not committed here — the ESV text is licensed for API
+      # access rather than redistribution — and build-dmg.sh only fetches them at DMG
+      # time, which is far too late: the search index is built from them and the app
+      # target lists them as resources, so both steps below fail without them.
+      #
+      # Reads jonyen/esv-text over SSH with the same read-only deploy key the web
+      # deploy uses. See web/README.md.
+      - uses: webfactory/ssh-agent@v0.10.0
+        with:
+          ssh-private-key: ${{ secrets.TEXT_REPO_SSH_KEY }}
+      - name: Fetch scripture text
+        run: ./Scripts/fetch-text.sh
+
       # search_index.json is a 25MB generated artifact and is gitignored, so a fresh
       # checkout doesn't have it. The app target lists it as a resource, so without this
       # every build fails in CpResource. Pure stdlib — no pip install needed.

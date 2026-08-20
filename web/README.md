@@ -29,10 +29,10 @@ The deploy needs a `DEPLOY_TOKEN` secret — a fine-grained PAT with `contents: 
 
     gh secret set DEPLOY_TOKEN --repo jonyen/zephyr
 
-It also needs a `TEXT_REPO_SSH_KEY` secret — the private half of a read-only deploy key on `jonyen/zephyr-esv-text`, the private repo holding the scripture text. `DEPLOY_TOKEN` cannot be reused: it is scoped to `jonyen-website` and cannot read the text repo. To rotate or recreate the key:
+It also needs a `TEXT_REPO_SSH_KEY` secret — the private half of a read-only deploy key on `jonyen/esv-text`, the private repo holding the scripture text. `DEPLOY_TOKEN` cannot be reused: it is scoped to `jonyen-website` and cannot read the text repo. To rotate or recreate the key:
 
     ssh-keygen -t ed25519 -N '' -C 'zephyr web deploy (read-only)' -f zephyr-text-deploy
-    gh repo deploy-key add zephyr-text-deploy.pub --repo jonyen/zephyr-esv-text \
+    gh repo deploy-key add zephyr-text-deploy.pub --repo jonyen/esv-text \
       --title 'zephyr web deploy (read-only)'
     gh secret set TEXT_REPO_SSH_KEY --repo jonyen/zephyr < zephyr-text-deploy
     rm zephyr-text-deploy zephyr-text-deploy.pub

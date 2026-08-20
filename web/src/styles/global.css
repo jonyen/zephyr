@@ -38,14 +38,31 @@ body { background: var(--bg); color: var(--text); font-family: var(--reading-fon
 .mac-download { display: block; margin: 12px 0 0; padding: 10px 0 0; border-top: 1px solid var(--divider); color: var(--accent); font-family: -apple-system, system-ui, sans-serif; font-size: 11px; text-decoration: none; }
 .mac-download:hover { text-decoration: underline; }
 
+/* How far a wrapped poetic line hangs back under the line it continues. */
+:root { --poem-hang: 26px; }
 .chapter { max-width: 700px; margin: 0 auto; padding: 24px 32px 0; }
 .book-title { font-family: -apple-system, system-ui, sans-serif; font-size: 28px; font-weight: 700; padding: 16px 0 12px; }
 .chapter-body { position: relative; }
 .chapter-body::after { content: ''; display: block; clear: both; }
 .drop-cap { float: left; font-size: 42px; line-height: 1; font-weight: 500; padding: 4px 10px 0 0; font-family: var(--reading-font); }
+/* A poem's first lines hang back into this padding, so reserve room for them. */
+.drop-cap-poem { padding-right: calc(10px + var(--poem-hang)); }
 .bookmark-flag { color: var(--accent); font-size: 14px; vertical-align: top; margin-left: 2px; }
+/* The ESV's own section headings, above the paragraph they open. */
+.section-heading { font-family: var(--reading-font); font-size: 16px; font-weight: 700; margin: 1.4em 0 0.5em; }
+.verses + .section-heading { margin-top: 1.4em; }
+.section-heading-lead { margin-top: 0; }
+/* A psalm's superscription, printed above the first verse. */
+.psalm-title { font-size: 15px; font-style: italic; color: var(--text-secondary); margin-bottom: 0.5em; }
 .verses { font-size: 17px; line-height: 1.65; white-space: pre-wrap; text-align: left; }
-.verses-lines > span { display: block; }
+/* Paragraphs, and the stanzas of a poem, come from the ESV's own layout. */
+.verses + .verses { margin-top: 0.75em; }
+/* Poetry: each line is its own block, so it breaks away from surrounding prose.
+   The hanging indent keeps a wrapped line under the line it continues. */
+.poem-line { display: block; padding-left: var(--poem-hang); text-indent: calc(-1 * var(--poem-hang)); }
+.poem-line[data-indent="1"] { padding-left: calc(var(--poem-hang) + 2em); }
+.poem-line[data-indent="2"] { padding-left: calc(var(--poem-hang) + 4em); }
+.poem-line[data-indent="3"] { padding-left: calc(var(--poem-hang) + 6em); }
 .verse-num { color: var(--text-secondary); font-size: 11px; margin-right: 3px; font-family: -apple-system, system-ui, sans-serif; }
 .red-letter { color: var(--red-letter); }
 .red-letter .verse-num { color: var(--text-secondary); }
