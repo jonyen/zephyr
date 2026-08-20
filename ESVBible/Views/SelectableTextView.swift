@@ -140,9 +140,16 @@ struct SelectableTextView: NSViewRepresentable {
         // PoetryLayout drops the omitted verses (Mark 9:44, Acts 8:37, …), which
         // carry no text and would otherwise leave a dangling numeral, and decides
         // where a poem breaks away from the surrounding prose.
-        for entry in PoetryLayout.layout(chapter.verses) {
+        let paragraphStarts = ParagraphService.shared.paragraphStarts(
+            book: bookName, chapter: chapter.number)
+
+        for (entryIndex, entry) in PoetryLayout.layout(chapter.verses,
+                                                       paragraphStarts: paragraphStarts).enumerated() {
             let verse = entry.verse
             let chunk = NSMutableAttributedString()
+            // Space before a new paragraph — but not above the first one, which
+            // would push the whole chapter down away from the drop cap.
+            let spacingBefore: CGFloat = entry.startsParagraph && entryIndex > 0 ? paragraphGap : 0
 
             // Skip verse 1 number — it's replaced by the drop-cap chapter number
             if verse.number > 1 {
@@ -229,10 +236,17 @@ struct SelectableTextView: NSViewRepresentable {
                         ? chunk.length
                         : prefixLength + line.range.upperBound
                     guard start < end else { continue }
-                    chunk.addAttribute(.paragraphStyle,
-                                       value: poeticParagraphStyle(indent: line.indent, font: bodyFont),
+                    let style = poeticParagraphStyle(indent: line.indent, font: bodyFont,
+                                                     spacingBefore: index == 0 ? spacingBefore : 0)
+                    chunk.addAttribute(.paragraphStyle, value: style,
                                        range: NSRange(location: start, length: end - start))
                 }
+            } else if spacingBefore > 0 {
+                let style = NSMutableParagraphStyle()
+                style.lineSpacing = 6
+                style.paragraphSpacingBefore = spacingBefore
+                chunk.addAttribute(.paragraphStyle, value: style,
+                                   range: NSRange(location: 0, length: chunk.length))
             }
 
             let verseEnd = result.length + chunk.length
@@ -247,9 +261,12 @@ struct SelectableTextView: NSViewRepresentable {
     /// Indent spaces already set where a poetic line starts; headIndent repeats
     /// that position for its wrapped continuations, plus a hang so they read as
     /// continuations rather than as new lines.
-    private func poeticParagraphStyle(indent: Int, font: NSFont) -> NSParagraphStyle {
+    private var paragraphGap: CGFloat { 10 }
+
+    private func poeticParagraphStyle(indent: Int, font: NSFont, spacingBefore: CGFloat = 0) -> NSParagraphStyle {
         let style = NSMutableParagraphStyle()
         style.lineSpacing = 6
+        style.paragraphSpacingBefore = spacingBefore
         let spaceWidth = (" " as NSString).size(withAttributes: [.font: font]).width
         let hang = spaceWidth * 3
         style.headIndent = CGFloat(indent) * spaceWidth * 4 + hang

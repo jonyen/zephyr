@@ -12,6 +12,7 @@
 		AA000003 /* ESVBibleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000013 /* ESVBibleTests.swift */; };
 		AA000004 /* BibleModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000014 /* BibleModels.swift */; };
 		AA0000D0 /* PoetryLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000D1 /* PoetryLayout.swift */; };
+		AA0000D4 /* ParagraphService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000D5 /* ParagraphService.swift */; };
 		AA0000D2 /* PoetryLayoutTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000D3 /* PoetryLayoutTests.swift */; };
 		AA000005 /* BibleModelsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000015 /* BibleModelsTests.swift */; };
 		AA000006 /* BibleStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000016 /* BibleStore.swift */; };
@@ -49,6 +50,7 @@
 		AA0000C0 /* TabCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000C1 /* TabCoordinator.swift */; };
 		AA0000C2 /* TabCoordinatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000C3 /* TabCoordinatorTests.swift */; };
 		AA000082 /* red_letter_ranges.json in Resources */ = {isa = PBXBuildFile; fileRef = AA000083 /* red_letter_ranges.json */; };
+		AA0000D6 /* paragraph_starts.json in Resources */ = {isa = PBXBuildFile; fileRef = AA0000D7 /* paragraph_starts.json */; };
 		AA3A3F952F40A2C5004087F5 /* ReadingPaneView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA3A3F942F40A2C5004087F5 /* ReadingPaneView.swift */; };
 		AA62DEA52F4CCB6E00D98FC2 /* KeybindingsSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA62DEA42F4CCB6E00D98FC2 /* KeybindingsSettingsView.swift */; };
 		AACC86CE2F409FA300E50F90 /* 1Chronicles.json in Resources */ = {isa = PBXBuildFile; fileRef = AACC868B2F409F1F00E50F90 /* 1Chronicles.json */; };
@@ -137,6 +139,7 @@
 		AA000013 /* ESVBibleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ESVBibleTests.swift; sourceTree = "<group>"; };
 		AA000014 /* BibleModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BibleModels.swift; sourceTree = "<group>"; };
 		AA0000D1 /* PoetryLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PoetryLayout.swift; sourceTree = "<group>"; };
+		AA0000D5 /* ParagraphService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParagraphService.swift; sourceTree = "<group>"; };
 		AA0000D3 /* PoetryLayoutTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PoetryLayoutTests.swift; sourceTree = "<group>"; };
 		AA000015 /* BibleModelsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BibleModelsTests.swift; sourceTree = "<group>"; };
 		AA000016 /* BibleStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BibleStore.swift; sourceTree = "<group>"; };
@@ -176,6 +179,7 @@
 		AA0000C1 /* TabCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabCoordinator.swift; sourceTree = "<group>"; };
 		AA0000C3 /* TabCoordinatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabCoordinatorTests.swift; sourceTree = "<group>"; };
 		AA000083 /* red_letter_ranges.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = red_letter_ranges.json; sourceTree = "<group>"; };
+		AA0000D7 /* paragraph_starts.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = paragraph_starts.json; sourceTree = "<group>"; };
 		AA3A3F942F40A2C5004087F5 /* ReadingPaneView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadingPaneView.swift; sourceTree = "<group>"; };
 		AA3A3F982F40AAB6004087F5 /* ESVBibleApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ESVBibleApp.swift; sourceTree = "<group>"; };
 		AA3A3F992F40AAB9004087F5 /* ESVBibleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ESVBibleTests.swift; sourceTree = "<group>"; };
@@ -340,6 +344,7 @@
 				AA000038 /* HighlightManager.swift */,
 				AAF00011 /* ReadingTimerService.swift */,
 				AA000047 /* UpdateService.swift */,
+				AA0000D5 /* ParagraphService.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -416,6 +421,7 @@
 				AACC87202F409F1F00E50F90 /* search_index.json */,
 				AA000036 /* red_letter_verses.json */,
 				AA000083 /* red_letter_ranges.json */,
+				AA0000D7 /* paragraph_starts.json */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -568,6 +574,7 @@
 				AACC87212F409FA300E50F90 /* search_index.json in Resources */,
 				AA000035 /* red_letter_verses.json in Resources */,
 				AA000082 /* red_letter_ranges.json in Resources */,
+				AA0000D6 /* paragraph_starts.json in Resources */,
 				AA0000D2 /* PoetryLayoutTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -609,6 +616,7 @@
 				AA00004C /* AppearanceSettingsView.swift in Sources */,
 				AA00004E /* ReadingTheme.swift in Sources */,
 				AA0000D0 /* PoetryLayout.swift in Sources */,
+				AA0000D4 /* ParagraphService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

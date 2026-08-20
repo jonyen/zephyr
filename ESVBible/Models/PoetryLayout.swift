@@ -25,6 +25,7 @@ enum PoetryLayout {
         let verse: Verse
         let isPoetry: Bool
         let lines: [Line]
+        let startsParagraph: Bool
         let separator: String  // what follows this verse: "\n", " ", or "" at the end
     }
 
@@ -51,27 +52,46 @@ enum PoetryLayout {
         return result
     }
 
-    static func layout(_ verses: [Verse]) -> [Entry] {
+    /// - Parameter paragraphStarts: verses that open a paragraph, from the ESV's
+    ///   own layout. A start aimed at a verse the ESV omits carries forward to
+    ///   the next verse present, so the paragraph is not lost with it.
+    static func layout(_ verses: [Verse], paragraphStarts: [Int] = []) -> [Entry] {
         // The ESV omits a handful of verses (Mark 9:44, Acts 8:37, …) as later
         // manuscript additions. They carry no text, so they get no line at all.
         let present = verses.filter { !$0.text.isEmpty }
         let broken = present.map { isPoetry($0.text) }
 
+        let opens = paragraphStarts.sorted()
+        var next = 0
+        let startsParagraph: [Bool] = present.map { verse in
+            var starts = false
+            while next < opens.count && opens[next] <= verse.number {
+                starts = true
+                next += 1
+            }
+            return starts
+        }
+
         return present.enumerated().map { index, verse in
             let nextIsBroken = index + 1 < broken.count && broken[index + 1]
+            let nextOpensParagraph = index + 1 < startsParagraph.count && startsParagraph[index + 1]
             // A lone unbroken verse surrounded by broken ones belongs to the poem.
             let poetry = broken[index] || ((index == 0 || broken[index - 1]) && nextIsBroken)
 
             let separator: String
             if index == present.count - 1 {
-                separator = ""                              // nothing trails the last verse
-            } else if broken[index] || nextIsBroken {
-                separator = "\n"                            // a poem starts or ends here
+                separator = ""                                      // nothing trails the last verse
+            } else if broken[index] || nextIsBroken || nextOpensParagraph {
+                separator = "\n"                                    // a poem or a paragraph breaks here
             } else {
-                separator = " "                             // prose keeps flowing
+                separator = " "                                     // prose keeps flowing
             }
 
-            return Entry(verse: verse, isPoetry: poetry, lines: lines(in: verse.text), separator: separator)
+            return Entry(verse: verse,
+                         isPoetry: poetry,
+                         lines: lines(in: verse.text),
+                         startsParagraph: startsParagraph[index],
+                         separator: separator)
         }
     }
 }

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { Book, Position } from '../lib/types'
 import { chapterAfter, chapterBefore, globalIndex } from '../lib/bible-nav'
-import { loadBook, loadRedLetter, type RedLetterMap } from '../lib/bible-data'
+import { loadBook, loadParagraphStarts, loadRedLetter, type ParagraphMap, type RedLetterMap } from '../lib/bible-data'
 import ChapterView from './ChapterView'
 import { useAnnotations } from '../state/annotations'
 
@@ -18,6 +18,7 @@ export default function ReadingPane({ target, navId, targetVerseRange, onPositio
   const [chapters, setChapters] = useState<Position[]>([target])
   const [books, setBooks] = useState<Map<string, Book>>(new Map())
   const [redMap, setRedMap] = useState<RedLetterMap>({})
+  const [paragraphMap, setParagraphMap] = useState<ParagraphMap>({})
   const [loadError, setLoadError] = useState(false)
   const scrollerRef = useRef<HTMLDivElement>(null)
   const chaptersRef = useRef<Position[]>([target])        // mirrors `chapters` for synchronous reads in the scroll handler
@@ -33,6 +34,7 @@ export default function ReadingPane({ target, navId, targetVerseRange, onPositio
 
   // Load red letter map once.
   useEffect(() => { loadRedLetter().then(setRedMap).catch(() => {}) }, [])
+  useEffect(() => { loadParagraphStarts().then(setParagraphMap).catch(() => {}) }, [])
 
   // Ensure every listed chapter's book is loaded.
   useEffect(() => {
@@ -246,6 +248,7 @@ export default function ReadingPane({ target, navId, targetVerseRange, onPositio
             chapter={ch}
             showBookTitle={pos.chapter === 1}
             redVerses={redMap[pos.book]?.[String(pos.chapter)] ?? []}
+            paragraphStarts={paragraphMap[pos.book]?.[String(pos.chapter)] ?? []}
             highlights={highlights.filter((h) => h.book === pos.book && h.chapter === pos.chapter)}
             bookmarked={bookmarks.some((b) => b.book === pos.book && b.chapter === pos.chapter)}
             targetVerseRange={isTargetCh ? targetVerseRange : null}

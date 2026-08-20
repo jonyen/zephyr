@@ -49,6 +49,8 @@ body { background: var(--bg); color: var(--text); font-family: var(--reading-fon
 .drop-cap-poem { padding-right: calc(10px + var(--poem-hang)); }
 .bookmark-flag { color: var(--accent); font-size: 14px; vertical-align: top; margin-left: 2px; }
 .verses { font-size: 17px; line-height: 1.65; white-space: pre-wrap; text-align: left; }
+/* Paragraphs, and the stanzas of a poem, come from the ESV's own layout. */
+.verses + .verses { margin-top: 0.75em; }
 /* Poetry: each line is its own block, so it breaks away from surrounding prose.
    The hanging indent keeps a wrapped line under the line it continues. */
 .poem-line { display: block; padding-left: var(--poem-hang); text-indent: calc(-1 * var(--poem-hang)); }

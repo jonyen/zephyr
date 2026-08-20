@@ -3,11 +3,14 @@ import { bookByName } from './bible-nav'
 import type { Book } from './types'
 
 export type RedLetterMap = Record<string, Record<string, number[]>>
+/** Book -> chapter -> the verses that open a paragraph, from the ESV's layout. */
+export type ParagraphMap = Record<string, Record<string, number[]>>
 
 const dataUrl = (file: string) => `${import.meta.env.BASE_URL}data/${file}`
 
 let bookCache = new Map<string, Promise<Book>>()
 let redLetterCache: Promise<RedLetterMap> | null = null
+let paragraphCache: Promise<ParagraphMap> | null = null
 
 async function fetchJSON<T>(url: string): Promise<T> {
   const res = await fetch(url)
@@ -46,7 +49,16 @@ export function loadRedLetter(): Promise<RedLetterMap> {
   return redLetterCache
 }
 
+export function loadParagraphStarts(): Promise<ParagraphMap> {
+  if (!paragraphCache) {
+    paragraphCache = fetchJSON<ParagraphMap>(dataUrl('paragraph_starts.json'))
+    paragraphCache.catch(() => { paragraphCache = null })
+  }
+  return paragraphCache
+}
+
 export function _resetCacheForTests(): void {
   bookCache = new Map()
   redLetterCache = null
+  paragraphCache = null
 }

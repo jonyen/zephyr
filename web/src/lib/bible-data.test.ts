@@ -1,14 +1,17 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { loadBook, loadAllBooks, loadRedLetter, _resetCacheForTests } from './bible-data'
+import { loadBook, loadAllBooks, loadParagraphStarts, loadRedLetter, _resetCacheForTests } from './bible-data'
 
 const fakeBook = { name: 'Genesis', chapters: [{ number: 1, verses: [{ number: 1, text: 'In the beginning' }] }] }
 
+function stubFor(url: string) {
+  if (url.includes('red_letter')) return { Matthew: { '3': [15] } }
+  if (url.includes('paragraph_starts')) return { Matthew: { '7': [1, 6, 7, 12] } }
+  return fakeBook
+}
+
 beforeEach(() => {
   _resetCacheForTests()
-  vi.stubGlobal('fetch', vi.fn(async (url: string) => ({
-    ok: true,
-    json: async () => (String(url).includes('red_letter') ? { Matthew: { '3': [15] } } : fakeBook),
-  })))
+  vi.stubGlobal('fetch', vi.fn(async (url: string) => ({ ok: true, json: async () => stubFor(String(url)) })))
 })
 
 describe('bible-data', () => {
@@ -44,11 +47,23 @@ describe('bible-data', () => {
     vi.stubGlobal('fetch', vi.fn(async () => ({ ok: false, status: 500 })))
     await expect(loadRedLetter()).rejects.toThrow('500')
     // Second call succeeds (stub replaced)
-    vi.stubGlobal('fetch', vi.fn(async (url: string) => ({
-      ok: true,
-      json: async () => (String(url).includes('red_letter') ? { Matthew: { '3': [15] } } : fakeBook),
-    })))
+    vi.stubGlobal('fetch', vi.fn(async (url: string) => ({ ok: true, json: async () => stubFor(String(url)) })))
     const rl = await loadRedLetter()
     expect(rl.Matthew['3']).toEqual([15])
+  })
+  it('loads paragraph starts', async () => {
+    const p = await loadParagraphStarts()
+    expect(p.Matthew['7']).toEqual([1, 6, 7, 12])
+  })
+  it('memoizes paragraph starts', async () => {
+    await loadParagraphStarts()
+    await loadParagraphStarts()
+    expect((globalThis.fetch as ReturnType<typeof vi.fn>).mock.calls.length).toBe(1)
+  })
+  it('retries paragraph starts after a failed load', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => ({ ok: false, status: 500 })))
+    await expect(loadParagraphStarts()).rejects.toThrow('500')
+    vi.stubGlobal('fetch', vi.fn(async (url: string) => ({ ok: true, json: async () => stubFor(String(url)) })))
+    expect((await loadParagraphStarts()).Matthew['7']).toEqual([1, 6, 7, 12])
   })
 })

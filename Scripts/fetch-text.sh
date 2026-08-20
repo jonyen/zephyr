@@ -9,6 +9,7 @@
 # Layout it produces:
 #   ESVBible/Resources/<Book>.json   66 files, macOS app bundle
 #   web/public/data/<Book>.json      66 files, web build
+#   <both>/paragraph_starts.json     where each chapter's paragraphs begin
 
 set -euo pipefail
 
@@ -21,7 +22,10 @@ WEB_DEST="$REPO_ROOT/web/public/data"
 
 if [ -d "$CACHE_DIR/.git" ]; then
   echo "==> Updating text cache at $CACHE_DIR"
-  git -C "$CACHE_DIR" pull --ff-only --quiet
+  # A cache checked out by CI is already at the right commit and may have no
+  # credentials to pull with, so a failed update is not fatal.
+  git -C "$CACHE_DIR" pull --ff-only --quiet \
+    || echo "==> Could not update the cache; using the copy already there" >&2
 else
   echo "==> Cloning text into $CACHE_DIR"
   rm -rf "$CACHE_DIR"
@@ -55,5 +59,17 @@ for pair in "macos:$MACOS_DEST" "web:$WEB_DEST"; do
   cp "$src"/*.json "$dest"/
   echo "==> $(ls -1 "$src"/*.json | wc -l | tr -d ' ') books -> ${dest#$REPO_ROOT/}"
 done
+
+# Where each chapter's paragraphs begin. Verse indices only, no text; see
+# Scripts/generate_paragraph_starts.py. Without it the readers still work —
+# a chapter just renders as one unbroken block.
+PARAGRAPHS="$CACHE_DIR/paragraph_starts.json"
+if [ -f "$PARAGRAPHS" ]; then
+  cp "$PARAGRAPHS" "$MACOS_DEST/"
+  cp "$PARAGRAPHS" "$WEB_DEST/"
+  echo "==> paragraph_starts.json -> both targets"
+else
+  echo "==> No paragraph_starts.json in the text repository; chapters will render unparagraphed" >&2
+fi
 
 echo "==> Text resources ready"

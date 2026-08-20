@@ -147,3 +147,71 @@ final class PoetryLayoutTests: XCTestCase {
         XCTAssertEqual(layout.dropLast().map { $0.separator.count }, [1, 1])
     }
 }
+
+final class PoetryLayoutParagraphTests: XCTestCase {
+
+    private func verse(_ number: Int, _ text: String) -> Verse {
+        Verse(number: number, text: text)
+    }
+
+    private let matthew7 = [
+        Verse(number: 1, text: "Judge not, that you be not judged."),
+        Verse(number: 2, text: "For with the judgment you pronounce you will be judged."),
+        Verse(number: 6, text: "Do not give dogs what is holy."),
+        Verse(number: 7, text: "Ask, and it will be given to you."),
+    ]
+
+    func testNoVerseStartsAParagraphWhenTheIndexIsEmpty() {
+        let layout = PoetryLayout.layout(matthew7, paragraphStarts: [])
+        XCTAssertEqual(layout.map(\.startsParagraph), [false, false, false, false])
+    }
+
+    func testListedVersesStartParagraphs() {
+        let layout = PoetryLayout.layout(matthew7, paragraphStarts: [1, 6, 7])
+        XCTAssertEqual(layout.map(\.startsParagraph), [true, false, true, true])
+    }
+
+    func testParagraphStartEndsThePrecedingVerseWithALineBreak() {
+        let layout = PoetryLayout.layout(matthew7, paragraphStarts: [1, 6])
+        // verse 2 precedes the paragraph opening at 6
+        XCTAssertEqual(layout.map(\.separator), [" ", "\n", " ", ""])
+    }
+
+    func testSeparatorsStayOneCharacterSoVerseOffsetsAreUnchanged() {
+        let layout = PoetryLayout.layout(matthew7, paragraphStarts: [1, 6, 7])
+        XCTAssertEqual(layout.dropLast().map { $0.separator.count }, [1, 1, 1])
+    }
+
+    func testAStartOnAnOmittedVerseCarriesToTheNextVersePresent() {
+        // The ESV omits Matthew 17:21, so a paragraph starting there must not vanish.
+        let layout = PoetryLayout.layout([
+            verse(20, "Nothing will be impossible for you."),
+            verse(21, ""),
+            verse(22, "As they were gathering."),
+        ], paragraphStarts: [20, 21])
+        XCTAssertEqual(layout.map(\.verse.number), [20, 22])
+        XCTAssertEqual(layout.map(\.startsParagraph), [true, true])
+    }
+
+    func testStanzaBreaksInsidePoetryStartParagraphs() {
+        // Psalm 23 breaks after verse 3 and after verse 4
+        let layout = PoetryLayout.layout([
+            verse(1, "The Lord is my shepherd; I shall not want."),
+            verse(2, "He makes me lie down in green pastures.\nHe leads me beside still waters."),
+            verse(3, "He restores my soul.\nHe leads me in paths of righteousness"),
+            verse(4, "Even though I walk through the valley,\n    I will fear no evil,"),
+            verse(5, "You prepare a table before me\n    in the presence of my enemies;"),
+        ], paragraphStarts: [1, 4, 5])
+        XCTAssertEqual(layout.map(\.startsParagraph), [true, false, false, true, true])
+    }
+
+    func testAStartBeyondTheChapterIsIgnored() {
+        let layout = PoetryLayout.layout(matthew7, paragraphStarts: [1, 99])
+        XCTAssertEqual(layout.map(\.startsParagraph), [true, false, false, false])
+    }
+
+    func testLayoutWithoutParagraphStartsStillWorks() {
+        let layout = PoetryLayout.layout(matthew7)
+        XCTAssertEqual(layout.map(\.startsParagraph), [false, false, false, false])
+    }
+}

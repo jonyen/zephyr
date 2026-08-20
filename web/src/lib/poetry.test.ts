@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { isPoetry, layoutVerses, verseLines } from './poetry'
+import { isPoetry, layoutVerses, paragraphs, verseLines } from './poetry'
 
 const v = (number: number, text: string) => ({ number, text })
 
@@ -100,5 +100,57 @@ describe('layoutVerses', () => {
 
   it('returns nothing for an empty chapter', () => {
     expect(layoutVerses([])).toEqual([])
+  })
+})
+
+describe('paragraphs', () => {
+  const layout = (verses: { number: number; text: string }[]) => layoutVerses(verses)
+  const numbers = (groups: ReturnType<typeof paragraphs>) => groups.map((g) => g.map((v) => v.number))
+
+  const MATTHEW_7 = [
+    v(1, 'Judge not, that you be not judged.'),
+    v(2, 'For with the judgment you pronounce you will be judged.'),
+    v(6, 'Do not give dogs what is holy.'),
+    v(7, 'Ask, and it will be given to you.'),
+  ]
+
+  it('keeps a chapter whole when nothing starts a paragraph', () => {
+    expect(numbers(paragraphs(layout(MATTHEW_7), []))).toEqual([[1, 2, 6, 7]])
+  })
+
+  it('breaks at each listed verse', () => {
+    expect(numbers(paragraphs(layout(MATTHEW_7), [1, 6, 7]))).toEqual([[1, 2], [6], [7]])
+  })
+
+  it('does not open an empty paragraph when verse 1 is listed', () => {
+    const groups = paragraphs(layout(MATTHEW_7), [1, 6, 7])
+    expect(groups[0][0].number).toBe(1)
+    expect(groups.every((g) => g.length > 0)).toBe(true)
+  })
+
+  it('ignores a listed verse that is not in the chapter', () => {
+    expect(numbers(paragraphs(layout(MATTHEW_7), [1, 3, 6]))).toEqual([[1, 2], [6, 7]])
+  })
+
+  it('carries the break to the next present verse when the listed one is omitted', () => {
+    // The ESV omits Matthew 17:21, so a paragraph starting there must not vanish.
+    const verses = layout([v(20, 'Nothing will be impossible for you.'), v(21, ''), v(22, 'As they were gathering.')])
+    expect(numbers(paragraphs(verses, [20, 21]))).toEqual([[20], [22]])
+  })
+
+  it('separates poem stanzas the same way it separates prose paragraphs', () => {
+    // Psalm 23 breaks after verse 3 and after verse 4
+    const verses = layout([
+      v(1, 'The Lord is my shepherd; I shall not want.'),
+      v(2, 'He makes me lie down in green pastures.\nHe leads me beside still waters.'),
+      v(3, 'He restores my soul.\nHe leads me in paths of righteousness'),
+      v(4, 'Even though I walk through the valley,\n    I will fear no evil,'),
+      v(5, 'You prepare a table before me\n    in the presence of my enemies;'),
+    ])
+    expect(numbers(paragraphs(verses, [1, 4, 5]))).toEqual([[1, 2, 3], [4], [5]])
+  })
+
+  it('returns nothing for an empty chapter', () => {
+    expect(paragraphs([], [1])).toEqual([])
   })
 })

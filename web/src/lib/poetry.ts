@@ -61,3 +61,35 @@ export function layoutVerses(verses: { number: number; text: string }[]): VerseL
     lines: verseLines(verse.text),
   }))
 }
+
+/**
+ * Group a chapter's verses into paragraphs.
+ *
+ * `starts` lists the verses that open a paragraph, from the ESV's own layout.
+ * A break aimed at a verse the ESV omits carries forward to the next verse
+ * present, so the paragraph is not lost with it.
+ */
+export function paragraphs(verses: VerseLayout[], starts: number[]): VerseLayout[][] {
+  if (!verses.length) return []
+  const opens = [...starts].sort((a, b) => a - b)
+  const groups: VerseLayout[][] = []
+  let current: VerseLayout[] = []
+  let next = 0
+
+  for (const verse of verses) {
+    // Consume every break at or before this verse. One aimed at a verse the
+    // ESV omits lands here instead of being dropped with it.
+    let breaks = false
+    while (next < opens.length && opens[next] <= verse.number) {
+      breaks = true
+      next++
+    }
+    if (breaks && current.length) {
+      groups.push(current)
+      current = []
+    }
+    current.push(verse)
+  }
+  if (current.length) groups.push(current)
+  return groups
+}
