@@ -1,16 +1,21 @@
 import { BOOKS } from './bible-index'
 import { bookByName } from './bible-nav'
+import type { Heading } from './poetry'
 import type { Book } from './types'
 
 export type RedLetterMap = Record<string, Record<string, number[]>>
 /** Book -> chapter -> the verses that open a paragraph, from the ESV's layout. */
 export type ParagraphMap = Record<string, Record<string, number[]>>
+/** Book -> chapter -> the ESV's section headings, and a psalm's superscription. */
+export interface ChapterHeadings { headings: Heading[]; title?: string }
+export type HeadingMap = Record<string, Record<string, ChapterHeadings>>
 
 const dataUrl = (file: string) => `${import.meta.env.BASE_URL}data/${file}`
 
 let bookCache = new Map<string, Promise<Book>>()
 let redLetterCache: Promise<RedLetterMap> | null = null
 let paragraphCache: Promise<ParagraphMap> | null = null
+let headingCache: Promise<HeadingMap> | null = null
 
 async function fetchJSON<T>(url: string): Promise<T> {
   const res = await fetch(url)
@@ -57,8 +62,17 @@ export function loadParagraphStarts(): Promise<ParagraphMap> {
   return paragraphCache
 }
 
+export function loadHeadings(): Promise<HeadingMap> {
+  if (!headingCache) {
+    headingCache = fetchJSON<HeadingMap>(dataUrl('headings.json'))
+    headingCache.catch(() => { headingCache = null })
+  }
+  return headingCache
+}
+
 export function _resetCacheForTests(): void {
   bookCache = new Map()
   redLetterCache = null
   paragraphCache = null
+  headingCache = null
 }

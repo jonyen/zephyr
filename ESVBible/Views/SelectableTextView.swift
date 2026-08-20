@@ -142,14 +142,34 @@ struct SelectableTextView: NSViewRepresentable {
         // where a poem breaks away from the surrounding prose.
         let paragraphStarts = ParagraphService.shared.paragraphStarts(
             book: bookName, chapter: chapter.number)
+        let headings = HeadingService.shared.headings(book: bookName, chapter: chapter.number)
+        let headingForVerse = Dictionary(headings.map { ($0.verse, $0.text) },
+                                         uniquingKeysWith: { first, _ in first })
+
 
         for (entryIndex, entry) in PoetryLayout.layout(chapter.verses,
                                                        paragraphStarts: paragraphStarts).enumerated() {
             let verse = entry.verse
             let chunk = NSMutableAttributedString()
+
+            // The ESV's own heading, above the paragraph it opens. It sits
+            // between verse chunks, so it shifts no offset inside a verse.
+            // entryIndex 0's heading is rendered above the text view instead.
+            if entryIndex > 0, entry.startsParagraph, let heading = headingForVerse[verse.number] {
+                let headingStyle = NSMutableParagraphStyle()
+                headingStyle.lineSpacing = 6
+                headingStyle.paragraphSpacingBefore = entryIndex > 0 ? headingGap : 0
+                headingStyle.paragraphSpacing = 2
+                result.append(NSAttributedString(string: heading + "\n", attributes: [
+                    .font: NSFont.systemFont(ofSize: 14, weight: .bold),
+                    .foregroundColor: theme.nsTextColor,
+                    .paragraphStyle: headingStyle
+                ]))
+            }
             // Space before a new paragraph — but not above the first one, which
             // would push the whole chapter down away from the drop cap.
-            let spacingBefore: CGFloat = entry.startsParagraph && entryIndex > 0 ? paragraphGap : 0
+            let opensWithHeading = entry.startsParagraph && headingForVerse[verse.number] != nil
+            let spacingBefore: CGFloat = entry.startsParagraph && entryIndex > 0 && !opensWithHeading ? paragraphGap : 0
 
             // Skip verse 1 number — it's replaced by the drop-cap chapter number
             if verse.number > 1 {
@@ -262,6 +282,7 @@ struct SelectableTextView: NSViewRepresentable {
     /// that position for its wrapped continuations, plus a hang so they read as
     /// continuations rather than as new lines.
     private var paragraphGap: CGFloat { 10 }
+    private var headingGap: CGFloat { 18 }
 
     private func poeticParagraphStyle(indent: Int, font: NSFont, spacingBefore: CGFloat = 0) -> NSParagraphStyle {
         let style = NSMutableParagraphStyle()

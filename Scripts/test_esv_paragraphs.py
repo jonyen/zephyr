@@ -1,6 +1,7 @@
 import unittest
 
-from esv_paragraphs import parse_paragraph_starts, passage_reference, verse_markers
+from esv_api import passage_reference
+from esv_paragraphs import parse_paragraph_starts, verse_markers
 
 # Verbatim /v3/passage/text/ output, trimmed to the shapes that matter.
 

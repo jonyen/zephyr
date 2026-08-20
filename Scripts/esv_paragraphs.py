@@ -14,17 +14,6 @@ import re
 VERSE_MARKER = re.compile(r"\[(\d+)\]")
 
 
-def passage_reference(book, chapter, chapter_count):
-    """The query string for one chapter.
-
-    For a one-chapter book the API reads "Jude 1" as verse 1, not chapter 1, and
-    hands back a single verse. Those books have to be asked for by name alone.
-    """
-    if chapter_count == 1:
-        return book
-    return f"{book} {chapter}"
-
-
 def verse_markers(passage):
     """Every verse number the passage marks, in order of appearance."""
     return [int(n) for n in VERSE_MARKER.findall(passage)]

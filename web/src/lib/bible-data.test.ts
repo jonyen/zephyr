@@ -1,11 +1,15 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { loadBook, loadAllBooks, loadParagraphStarts, loadRedLetter, _resetCacheForTests } from './bible-data'
+import { loadBook, loadAllBooks, loadHeadings, loadParagraphStarts, loadRedLetter, _resetCacheForTests } from './bible-data'
 
 const fakeBook = { name: 'Genesis', chapters: [{ number: 1, verses: [{ number: 1, text: 'In the beginning' }] }] }
 
 function stubFor(url: string) {
   if (url.includes('red_letter')) return { Matthew: { '3': [15] } }
   if (url.includes('paragraph_starts')) return { Matthew: { '7': [1, 6, 7, 12] } }
+  if (url.includes('headings')) {
+    return { Matthew: { '6': { headings: [{ verse: 1, text: 'Giving to the Needy' }] } },
+             Psalms: { '23': { title: 'A Psalm of David.', headings: [] } } }
+  }
   return fakeBook
 }
 
@@ -59,6 +63,19 @@ describe('bible-data', () => {
     await loadParagraphStarts()
     await loadParagraphStarts()
     expect((globalThis.fetch as ReturnType<typeof vi.fn>).mock.calls.length).toBe(1)
+  })
+  it('loads headings', async () => {
+    const h = await loadHeadings()
+    expect(h.Matthew['6'].headings).toEqual([{ verse: 1, text: 'Giving to the Needy' }])
+  })
+  it('loads a psalm superscription', async () => {
+    expect((await loadHeadings()).Psalms['23'].title).toBe('A Psalm of David.')
+  })
+  it('retries headings after a failed load', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => ({ ok: false, status: 500 })))
+    await expect(loadHeadings()).rejects.toThrow('500')
+    vi.stubGlobal('fetch', vi.fn(async (url: string) => ({ ok: true, json: async () => stubFor(String(url)) })))
+    expect((await loadHeadings()).Matthew['6'].headings).toHaveLength(1)
   })
   it('retries paragraph starts after a failed load', async () => {
     vi.stubGlobal('fetch', vi.fn(async () => ({ ok: false, status: 500 })))

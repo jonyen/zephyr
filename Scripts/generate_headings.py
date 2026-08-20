@@ -1,18 +1,17 @@
 #!/usr/bin/env python3
-"""Record which verses begin a paragraph, for every chapter of the Bible.
+"""Record the ESV's section headings, and the psalm superscriptions, per chapter.
 
-The scripture data is stored verse by verse and carries no paragraph
-information, so the readers render a chapter as one unbroken block. The ESV API
-knows where the paragraphs are; this asks it, and writes out the verse indices.
+The scripture data is stored verse by verse and carries neither, so the readers
+show a chapter with no editorial structure and Psalms with no superscription.
 
-Only indices are written — no scripture text.
+Unlike paragraph_starts.json this output contains ESV *text*, so it belongs in
+the private text repository rather than here.
 
 Usage:
     doppler run -p personal -c prd_bible -- \
-        python3 Scripts/generate_paragraph_starts.py --out <path>
+        python3 Scripts/generate_headings.py --out <path>
 
-The run is resumable: chapters already present in the output file are skipped,
-so an interrupted run picks up where it left off.
+The run is resumable: chapters already present in the output file are skipped.
 """
 
 import argparse
@@ -23,22 +22,18 @@ import requests
 
 from esv_api import (RateLimiter, Throttled, api_key_or_exit, books_from, fetch_passage,
                      load_json, passage_reference, select_books, write_json)
-from esv_paragraphs import parse_paragraph_starts, verse_markers
+from esv_headings import parse_headings, verse_numbers
 
-API_URL = "https://api.esv.org/v3/passage/text/"
+API_URL = "https://api.esv.org/v3/passage/html/"
 
-# Strip everything that is not the passage itself, so the only structure left
-# in the response is the paragraph and poetry layout we are here to read.
+# The HTML endpoint tags headings and psalm superscriptions distinctly, which
+# the text endpoint does not — there both render as blocks with no verse number.
 PASSAGE_PARAMS = {
     "include-passage-references": "false",
-    "include-verse-numbers": "true",
-    "include-first-verse-numbers": "true",
     "include-footnotes": "false",
-    "include-headings": "false",
+    "include-headings": "true",
     "include-short-copyright": "false",
-    "indent-paragraphs": "2",
-    "indent-poetry": "true",
-    "indent-poetry-lines": "4",
+    "include-audio-link": "false",
 }
 
 
@@ -46,7 +41,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--text-dir", default="ESVBible/Resources",
                         help="where the per-book scripture JSON lives")
-    parser.add_argument("--out", default="paragraph_starts.json",
+    parser.add_argument("--out", default="headings.json",
                         help="output file; existing entries are kept and skipped")
     parser.add_argument("--delay", type=float, default=1.0,
                         help="minimum seconds between requests (default: 1.0)")
@@ -82,19 +77,22 @@ def main():
                 passage, payload = fetch_passage(session, API_URL, api_key, reference,
                                                  PASSAGE_PARAMS, limiter, args.max_wait)
 
-                # Check we were handed the whole chapter before trusting its
-                # paragraphs. A reference the API reads differently than we meant
-                # comes back short rather than empty, so length is the tell.
-                markers = verse_markers(passage)
+                # A reference the API reads differently than we meant comes back
+                # short rather than empty, so check the chapter arrived whole.
+                numbers = verse_numbers(passage)
                 expected = last_verse[number]
-                if not markers or max(markers) != expected:
+                if not numbers or max(numbers) != expected:
                     raise RuntimeError(
                         f"{reference}: expected the chapter to run to verse {expected}, "
-                        f"got {max(markers) if markers else 'none'} "
+                        f"got {max(numbers) if numbers else 'none'} "
                         f"(API read the reference as {payload.get('canonical')!r})"
                     )
 
-                book_result[str(number)] = parse_paragraph_starts(passage)
+                parsed = parse_headings(passage)
+                entry = {"headings": parsed["headings"]}
+                if parsed["title"]:
+                    entry["title"] = parsed["title"]
+                book_result[str(number)] = entry
                 fetched += 1
 
             # Write after each book so an interrupted run keeps its progress.

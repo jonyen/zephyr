@@ -93,3 +93,18 @@ export function paragraphs(verses: VerseLayout[], starts: number[]): VerseLayout
   if (current.length) groups.push(current)
   return groups
 }
+
+/** A section heading the ESV prints above the verse it names. */
+export interface Heading { verse: number; text: string }
+
+/**
+ * The heading that belongs above this paragraph, if any.
+ *
+ * A heading sits above a paragraph, never inside one, so it only applies when
+ * its verse is the one the paragraph opens with.
+ */
+export function headingFor(paragraph: VerseLayout[], headings: Heading[]): Heading | undefined {
+  const first = paragraph[0]
+  if (!first) return undefined
+  return headings.find((h) => h.verse === first.number)
+}

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { isPoetry, layoutVerses, paragraphs, verseLines } from './poetry'
+import { headingFor, isPoetry, layoutVerses, paragraphs, verseLines } from './poetry'
 
 const v = (number: number, text: string) => ({ number, text })
 
@@ -152,5 +152,35 @@ describe('paragraphs', () => {
 
   it('returns nothing for an empty chapter', () => {
     expect(paragraphs([], [1])).toEqual([])
+  })
+})
+
+describe('headings', () => {
+  const CHAPTER = [
+    v(1, 'Judge not, that you be not judged.'),
+    v(2, 'For with the judgment you pronounce you will be judged.'),
+    v(6, 'Do not give dogs what is holy.'),
+  ]
+
+  it('attaches a heading to the paragraph it opens', () => {
+    const groups = paragraphs(layoutVerses(CHAPTER), [1, 6])
+    const headings = [{ verse: 1, text: 'Judging Others' }, { verse: 6, text: 'Pearls Before Pigs' }]
+    expect(groups.map((g) => headingFor(g, headings)?.text)).toEqual(['Judging Others', 'Pearls Before Pigs'])
+  })
+
+  it('is undefined for a paragraph with no heading', () => {
+    const groups = paragraphs(layoutVerses(CHAPTER), [1, 6])
+    expect(headingFor(groups[0], [{ verse: 6, text: 'Pearls Before Pigs' }])).toBeUndefined()
+  })
+
+  it('ignores a heading whose verse does not open the paragraph', () => {
+    // A heading can only sit above a paragraph, never inside one.
+    const groups = paragraphs(layoutVerses(CHAPTER), [1])
+    expect(headingFor(groups[0], [{ verse: 2, text: 'Not A Paragraph Start' }])).toBeUndefined()
+  })
+
+  it('is undefined when there are no headings at all', () => {
+    const groups = paragraphs(layoutVerses(CHAPTER), [1])
+    expect(headingFor(groups[0], [])).toBeUndefined()
   })
 })

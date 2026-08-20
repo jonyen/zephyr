@@ -217,6 +217,22 @@ private struct ChapterView: View {
     @AppStorage("bionicReadingEnabled") private var bionicReadingEnabled: Bool = false
     @AppStorage("readingTheme") private var readingTheme: ReadingTheme = .system
 
+    // The chapter's opening heading and a psalm's superscription sit above the
+    // drop cap rather than beside it. The text view reserves the drop cap's
+    // corner, so anything rendered inside it would be pushed right and read as
+    // though the chapter number were part of the heading.
+    private var leadHeading: String? {
+        let starts = ParagraphService.shared.paragraphStarts(book: bookName, chapter: chapter.number)
+        let firstVerse = chapter.verses.first(where: { !$0.text.isEmpty })?.number
+        guard let firstVerse, starts.isEmpty || starts.contains(firstVerse) else { return nil }
+        return HeadingService.shared.headings(book: bookName, chapter: chapter.number)
+            .first(where: { $0.verse == firstVerse })?.text
+    }
+
+    private var psalmTitle: String? {
+        HeadingService.shared.psalmTitle(book: bookName, chapter: chapter.number)
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             if isFirstChapter {
@@ -226,6 +242,20 @@ private struct ChapterView: View {
                     .foregroundStyle(Color(readingTheme.nsTextColor))
                     .padding(.top, 16)
                     .padding(.bottom, 12)
+            }
+
+            if let leadHeading {
+                Text(leadHeading)
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundStyle(Color(readingTheme.nsTextColor))
+                    .padding(.bottom, 4)
+            }
+
+            if let psalmTitle {
+                Text(psalmTitle)
+                    .font(.system(size: 14).italic())
+                    .foregroundStyle(Color(readingTheme.nsSecondaryColor))
+                    .padding(.bottom, 4)
             }
 
             SelectableTextView(

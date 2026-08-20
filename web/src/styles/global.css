@@ -48,6 +48,12 @@ body { background: var(--bg); color: var(--text); font-family: var(--reading-fon
 /* A poem's first lines hang back into this padding, so reserve room for them. */
 .drop-cap-poem { padding-right: calc(10px + var(--poem-hang)); }
 .bookmark-flag { color: var(--accent); font-size: 14px; vertical-align: top; margin-left: 2px; }
+/* The ESV's own section headings, above the paragraph they open. */
+.section-heading { font-family: -apple-system, system-ui, sans-serif; font-size: 15px; font-weight: 700; margin: 1.4em 0 0.5em; }
+.verses + .section-heading { margin-top: 1.4em; }
+.section-heading-lead { margin-top: 0; }
+/* A psalm's superscription, printed above the first verse. */
+.psalm-title { font-size: 15px; font-style: italic; color: var(--text-secondary); margin-bottom: 0.5em; }
 .verses { font-size: 17px; line-height: 1.65; white-space: pre-wrap; text-align: left; }
 /* Paragraphs, and the stanzas of a poem, come from the ESV's own layout. */
 .verses + .verses { margin-top: 0.75em; }
