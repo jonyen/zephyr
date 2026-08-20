@@ -134,15 +134,15 @@ struct SelectableTextView: NSViewRepresentable {
 
         let bodyFont = resolvedBodyFont
         let verseNumFont = NSFont.systemFont(ofSize: 10)
-        let verseSeparator = bookName == "Proverbs" ? "\n" : " "
 
         var boundaries: [(verse: Int, start: Int, end: Int)] = []
 
-        for verse in chapter.verses {
-            // The ESV omits a handful of verses (Mark 9:44, Acts 8:37, …) as later
-            // manuscript additions. They carry no text, so printing the number would
-            // leave a dangling numeral mid-paragraph.
-            if verse.text.isEmpty { continue }
+        // PoetryLayout drops the omitted verses (Mark 9:44, Acts 8:37, …), which
+        // carry no text and would otherwise leave a dangling numeral, and decides
+        // where a poem breaks away from the surrounding prose.
+        for entry in PoetryLayout.layout(chapter.verses) {
+            let verse = entry.verse
+            let chunk = NSMutableAttributedString()
 
             // Skip verse 1 number — it's replaced by the drop-cap chapter number
             if verse.number > 1 {
@@ -152,7 +152,7 @@ struct SelectableTextView: NSViewRepresentable {
                     .baselineOffset: 6,
                     .paragraphStyle: paragraphStyle
                 ]
-                result.append(NSAttributedString(string: "\(verse.number) ", attributes: numAttrs))
+                chunk.append(NSAttributedString(string: "\(verse.number) ", attributes: numAttrs))
             }
 
             // Note indicator icon
@@ -166,11 +166,15 @@ struct SelectableTextView: NSViewRepresentable {
                 let attachStr = NSMutableAttributedString(attachment: attachment)
                 attachStr.addAttribute(.foregroundColor, value: NSColor.controlAccentColor, range: NSRange(location: 0, length: attachStr.length))
                 attachStr.append(NSAttributedString(string: " "))
-                result.append(attachStr)
+                chunk.append(attachStr)
             }
 
+            // Everything before the verse text — number, note icon — shifts the
+            // poetic line ranges, which are measured against the verse text alone.
+            let prefixLength = chunk.length
+
             // Verse text
-            let verseStart = result.length
+            let verseStart = result.length + prefixLength
             let isSearchHighlighted = isSearchHighlight(verse.number)
 
             let baseColor: NSColor = isSearchHighlighted ? .controlAccentColor : theme.nsTextColor
@@ -179,7 +183,7 @@ struct SelectableTextView: NSViewRepresentable {
                 .paragraphStyle: paragraphStyle,
                 .foregroundColor: baseColor
             ]
-            let textStr = NSMutableAttributedString(string: verse.text + verseSeparator, attributes: baseAttrs)
+            let textStr = NSMutableAttributedString(string: verse.text + entry.separator, attributes: baseAttrs)
 
             // Apply red-letter coloring from the authoritative data file.
             // Each range is a (start, end) pair into verse.text (end exclusive).
@@ -210,13 +214,46 @@ struct SelectableTextView: NSViewRepresentable {
                 applyBionicReading(to: textStr, font: bodyFont)
             }
 
-            result.append(textStr)
-            let verseEnd = result.length
+            chunk.append(textStr)
+
+            // Give each poetic line its own paragraph style so a wrapped line
+            // hangs under the line it continues instead of resetting to the
+            // margin. The indent spaces stay in the text — removing them would
+            // shift every offset highlights are keyed on — so they set the first
+            // line's position and headIndent only has to match it.
+            if entry.isPoetry {
+                for (index, line) in entry.lines.enumerated() {
+                    // The first line owns the prefix; the last owns the separator.
+                    let start = index == 0 ? 0 : prefixLength + line.range.location
+                    let end = index == entry.lines.count - 1
+                        ? chunk.length
+                        : prefixLength + line.range.upperBound
+                    guard start < end else { continue }
+                    chunk.addAttribute(.paragraphStyle,
+                                       value: poeticParagraphStyle(indent: line.indent, font: bodyFont),
+                                       range: NSRange(location: start, length: end - start))
+                }
+            }
+
+            let verseEnd = result.length + chunk.length
+            result.append(chunk)
             boundaries.append((verse: verse.number, start: verseStart, end: verseEnd))
         }
 
         coordinator.verseBoundaries = boundaries
         return result
+    }
+
+    /// Indent spaces already set where a poetic line starts; headIndent repeats
+    /// that position for its wrapped continuations, plus a hang so they read as
+    /// continuations rather than as new lines.
+    private func poeticParagraphStyle(indent: Int, font: NSFont) -> NSParagraphStyle {
+        let style = NSMutableParagraphStyle()
+        style.lineSpacing = 6
+        let spaceWidth = (" " as NSString).size(withAttributes: [.font: font]).width
+        let hang = spaceWidth * 3
+        style.headIndent = CGFloat(indent) * spaceWidth * 4 + hang
+        return style
     }
 
     private func isSearchHighlight(_ verseNumber: Int) -> Bool {

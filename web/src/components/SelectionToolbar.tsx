@@ -1,35 +1,20 @@
 import { useEffect, useState } from 'react'
 import { useAnnotations } from '../state/annotations'
 import type { HighlightColor } from '../lib/types'
+import { offsetInVerse, verseTextLength } from '../lib/verse-offsets'
 
 const COLORS: HighlightColor[] = ['yellow', 'green', 'blue', 'pink', 'purple']
 
 interface Target { book: string; chapter: number; ranges: Array<{ verse: number; startChar: number; endChar: number }>; x: number; y: number }
 
-const toElement = (n: Node): Element | null => n.nodeType === Node.ELEMENT_NODE ? (n as Element) : n.parentElement
-
-/** Char offset of the boundary (node, offset) within verseEl's text, excluding verse-number sups. */
-function offsetInVerse(verseEl: Element, node: Node, offset: number): number {
-  const r = document.createRange()
-  r.selectNodeContents(verseEl)
-  try { r.setEnd(node, offset) } catch { return 0 }
-  const frag = r.cloneContents()
-  frag.querySelectorAll('sup.verse-num').forEach((s) => s.remove())
-  return frag.textContent?.length ?? 0
-}
-
-const verseTextLength = (v: Element): number => {
-  const clone = v.cloneNode(true) as Element
-  clone.querySelectorAll('sup.verse-num').forEach((s) => s.remove())
-  return clone.textContent?.length ?? 0
-}
+const elementOf = (n: Node): Element | null => n.nodeType === Node.ELEMENT_NODE ? (n as Element) : n.parentElement
 
 function computeTarget(): Target | null {
   const sel = window.getSelection()
   if (!sel || sel.isCollapsed || sel.rangeCount === 0) return null
   const range = sel.getRangeAt(0)
-  const startVerse = toElement(range.startContainer)?.closest('.verse')
-  const endVerse = toElement(range.endContainer)?.closest('.verse')
+  const startVerse = elementOf(range.startContainer)?.closest('.verse')
+  const endVerse = elementOf(range.endContainer)?.closest('.verse')
   if (!startVerse || !endVerse) return null
   const chapterEl = startVerse.closest<HTMLElement>('.chapter')
   if (!chapterEl || endVerse.closest('.chapter') !== chapterEl) return null
@@ -42,8 +27,8 @@ function computeTarget(): Target | null {
     const v = verses[i]
     const verse = Number(v.dataset.verse)
     const textLen = verseTextLength(v)
-    const startChar = i === si ? offsetInVerse(v, range.startContainer, range.startOffset) : 0
-    const endChar = i === ei ? offsetInVerse(v, range.endContainer, range.endOffset) : textLen
+    const startChar = i === si ? offsetInVerse(v, range.startContainer, range.startOffset, 0) : 0
+    const endChar = i === ei ? offsetInVerse(v, range.endContainer, range.endOffset, textLen) : textLen
     if (endChar > startChar) ranges.push({ verse, startChar, endChar })
   }
   if (!ranges.length) return null

@@ -11,6 +11,8 @@
 		AA000002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000012 /* ContentView.swift */; };
 		AA000003 /* ESVBibleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000013 /* ESVBibleTests.swift */; };
 		AA000004 /* BibleModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000014 /* BibleModels.swift */; };
+		AA0000D0 /* PoetryLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000D1 /* PoetryLayout.swift */; };
+		AA0000D2 /* PoetryLayoutTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0000D3 /* PoetryLayoutTests.swift */; };
 		AA000005 /* BibleModelsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000015 /* BibleModelsTests.swift */; };
 		AA000006 /* BibleStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000016 /* BibleStore.swift */; };
 		AA000007 /* BibleStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000017 /* BibleStoreTests.swift */; };
@@ -134,6 +136,8 @@
 		AA000012 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		AA000013 /* ESVBibleTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ESVBibleTests.swift; sourceTree = "<group>"; };
 		AA000014 /* BibleModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BibleModels.swift; sourceTree = "<group>"; };
+		AA0000D1 /* PoetryLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PoetryLayout.swift; sourceTree = "<group>"; };
+		AA0000D3 /* PoetryLayoutTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PoetryLayoutTests.swift; sourceTree = "<group>"; };
 		AA000015 /* BibleModelsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BibleModelsTests.swift; sourceTree = "<group>"; };
 		AA000016 /* BibleStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BibleStore.swift; sourceTree = "<group>"; };
 		AA000017 /* BibleStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BibleStoreTests.swift; sourceTree = "<group>"; };
@@ -293,6 +297,7 @@
 				AA000073 /* ChapterPositionTests.swift */,
 				AA000077 /* ClosedTabsStackTests.swift */,
 				AA0000C3 /* TabCoordinatorTests.swift */,
+				AA0000D3 /* PoetryLayoutTests.swift */,
 			);
 			path = ESVBibleTests;
 			sourceTree = "<group>";
@@ -302,6 +307,7 @@
 			children = (
 				AA000014 /* BibleModels.swift */,
 				AA00004F /* ReadingTheme.swift */,
+				AA0000D1 /* PoetryLayout.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -562,6 +568,7 @@
 				AACC87212F409FA300E50F90 /* search_index.json in Resources */,
 				AA000035 /* red_letter_verses.json in Resources */,
 				AA000082 /* red_letter_ranges.json in Resources */,
+				AA0000D2 /* PoetryLayoutTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -601,6 +608,7 @@
 				AA000084 /* VerseRangeView.swift in Sources */,
 				AA00004C /* AppearanceSettingsView.swift in Sources */,
 				AA00004E /* ReadingTheme.swift in Sources */,
+				AA0000D0 /* PoetryLayout.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
