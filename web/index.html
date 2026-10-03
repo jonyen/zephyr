@@ -14,6 +14,17 @@
         if (p && p.font) document.documentElement.dataset.font = p.font
       } catch (e) {}
     </script>
+    <!-- Anonymous, cookieless, aggregate visit counts via GoatCounter; no personal data.
+         The reader has its own GoatCounter site, separate from the jonyen.com
+         website and the quiz on the same origin, and every chapter reports the
+         one path "/", so a reader counts once per visit. If jonyen.com ever
+         sends a Content-Security-Policy, allow script-src https://gc.zgo.at and
+         connect-src and img-src https://jonyen-zephyr.goatcounter.com. -->
+    <script data-goatcounter="https://jonyen-zephyr.goatcounter.com/count"
+            data-goatcounter-settings='{"path": "/"}'
+            async src="https://gc.zgo.at/count.v5.js"
+            crossorigin="anonymous"
+            integrity="sha384-atnOLvQb9t+jTSipvd75X2yginT4PjVbqDdlJAmxMm+wYElFmeR6EmLP5bYeoRVQ"></script>
   </head>
   <body>
     <div id="root"></div>

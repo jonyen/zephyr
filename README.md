@@ -59,7 +59,7 @@ Open the DMG and drag Zephyr to your Applications folder.
 
 ## Zephyr on the web
 
-There's a browser version at **[jonyen.com/zephyr](https://jonyen.com/zephyr)** — same reader, same offline-first, localStorage-only approach. It lives in [`web/`](./web) in this repository; see [`web/README.md`](./web/README.md) for development and deploy details.
+There's a browser version at **[jonyen.com/zephyr](https://jonyen.com/zephyr)** — same reader, same offline-first, localStorage-only approach to your data. The web version keeps anonymous, cookieless, aggregate visit counts via GoatCounter; no personal data. It lives in [`web/`](./web) in this repository; see [`web/README.md`](./web/README.md) for development and deploy details.
 
 ## Repository layout
 

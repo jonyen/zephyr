@@ -1,6 +1,6 @@
 # Zephyr Web
 
-A web version of [Zephyr](../README.md), the minimalist ESV Bible reader for macOS. No accounts, no tracking — highlights, bookmarks, and history live in your browser's localStorage.
+A web version of [Zephyr](../README.md), the minimalist ESV Bible reader for macOS. No accounts — highlights, bookmarks, and history live in your browser's localStorage. The page keeps anonymous, cookieless, aggregate visit counts via GoatCounter; no personal data.
 
 Live at [jonyen.com/zephyr](https://jonyen.com/zephyr).
 
