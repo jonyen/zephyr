@@ -7,6 +7,15 @@ const bySlug = new Map(BOOKS.map((b) => [b.slug, b]))
 export function bookByName(name: string): BookInfo | undefined { return byName.get(name) }
 export function bookBySlug(slug: string): BookInfo | undefined { return bySlug.get(slug) }
 
+// Singular spellings people type for a book whose slug is plural. A link to
+// /psalm/23 should land on Psalm 23, not bounce to Genesis 1.
+const SLUG_ALIASES: Record<string, string> = { psalm: 'psalms', proverb: 'proverbs' }
+
+/** The canonical slug for an alias, or undefined if `slug` is not one. */
+export function aliasedSlug(slug: string): string | undefined {
+  return SLUG_ALIASES[slug.toLowerCase()]
+}
+
 export function globalIndex(pos: Position): number {
   const b = byName.get(pos.book)
   if (!b) throw new Error(`Unknown book: ${pos.book}`)
