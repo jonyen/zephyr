@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { Navigate, useLocation, useNavigate, useParams } from 'react-router-dom'
 import type { Position } from '../lib/types'
-import { bookBySlug, slugForPosition } from '../lib/bible-nav'
+import { aliasedSlug, bookBySlug, slugForPosition } from '../lib/bible-nav'
 import ReadingPane from './ReadingPane'
 import Scrubber from './Scrubber'
 import SelectionToolbar from './SelectionToolbar'
@@ -66,6 +66,10 @@ export default function Reader({ children }: { children?: React.ReactNode }) {
     navigate(`/${slugForPosition(pos)}/${pos.chapter}`, { state: verseRange ? { verseRange } : undefined, replace: opts?.replace ?? false })
   }, [navigate])
 
+  const alias = slug ? aliasedSlug(slug) : undefined
+  if (alias) {
+    return <Navigate to={`/${alias}/${chapter ?? 1}${location.search}${location.hash}`} replace state={location.state} />
+  }
   if (!valid && slug) return <Navigate to="/genesis/1" replace />
   const verseRange = (location.state as { verseRange?: VerseRange } | null)?.verseRange ?? null
 

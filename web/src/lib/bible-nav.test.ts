@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { BOOKS, TOTAL_CHAPTERS } from './bible-index'
-import { bookByName, bookBySlug, globalIndex, positionForGlobalIndex, chapterAfter, chapterBefore, slugForPosition } from './bible-nav'
+import { bookByName, bookBySlug, globalIndex, positionForGlobalIndex, chapterAfter, chapterBefore, slugForPosition, aliasedSlug } from './bible-nav'
 
 describe('bible index', () => {
   it('has 66 books and 1189 chapters', () => {
@@ -44,5 +44,21 @@ describe('chapter stepping', () => {
   })
   it('slugs positions', () => {
     expect(slugForPosition({ book: 'Song of Solomon', chapter: 3 })).toBe('song-of-solomon')
+  })
+})
+
+describe('slug aliases', () => {
+  it('maps singular psalm and proverb to their book slugs', () => {
+    expect(aliasedSlug('psalm')).toBe('psalms')
+    expect(aliasedSlug('proverb')).toBe('proverbs')
+    expect(aliasedSlug('Psalm')).toBe('psalms')
+  })
+  it('leaves real slugs and unknown words alone', () => {
+    expect(aliasedSlug('psalms')).toBeUndefined()
+    expect(aliasedSlug('genesis')).toBeUndefined()
+    expect(aliasedSlug('nope')).toBeUndefined()
+  })
+  it('every alias points at a real book', () => {
+    for (const s of ['psalm', 'proverb']) expect(bookBySlug(aliasedSlug(s)!)).toBeDefined()
   })
 })
